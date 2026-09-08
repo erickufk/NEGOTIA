@@ -125,7 +125,7 @@ export default function NegotiationRoom() {
         <div className="flex flex-col card-glow rounded-2xl overflow-hidden">
           <div className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
             <div>
-              <div className="text-xs text-slate-500 font-mono">NEGOTIATION</div>
+              <div className="text-xs text-slate-500 font-mono">NEGOTIATION · {(neg.framework_name || "Combined").toUpperCase()}</div>
               <div className="font-display font-semibold">{neg.scenario_title}</div>
             </div>
             <span className="chip chip-emerald pulse-dot">● Active</span>

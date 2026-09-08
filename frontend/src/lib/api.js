@@ -5,6 +5,8 @@ export const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 export const api = {
   scenarios: () => axios.get(`${API}/scenarios`).then(r => r.data.scenarios),
   scenario: (slug) => axios.get(`${API}/scenarios/${slug}`).then(r => r.data.scenario),
+  frameworks: () => axios.get(`${API}/frameworks`).then(r => r.data.frameworks),
+  analyzePrep: (payload) => axios.post(`${API}/prep/analyze`, payload).then(r => r.data.preparation),
   createNeg: (payload) => axios.post(`${API}/negotiations`, payload).then(r => r.data.negotiation),
   listNeg: () => axios.get(`${API}/negotiations`).then(r => r.data.negotiations),
   getNeg: (id) => axios.get(`${API}/negotiations/${id}`).then(r => r.data.negotiation),

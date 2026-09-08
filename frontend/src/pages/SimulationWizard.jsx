@@ -22,14 +22,17 @@ export default function SimulationWizard() {
 
   const [step, setStep] = useState(preSlug ? 2 : 1);
   const [scenarios, setScenarios] = useState([]);
+  const [frameworks, setFrameworks] = useState([]);
+  const [framework, setFramework] = useState("combined");
   const [slug, setSlug] = useState(preSlug || "");
   const [scenario, setScenario] = useState(null);
   const [mode, setMode] = useState("chat");
   const [participantsCount, setParticipantsCount] = useState(1);
   const [prep, setPrep] = useState({ batna: "", priorities: "", theirs: "", offer: "", ideal: "", minimum: "" });
   const [creating, setCreating] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
 
-  useEffect(() => { api.scenarios().then(setScenarios); }, []);
+  useEffect(() => { api.scenarios().then(setScenarios); api.frameworks().then(setFrameworks); }, []);
   useEffect(() => {
     if (slug) api.scenario(slug).then(s => { setScenario(s); setParticipantsCount(s.max_participants); });
   }, [slug]);
@@ -37,26 +40,39 @@ export default function SimulationWizard() {
   const start = async () => {
     setCreating(true);
     try {
-      const neg = await api.createNeg({ scenario_slug: slug, mode, participants_count: participantsCount, preparation: prep });
+      const neg = await api.createNeg({ scenario_slug: slug, mode, participants_count: participantsCount, preparation: prep, training_framework: framework });
       nav(`/negotiation/${neg.id}`);
     } catch (e) {
       toast.error("Failed to create negotiation");
     } finally { setCreating(false); }
   };
 
-  const steps = [t.wizard.s1, t.wizard.s2, t.wizard.s3, t.wizard.s4, t.wizard.s5, t.wizard.s6];
+  const autofillPrep = async () => {
+    setAnalyzing(true);
+    try {
+      const data = await api.analyzePrep({ scenario_slug: slug, training_framework: framework });
+      setPrep(p => ({ ...p, ...data }));
+      toast.success("Preparation drafted by AI. Edit as you wish.");
+    } catch { toast.error("Autofill failed"); }
+    finally { setAnalyzing(false); }
+  };
+
+  const steps = [t.wizard.s1, "Framework", t.wizard.s2, t.wizard.s3, t.wizard.s4, t.wizard.s5, t.wizard.s6];
 
   return (
     <AppShell>
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <div className="text-xs font-mono text-sky-400 mb-2">{t.wizard.step} {step} {t.wizard.of} 6</div>
+          <div className="text-xs font-mono text-sky-400 mb-2">{t.wizard.step} {step} {t.wizard.of} 7</div>
           <div className="flex items-center gap-2">
             {steps.map((s, i) => (
               <div key={i} className={`h-1 flex-1 rounded-full ${i+1 <= step ? "bg-sky-400" : "bg-white/10"}`} />
             ))}
           </div>
           <div className="mt-3 font-display font-bold text-2xl">{steps[step-1]}</div>
+          {step === 2 && (
+            <div className="text-sm text-slate-400 mt-1">How do you want to train? Choose the framework you want to focus on.</div>
+          )}
         </div>
 
         <div className="card-glow rounded-2xl p-6">
@@ -78,6 +94,24 @@ export default function SimulationWizard() {
           )}
 
           {step === 2 && (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {frameworks.map(f => (
+                <button key={f.id} data-testid={`w-framework-${f.id}`} onClick={() => setFramework(f.id)}
+                  className={`text-left p-5 rounded-xl border transition ${framework===f.id?"border-sky-400 bg-sky-500/5":"border-white/10 hover:border-white/20"}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="font-display font-semibold text-lg">{f.name}</div>
+                    {f.id === "combined" && <span className="chip chip-emerald">Recommended</span>}
+                  </div>
+                  <div className="text-sm text-slate-400 mb-3">{f.tagline}</div>
+                  <div className="flex flex-wrap gap-1">
+                    {f.chips.map(c => <span key={c} className="chip chip-indigo text-[10px]">{c}</span>)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {step === 3 && (
             <div className="grid sm:grid-cols-3 gap-3">
               {modes.map(m => (
                 <button key={m.id} data-testid={`w-mode-${m.id}`} onClick={() => setMode(m.id)}
@@ -90,7 +124,7 @@ export default function SimulationWizard() {
             </div>
           )}
 
-          {step === 3 && scenario && (
+          {step === 4 && scenario && (
             <div className="space-y-4">
               <div className="text-sm text-slate-400 mb-3">Choose how many opponents you'll face.</div>
               <div className="grid grid-cols-4 gap-3">
@@ -119,7 +153,7 @@ export default function SimulationWizard() {
             </div>
           )}
 
-          {step === 4 && scenario && (
+          {step === 5 && scenario && (
             <div className="space-y-4 text-sm">
               <div><div className="text-xs uppercase text-slate-500 mb-1">{t.wizard.situation}</div>
                 <div className="text-slate-300">{scenario.context}</div></div>
@@ -132,8 +166,15 @@ export default function SimulationWizard() {
             </div>
           )}
 
-          {step === 5 && (
-            <div className="grid sm:grid-cols-2 gap-4">
+          {step === 6 && (
+            <div>
+              <div className="flex justify-end mb-3">
+                <Button data-testid="autofill-prep" onClick={autofillPrep} disabled={analyzing || !slug} variant="outline"
+                  className="border-sky-500/30 bg-sky-500/5 text-sky-300 hover:bg-sky-500/10">
+                  ✨ {analyzing ? "Drafting..." : "AI Autofill"}
+                </Button>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
               {[
                 { k: "batna", label: t.wizard.batna, ph: t.wizard.batnaPh },
                 { k: "priorities", label: t.wizard.priorities, ph: t.wizard.prioritiesPh },
@@ -149,16 +190,17 @@ export default function SimulationWizard() {
                     className="bg-white/5 border-white/10 text-sm" />
                 </div>
               ))}
+              </div>
             </div>
           )}
 
-          {step === 6 && scenario && (
+          {step === 7 && scenario && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><div className="text-xs uppercase text-slate-500">Scenario</div><div className="font-semibold">{scenario.title}</div></div>
+                <div><div className="text-xs uppercase text-slate-500">Framework</div><div className="font-semibold capitalize">{framework}</div></div>
                 <div><div className="text-xs uppercase text-slate-500">{t.wizard.mode}</div><div className="font-semibold capitalize">{mode}</div></div>
                 <div><div className="text-xs uppercase text-slate-500">{t.scenarios.participants}</div><div className="font-semibold font-mono">{participantsCount}</div></div>
-                <div><div className="text-xs uppercase text-slate-500">Prep</div><div className="font-semibold text-emerald-400 flex items-center gap-1"><Check className="w-4 h-4" />Done</div></div>
               </div>
               <div className="p-4 rounded-lg bg-sky-500/5 border border-sky-500/10 text-sm text-slate-300">
                 <div className="font-semibold text-sky-400 mb-1">Primary Goal</div>
@@ -172,7 +214,7 @@ export default function SimulationWizard() {
           <Button variant="ghost" onClick={() => setStep(Math.max(1, step-1))} disabled={step === 1} data-testid="wizard-back" className="text-slate-400">
             <ArrowLeft className="w-4 h-4 mr-1" />{t.wizard.back}
           </Button>
-          {step < 6 ? (
+          {step < 7 ? (
             <Button className="btn-primary rounded-full px-6" disabled={step === 1 && !slug} onClick={() => setStep(step+1)} data-testid="wizard-next">
               {t.wizard.next}<ArrowRight className="w-4 h-4 ml-1" />
             </Button>

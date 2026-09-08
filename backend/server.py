@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field, EmailStr
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 from scenarios_seed import SCENARIOS
+from frameworks import FRAMEWORKS, classify_spin
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -76,6 +77,12 @@ class CreateNegotiationIn(BaseModel):
     mode: str = "chat"  # chat | voice | challenge
     participants_count: Optional[int] = None
     preparation: Optional[Dict[str, Any]] = None
+    training_framework: str = "combined"  # harvard | spin | batna | combined
+
+
+class AnalyzePrepIn(BaseModel):
+    scenario_slug: str
+    training_framework: str = "combined"
 
 
 class EndNegotiationIn(BaseModel):
@@ -219,9 +226,12 @@ async def get_scenario(slug: str, user=Depends(get_current_user)):
 
 
 # ---------- AI helpers ----------
-def _build_system_prompt(scenario: dict, participant: dict, state: dict, all_participants: List[dict]) -> str:
+def _build_system_prompt(scenario: dict, participant: dict, state: dict, all_participants: List[dict], framework_id: str = "combined") -> str:
     others = ", ".join([f"{p['name']} ({p['role']})" for p in all_participants if p['name'] != participant['name']])
+    fw = FRAMEWORKS.get(framework_id, FRAMEWORKS["combined"])
     return f"""You are {participant['name']}, {participant['role']} in a business negotiation.
+
+{fw['ai_instructions']}
 
 SCENARIO CONTEXT (private):
 {scenario['context']}
@@ -295,19 +305,23 @@ async def create_negotiation(body: CreateNegotiationIn, user=Depends(get_current
         raise HTTPException(404, "Scenario not found")
     parts = _pick_participants(scenario, body.participants_count)
     neg_id = str(uuid.uuid4())
+    fw = FRAMEWORKS.get(body.training_framework, FRAMEWORKS["combined"])
     doc = {
         "id": neg_id,
         "user_id": user["id"],
         "scenario_slug": body.scenario_slug,
         "scenario_title": scenario["title"],
         "mode": body.mode,
+        "training_framework": fw["id"],
+        "framework_name": fw["name"],
         "participants": [{"name": p["name"], "role": p["role"]} for p in parts],
         "preparation": body.preparation or {},
         "state": {
             "round": 0,
             "trust": {p["name"]: 50 for p in parts},
             "pressure": {p["name"]: 30 for p in parts},
-            "signals": {"question": 0, "open_question": 0, "concession": 0, "anchoring": 0, "empathy": 0, "pressure": 0, "batna_ref": 0},
+            "signals": {"question": 0, "open_question": 0, "concession": 0, "anchoring": 0, "empathy": 0, "pressure": 0, "batna_ref": 0, "objective_criteria": 0, "trades": 0, "personal_attack": 0},
+            "spin_counts": {"situation": 0, "problem": 0, "implication": 0, "need_payoff": 0, "other": 0},
             "started_at": now_iso(),
         },
         "messages": [],
@@ -325,6 +339,9 @@ def _neg_out(doc: dict) -> dict:
     return {
         "id": doc["id"], "scenario_slug": doc["scenario_slug"], "scenario_title": doc["scenario_title"],
         "mode": doc["mode"], "participants": doc["participants"], "state": doc["state"],
+        "training_framework": doc.get("training_framework", "combined"),
+        "framework_name": doc.get("framework_name", "Combined"),
+        "framework_scores": doc.get("framework_scores"),
         "messages": doc.get("messages", []), "status": doc["status"], "outcome": doc.get("outcome"),
         "score": doc.get("score"), "created_at": doc["created_at"], "preparation": doc.get("preparation", {}),
         "feedback": doc.get("feedback"), "skill_scores": doc.get("skill_scores"),
@@ -362,6 +379,18 @@ async def post_message(neg_id: str, body: MessageIn, user=Depends(get_current_us
     for k, v in signals.items():
         if v:
             doc["state"]["signals"][k] = doc["state"]["signals"].get(k, 0) + 1
+    # extended signals
+    tl = body.content.lower()
+    if any(w in tl for w in ["benchmark", "market rate", "industry standard", "standard practice", "рынок"]):
+        doc["state"]["signals"]["objective_criteria"] = doc["state"]["signals"].get("objective_criteria", 0) + 1
+    if any(w in tl for w in ["in exchange", "in return", "if you", "trade", "swap"]):
+        doc["state"]["signals"]["trades"] = doc["state"]["signals"].get("trades", 0) + 1
+    if any(w in tl for w in ["stupid", "ridiculous", "you people", "your fault", "incompetent"]):
+        doc["state"]["signals"]["personal_attack"] = doc["state"]["signals"].get("personal_attack", 0) + 1
+    # SPIN classification
+    spin_cat = classify_spin(body.content)
+    doc["state"].setdefault("spin_counts", {"situation": 0, "problem": 0, "implication": 0, "need_payoff": 0, "other": 0})
+    doc["state"]["spin_counts"][spin_cat] = doc["state"]["spin_counts"].get(spin_cat, 0) + 1
 
     # append user msg
     user_msg = {"id": str(uuid.uuid4()), "role": "user", "content": body.content, "at": now_iso()}
@@ -370,8 +399,9 @@ async def post_message(neg_id: str, body: MessageIn, user=Depends(get_current_us
 
     # generate AI responses from each participant (or just first if multi-party gets too long)
     ai_replies = []
+    fw_id = doc.get("training_framework", "combined")
     for p in parts[:2]:  # cap at 2 concurrent to keep responses tight
-        sys_prompt = _build_system_prompt(scenario, p, doc["state"], parts)
+        sys_prompt = _build_system_prompt(scenario, p, doc["state"], parts, fw_id)
         try:
             ai_text = await _ai_respond(sys_prompt, doc["messages"][:-1], body.content, f"{neg_id}-{p['name']}")
         except Exception as e:
@@ -435,6 +465,7 @@ async def end_negotiation(neg_id: str, body: EndNegotiationIn, user=Depends(get_
     await db.negotiations.update_one({"id": neg_id}, {"$set": {
         "status": "completed", "outcome": doc["outcome"], "score": doc["score"],
         "skill_scores": doc["skill_scores"], "feedback": doc["feedback"], "ended_at": doc["ended_at"],
+        "framework_scores": doc.get("framework_scores"),
     }})
     # update user skill aggregate
     await _update_user_skills(user["id"], doc["skill_scores"])
@@ -505,7 +536,65 @@ Transcript:
     except Exception:
         logger.exception("Debrief AI failed, using fallback")
 
-    return {"outcome": outcome, "score": score, "skill_scores": skill_scores, "feedback": feedback}
+    return {"outcome": outcome, "score": score, "skill_scores": skill_scores, "feedback": feedback,
+            "framework_scores": _compute_framework_scores(doc)}
+
+
+def _compute_framework_scores(doc: dict) -> Dict[str, Any]:
+    sig = doc["state"].get("signals", {})
+    spin = doc["state"].get("spin_counts", {})
+    fw = doc.get("training_framework", "combined")
+    def clamp(v): return max(0, min(100, int(v)))
+    harvard = {
+        "People vs Problem": clamp(70 - sig.get("personal_attack", 0) * 20 + sig.get("empathy", 0) * 5),
+        "Interests vs Positions": clamp(45 + sig.get("open_question", 0) * 10),
+        "Options for Mutual Gain": clamp(45 + sig.get("trades", 0) * 15),
+        "Objective Criteria": clamp(40 + sig.get("objective_criteria", 0) * 20),
+    }
+    spin_scores = {
+        "Situation": clamp(50 + spin.get("situation", 0) * 8),
+        "Problem": clamp(50 + spin.get("problem", 0) * 12),
+        "Implication": clamp(40 + spin.get("implication", 0) * 18),
+        "Need-Payoff": clamp(40 + spin.get("need_payoff", 0) * 20),
+    }
+    batna = {
+        "BATNA Clarity": clamp(45 + sig.get("batna_ref", 0) * 15 + (10 if (doc.get("preparation") or {}).get("batna") else 0)),
+        "Leverage": clamp(45 + sig.get("batna_ref", 0) * 10 + sig.get("anchoring", 0) * 5),
+        "Reservation Discipline": clamp(50 + (10 if (doc.get("preparation") or {}).get("minimum") else 0)),
+        "Concession Management": clamp(50 + sig.get("trades", 0) * 10 - max(0, sig.get("concession", 0) - sig.get("trades", 0)) * 8),
+    }
+    return {"framework": fw, "harvard": harvard, "spin": spin_scores, "batna": batna}
+
+
+@api.get("/frameworks")
+async def list_frameworks():
+    return {"frameworks": [{"id": f["id"], "name": f["name"], "tagline": f["tagline"], "chips": f["chips"]} for f in FRAMEWORKS.values()]}
+
+
+@api.post("/prep/analyze")
+async def analyze_prep(body: AnalyzePrepIn, user=Depends(get_current_user)):
+    scenario = await db.scenarios.find_one({"slug": body.scenario_slug}, {"_id": 0})
+    if not scenario:
+        raise HTTPException(404, "Scenario not found")
+    fw = FRAMEWORKS.get(body.training_framework, FRAMEWORKS["combined"])
+    # scrub scenario for AI (still has objective/context, but no hidden fields exposed to user response)
+    prompt = f"""You are a negotiation coach. Draft a preparation sheet for the user practicing the {fw['name']} framework.
+Scenario: {scenario['title']}. Objective: {scenario['objective']}. Context: {scenario['context']}.
+
+Return ONLY JSON with these fields (short bullet-style, one sentence each):
+{{"batna": "...", "priorities": "...", "theirs": "...", "offer": "...", "ideal": "...", "minimum": "..."}}"""
+    try:
+        chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"prep-{user['id']}-{body.scenario_slug}",
+                       system_message="You are a Harvard-trained negotiation coach who writes concise preparation sheets.").with_model(AI_PROVIDER, AI_MODEL)
+        resp = await chat.send_message(UserMessage(text=prompt))
+        text = resp if isinstance(resp, str) else str(resp)
+        s = text.find("{"); e = text.rfind("}")
+        if s >= 0 and e > s:
+            data = json.loads(text[s:e+1])
+            return {"preparation": data}
+    except Exception:
+        logger.exception("Prep analyze failed")
+    return {"preparation": {"batna": "", "priorities": "", "theirs": "", "offer": "", "ideal": "", "minimum": ""}}
 
 
 async def _update_user_skills(user_id: str, new_scores: Dict[str, int]):

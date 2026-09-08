@@ -92,6 +92,33 @@ export default function Debrief() {
           </div>
         </div>
 
+        {neg.framework_scores && (
+          <div className="card-glow rounded-2xl p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-display font-bold text-xl">Framework Breakdown</h3>
+              <span className="chip chip-indigo">{(neg.framework_name || "Combined").toUpperCase()}</span>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4">
+              {["harvard", "spin", "batna"].map(fw => (
+                <div key={fw} className="p-4 rounded-lg bg-white/5">
+                  <div className="text-xs uppercase text-slate-500 mb-2 font-mono">{fw}</div>
+                  {Object.entries(neg.framework_scores[fw] || {}).map(([k, v]) => (
+                    <div key={k} className="mb-2">
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-slate-400">{k}</span>
+                        <span className="font-mono text-sky-400">{v}</span>
+                      </div>
+                      <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-sky-400 to-indigo-500" style={{ width: `${v}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="card-glow rounded-2xl p-6 mb-8">
           <div className="flex items-center gap-2 mb-3"><Lightbulb className="w-4 h-4 text-sky-400" /><h3 className="font-display font-bold">{t.debrief.critical}</h3></div>
           <div className="text-slate-300 text-sm mb-4">{fb.critical_moment}</div>

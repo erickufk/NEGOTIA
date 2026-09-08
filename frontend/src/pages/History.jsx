@@ -33,7 +33,7 @@ export default function History() {
               <div>
                 <div className="font-semibold">{n.scenario_title}</div>
                 <div className="text-xs text-slate-500 font-mono mt-1">
-                  {n.mode.toUpperCase()} · {n.participants.length}p · {new Date(n.created_at).toLocaleString()}
+                  {n.mode.toUpperCase()} · {(n.framework_name || "Combined").toUpperCase()} · {n.participants.length}p · {new Date(n.created_at).toLocaleString()}
                 </div>
               </div>
               <div className="flex items-center gap-6">
