@@ -1,0 +1,42 @@
+{
+  "summary": "First E2E smoke test of NEGOTIA MVP. Backend and frontend core flows are working. Login, scenarios (12), full negotiation lifecycle (create → message → end with AI feedback) confirmed via API. Frontend: landing, auth, dashboard, scenarios grid + filters, and auth protection all pass. LLM integration latency ~18s for first AI reply, ~7s for end/feedback.",
+  "tested_scope": ["frontend", "backend", "auth", "integration"],
+  "passed": [
+    "Backend /api/auth/login returns token+user (HTTP 200) for demo@negotia.app / Demo1234!",
+    "Backend /api/scenarios returns 12 seeded scenarios wrapped as {scenarios:[...]}, HTTP 200",
+    "Security: participants in /api/scenarios do NOT expose hidden_interests, batna, or reservation_point",
+    "Backend /api/users/me/stats returns 8-skill map + KPIs",
+    "Backend /api/users/me/recommended returns weakest_skill + scenario list",
+    "Backend POST /api/negotiations creates negotiation (uses scenario_slug), state.round=0, trust/pressure/signals initialized",
+    "Backend POST /api/negotiations/:id/message returns AI reply from Claude (~18s), state.round increments to 1, trust updates from 50→55, signals updated",
+    "Backend POST /api/negotiations/:id/end returns score (54), outcome ('Weak outcome'), feedback.did_well (3), feedback.improve (3), critical_moment, better_alternative, final_agreement",
+    "Frontend landing loads with hero 'Practice Negotiations...' and hero-start CTA",
+    "Language switcher (lang-en/lang-ru) toggles",
+    "hero-start CTA navigates to /auth",
+    "Sign In with demo credentials lands on /dashboard, KPIs visible, new-sim-btn present",
+    "/scenarios shows exactly 12 scenario cards; filter-category and filter-difficulty controls present",
+    "Auth protection: removing negotia_token from localStorage and visiting /dashboard redirects to /auth"
+  ],
+  "failed": [
+    {
+      "area": "backend / debrief",
+      "issue": "POST /api/negotiations/:id/end returns feedback with EMPTY 'skills' object ({}). Spec requires 8-skill radar on debrief page; Debrief.jsx may render an empty/broken radar.",
+      "evidence": "feedback keys = ['did_well','improve','critical_moment','better_alternative','final_agreement']; feedback.skills = {} (0 keys). Users' aggregate skills at /api/users/me/stats do return 8 skills, but per-negotiation debrief does not include a per-session skill breakdown.",
+      "priority": "MEDIUM"
+    },
+    {
+      "area": "backend / API contract",
+      "issue": "POST /api/negotiations requires 'scenario_slug' (not 'scenario_id') per 422 validation error. Ensure SimulationWizard sends scenario_slug. Not a bug if frontend already does — flagging so main agent can verify wizard payload.",
+      "evidence": "POST with {scenario_id: ...} => 422 'scenario_slug field required'. POST with {scenario_slug:'salary-negotiation'} => 200.",
+      "priority": "LOW"
+    }
+  ],
+  "action_items": [
+    "Ensure per-negotiation debrief feedback includes an 8-skill radar (feedback.skills) so Debrief.jsx radar renders; or make Debrief.jsx compute session skills from state.signals if that's the intended design.",
+    "Verify SimulationWizard payload uses scenario_slug (matches backend contract)."
+  ],
+  "success_rate": {"backend": "95%", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Did not test: register-new-user, full wizard 6-step UI (skipped due to time; API path is verified), Voice mode UI, History page, Profile page radar, Make-a-Deal / Walk-Away UI buttons (verified via /end API). Recommend full testing agent cover these post-first-finish."
+}

@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0B0F17;
+  --surface: #131C2E;
+  --card: #1A263D;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.14);
+  --primary: #38BDF8;
+  --primary-hover: #0EA5E9;
+  --amber: #F59E0B;
+  --emerald: #10B981;
+  --rose: #F43F5E;
+  --indigo: #6366F1;
+  --text: #F8FAFC;
+  --muted: #94A3B8;
+  --dim: #64748B;
+}
+
+html, body, #root {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(56,189,248,0.10), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 20%, rgba(99,102,241,0.06), transparent 60%),
+    linear-gradient(180deg, #0B0F17 0%, #0B0F17 100%);
+  min-height: 100vh;
+}
+
+h1,h2,h3,h4,.font-display { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+
+@layer base {
+  :root {
+    --background: 220 30% 7%;
+    --foreground: 210 40% 98%;
+    --card: 220 30% 12%;
+    --card-foreground: 210 40% 98%;
+    --popover: 220 30% 10%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 199 89% 60%;
+    --primary-foreground: 220 30% 10%;
+    --secondary: 220 20% 20%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 20% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 220 20% 20%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 20% 20%;
+    --input: 220 20% 18%;
+    --ring: 199 89% 60%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * { border-color: hsl(var(--border)); }
+  body { background: var(--bg); color: var(--text); }
+}
+
+.card-glow {
+  background: linear-gradient(180deg, rgba(26,38,61,0.9) 0%, rgba(19,28,46,0.9) 100%);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+}
+.card-glow:hover { border-color: var(--border-strong); }
+
+.tactical-grid {
+  background-image:
+    linear-gradient(rgba(56,189,248,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56,189,248,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, #38BDF8 0%, #6366F1 50%, #F59E0B 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, #38BDF8 0%, #0EA5E9 100%);
+  color: #0B0F17;
+  font-weight: 600;
+  transition: all .2s ease;
+  box-shadow: 0 8px 24px -8px rgba(56,189,248,0.4);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 12px 32px -8px rgba(56,189,248,0.6); }
+
+.chip { display:inline-flex; align-items:center; padding:2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; border:1px solid; }
+.chip-sky { background: rgba(56,189,248,0.10); color:#7DD3FC; border-color: rgba(56,189,248,0.25); }
+.chip-amber { background: rgba(245,158,11,0.10); color:#FCD34D; border-color: rgba(245,158,11,0.25); }
+.chip-emerald { background: rgba(16,185,129,0.10); color:#6EE7B7; border-color: rgba(16,185,129,0.25); }
+.chip-rose { background: rgba(244,63,94,0.10); color:#FDA4AF; border-color: rgba(244,63,94,0.25); }
+.chip-indigo { background: rgba(99,102,241,0.10); color:#A5B4FC; border-color: rgba(99,102,241,0.25); }
+.chip-slate { background: rgba(148,163,184,0.10); color:#CBD5E1; border-color: rgba(148,163,184,0.25); }
+
+@keyframes pulse-dot { 0%,100% { opacity: 1 } 50% { opacity: .4 } }
+.pulse-dot { animation: pulse-dot 1.4s ease-in-out infinite; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+@keyframes fade-up { from { opacity:0; transform: translateY(12px);} to { opacity:1; transform:none;} }
+.fade-up { animation: fade-up .5s ease forwards; }

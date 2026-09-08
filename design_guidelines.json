@@ -1,0 +1,124 @@
+{
+  "project_name": "NEGOTIA — AI Negotiation Simulator",
+  "archetype": "THE PERFORMANCE PRO / HIGH DENSITY EXECUTIVE SAAS",
+  "theme": "hybrid_slate_dark_light",
+  "typography": {
+    "font_family_headings": "Outfit, Cabinet Grotesk, sans-serif",
+    "font_family_body": "Plus Jakarta Sans, -apple-system, BlinkMacSystemFont, sans-serif",
+    "font_family_mono": "JetBrains Mono, monospace",
+    "rules": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-none",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-semibold tracking-tight",
+      "h4": "text-lg sm:text-xl font-medium",
+      "body": "text-sm sm:text-base leading-relaxed text-slate-300 dark:text-slate-300",
+      "mono_stats": "font-mono font-semibold text-amber-400 dark:text-amber-400"
+    }
+  },
+  "colors": {
+    "background_dark": "#0B0F17",
+    "surface_dark": "#131C2E",
+    "surface_card": "#1A263D",
+    "surface_border": "rgba(255, 255, 255, 0.08)",
+    "primary": "#38BDF8",
+    "primary_hover": "#0EA5E9",
+    "accent_amber": "#F59E0B",
+    "accent_emerald": "#10B981",
+    "accent_rose": "#F43F5E",
+    "accent_indigo": "#6366F1",
+    "text_primary": "#F8FAFC",
+    "text_secondary": "#94A3B8",
+    "text_muted": "#64748B",
+    "tactical_badges": {
+      "batna": "bg-amber-500/10 text-amber-400 border-amber-500/20",
+      "spin": "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+      "harvard": "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+      "aggressive": "bg-rose-500/10 text-rose-400 border-rose-500/20",
+      "analytical": "bg-sky-500/10 text-sky-400 border-sky-500/20",
+      "cooperative": "bg-teal-500/10 text-teal-400 border-teal-500/20"
+    }
+  },
+  "layout_and_components": {
+    "landing_page": {
+      "hero": "Split screen or bold center headline with high-contrast badge: 'PRACTICE NEGOTIATIONS. NOT JUST THEORY.'",
+      "problem_section": "3-column comparison grid (Traditional Training vs Generic AI vs NEGOTIA Real-time Simulator)",
+      "how_it_works": "4-step animated timeline: 1. Select Scenario -> 2. Prep Strategy & BATNA -> 3. Multi-Opponent Simulation -> 4. AI Debrief & Radar Score",
+      "features": "Bento Grid Mode A (Tetris Grid) highlighting Voice/Text mode, Tactical Coaching, Harvard/SPIN analytics, and Replay Engine",
+      "scenario_showcase": "Interactive carousel or grid showcasing Enterprise M&A, Salary Negotiation, Vendor Contract, Crisis Management",
+      "methodology": "Card layout detailing Harvard Principled Negotiation, BATNA Calculator, SPIN Questioning Framework",
+      "cta": "High-impact CTA block with immediate 'Start Free Simulation' trigger"
+    },
+    "dashboard": {
+      "welcome_bar": "Personalized greeting, current streak counter, quick '+ New Simulation' primary CTA button",
+      "stats_grid": "4 key KPI widgets: Total Sims, Avg Outcome Score %, Highest Deal Value / Win %, Active Streak Days",
+      "skills_radar": "Recharts Radar Chart displaying 6 core competencies: Questioning, Listening, Argumentation, Concessions, BATNA Management, Conflict Resolution",
+      "recent_simulations": "Data table with scenario title, opponents, date, score badge, deal status (Agreed / Walkaway / Deadlock), and Replay button",
+      "recommended_scenario": "Feature card with difficulty tag, target skills, estimated duration, and 1-click launch"
+    },
+    "scenario_library": {
+      "filters": "Category tabs (Corporate M&A, Sales & SPIN, Procurement, HR & Salary, Crisis), Difficulty rating (Beginner, Intermediate, Advanced, Executive), Opponents count (1 to 4)",
+      "cards": "Rich scenario cards with avatar stack, key objectives, methodology tags, target duration, launch button"
+    },
+    "simulation_wizard": {
+      "steps": [
+        "1. Scenario Choice",
+        "2. Mode Selection (Text & Mic / Multiple Choice / Full Voice)",
+        "3. Opponent AI Profiles & Persona Customization",
+        "4. Objective & Deal Parameters Setup",
+        "5. Strategy & BATNA Preparation Sheet",
+        "6. Ready & Briefing Briefing Confirmation"
+      ],
+      "layout": "Progress stepper bar with full validation and state persistence"
+    },
+    "negotiation_room": {
+      "header_hud": "Opponents status bar, Tension Level Meter (0-100%), Deal Value / Terms Bar, Current BATNA Threshold indicator, Pause / Advice button",
+      "opponents_panel": "Cards for 1-4 AI opponents showing name, role, current stance (Defensive, Aggressive, Open), mood indicator, and voice waveform if speaking",
+      "chat_canvas": "Real-time message feed with clear separation between User and AI opponents, AI thinking state animation ('Analyzing counter-offer...'), inline coaching hints toggle",
+      "input_controls": "Tabbed or dynamic switcher: 1) Text Input with Speech-to-Text Microphone button, 2) Tactical Choice Cards (3-4 option cards with risk levels), 3) Voice Call Mode with audio spectrum feedback"
+    },
+    "debrief_and_history": {
+      "debrief": "Prominent Overall Score (e.g. 84/100) with outcome banner (Agreement Reached / Walkaway Executed), 6-Skill Radar breakdown, 'What You Did Well' (3 points), 'Areas to Improve' (3 points), Critical Decision Moments timeline, and 'Recommended Alternative Path' simulator",
+      "history": "Filterable history log with search, date range, difficulty filter, and full replay export/view",
+      "profile": "User analytics dashboard, skill progression over time, earned negotiation certifications/badges, personal BATNA strengths"
+    }
+  },
+  "i18n_support": {
+    "default_language": "en",
+    "supported_languages": ["en", "ru", "es", "de"],
+    "implementation_notes": "Use structured JSON key-value dictionary hook (e.g. `useTranslation`) for all UI labels, scenario titles, debrief rubrics, and opponent responses to allow seamless multi-language toggling."
+  },
+  "image_urls": {
+    "hero_negotiation": "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTB8MHwxfHNlYXJjaHwxfHxjb3Jwb3JhdGUlMjBuZWdvdGlhdGlvbiUyMGV4ZWN1dGl2ZSUyMGJ1c2luZXNzJTIwbWVldGluZ3xlbnwwfHx8fDE3ODg4NjgwODN8MA&ixlib=rb-4.1.0&q=85",
+    "boardroom_meeting": "https://images.unsplash.com/photo-1714974528737-3e6c7e4d11af?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTB8MHwxfHNlYXJjaHwzfHxjb3Jwb3JhdGUlMjBuZWdvdGlhdGlvbiUyMGV4ZWN1dGl2ZSUyMGJ1c2luZXNzJTIwbWVldGluZ3xlbnwwfHx8fDE3ODg4NjgwODN8MA&ixlib=rb-4.1.0&q=85",
+    "avatars": [
+      {
+        "name": "Alexander Vance",
+        "role": "CFO / Hardball Negotiator",
+        "url": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwzfHxmb3VuZGVyJTIwZXhlY3V0aXZlJTIwYnVzaW5lc3MlMjBwb3J0cmFpdCUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3ODg2MzExNzB8MA&ixlib=rb-4.1.0&q=85"
+      },
+      {
+        "name": "Elena Rostova",
+        "role": "VP of Procurement",
+        "url": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwyfHxmb3VuZGVyJTIwZXhlY3V0aXZlJTIwYnVzaW5lc3MlMjBwb3J0cmFpdCUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3ODg2MzExNzB8MA&ixlib=rb-4.1.0&q=85"
+      },
+      {
+        "name": "Marcus Chen",
+        "role": "Lead Legal Counsel",
+        "url": "https://images.unsplash.com/photo-1676989880361-091e12efc056?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHw0fHxmb3VuZGVyJTIwZXhlY3V0aXZlJTIwYnVzaW5lc3MlMjBwb3J0cmFpdCUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3ODg2MzExNzB8MA&ixlib=rb-4.1.0&q=85"
+      },
+      {
+        "name": "David Sterling",
+        "role": "Enterprise Sales Director",
+        "url": "https://images.unsplash.com/photo-1560250097-0b93528c311a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2OTV8MHwxfHNlYXJjaHwxfHxmb3VuZGVyJTIwZXhlY3V0aXZlJTIwYnVzaW5lc3MlMjBwb3J0cmFpdCUyMHByb2Zlc3Npb25hbHxlbnwwfHx8fDE3ODg2MzExNzB8MA&ixlib=rb-4.1.0&q=85"
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Ensure all interactive components (buttons, tabs, filter pills, inputs, cards, speech toggles) have strict data-testid attributes.",
+    "Do NOT use pure default generic chat aesthetics. Treat the Negotiation Room like a live corporate command center HUD.",
+    "Implement real working multi-language support (English / Russian) using state/context dictionary toggling in the top header.",
+    "Ensure full responsiveness across desktop, tablet, and mobile views with tight spacing padding.",
+    "Use Recharts or SVG radar charts for skill breakdown in both Dashboard and Debrief modal/page.",
+    "In Negotiation Room, support 3 operational input modes: Text + Voice Mic, Structured Multiple Choice (3 options with impact preview), and Full Interactive Voice call mode simulation."
+  ]
+}
