@@ -14,10 +14,12 @@ export default function Profile() {
   const nav = useNavigate();
   const [stats, setStats] = useState(null);
   const [rec, setRec] = useState(null);
+  const [fwStats, setFwStats] = useState(null);
 
   useEffect(() => {
     api.stats().then(setStats);
     api.recommended().then(setRec);
+    api.frameworkStats().then(setFwStats).catch(() => {});
   }, []);
 
   const skills = stats?.skills || {};
@@ -87,6 +89,34 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {fwStats?.stats && (
+        <div className="card-glow rounded-2xl p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display font-bold text-xl">Framework Performance</h2>
+            {fwStats.weakest !== "combined" && (
+              <span className="chip chip-amber">Weakest: {fwStats.weakest.toUpperCase()}</span>
+            )}
+          </div>
+          <div className="grid md:grid-cols-3 gap-4">
+            {["harvard", "spin", "batna"].map(fw => {
+              const s = fwStats.stats[fw] || { count: 0, avg: 0, best: 0 };
+              return (
+                <div key={fw} className={`p-4 rounded-lg bg-white/5 ${fwStats.weakest===fw?"ring-1 ring-amber-500/30":""}`} data-testid={`fw-stat-${fw}`}>
+                  <div className="text-xs uppercase text-slate-500 font-mono mb-2">{fw}</div>
+                  <div className="font-mono font-bold text-3xl text-sky-400">{s.avg}</div>
+                  <div className="text-xs text-slate-500 mt-1">Best {s.best} · {s.count} sims</div>
+                </div>
+              );
+            })}
+          </div>
+          {fwStats.weakest !== "combined" && rec?.scenarios?.[0] && (
+            <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/10 text-sm text-slate-300">
+              Your <span className="text-amber-400 font-semibold">{fwStats.weakest.toUpperCase()}</span> performance is your weakest area. Try practicing it on <span className="text-sky-400">{rec.scenarios[0].title}</span>.
+            </div>
+          )}
+        </div>
+      )}
 
       {rec?.scenarios?.length > 0 && (
         <div className="card-glow rounded-2xl p-6">

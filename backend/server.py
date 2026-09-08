@@ -654,6 +654,55 @@ async def recommended(user=Depends(get_current_user)):
     return {"weakest_skill": weakest, "scenarios": [_scrub_scenario(s) for s in scenarios]}
 
 
+@api.get("/users/me/framework-stats")
+async def framework_stats(user=Depends(get_current_user)):
+    negs = await db.negotiations.find({"user_id": user["id"], "status": "completed"}, {"_id": 0}).to_list(500)
+    def summarize(fw_key):
+        vals = []
+        for n in negs:
+            fs = n.get("framework_scores", {}).get(fw_key) or {}
+            if fs:
+                avg = sum(fs.values()) / len(fs)
+                vals.append(avg)
+        if not vals:
+            return {"count": 0, "avg": 0, "best": 0}
+        return {"count": len(vals), "avg": int(sum(vals) / len(vals)), "best": int(max(vals))}
+    stats = {fw: summarize(fw) for fw in ("harvard", "spin", "batna")}
+    weakest = min(stats.keys(), key=lambda k: stats[k]["avg"] if stats[k]["count"] else 999)
+    if all(stats[k]["count"] == 0 for k in stats):
+        weakest = "combined"
+    return {"stats": stats, "weakest": weakest}
+
+
+class CoachIn(BaseModel):
+    negotiation_id: str
+
+
+@api.post("/coach/hint")
+async def coach_hint(body: CoachIn, user=Depends(get_current_user)):
+    doc = await db.negotiations.find_one({"id": body.negotiation_id, "user_id": user["id"]}, {"_id": 0})
+    if not doc:
+        raise HTTPException(404, "Not found")
+    fw = FRAMEWORKS.get(doc.get("training_framework", "combined"), FRAMEWORKS["combined"])
+    sig = doc["state"].get("signals", {})
+    spin = doc["state"].get("spin_counts", {})
+    hint = "Stay curious — probe their real interests before making offers."
+    if doc["training_framework"] == "spin":
+        if spin.get("implication", 0) == 0:
+            hint = "Ask about the consequences of their current problem — what happens if it isn't solved?"
+        elif spin.get("need_payoff", 0) == 0 and spin.get("problem", 0) > 0:
+            hint = "You've uncovered a problem — now help them see the value of solving it."
+    elif doc["training_framework"] == "harvard":
+        if sig.get("trades", 0) == 0:
+            hint = "Introduce another variable (term length, payment, SLA) to trade for what you want."
+        elif sig.get("objective_criteria", 0) == 0:
+            hint = "Try referencing an objective benchmark — market rate, industry standard, or comparable."
+    elif doc["training_framework"] == "batna":
+        if sig.get("batna_ref", 0) == 0:
+            hint = "Signal your alternative — remind them you have options if this deal doesn't work."
+    return {"hint": hint, "framework": fw["name"]}
+
+
 @api.get("/health")
 async def health():
     return {"status": "ok", "ts": now_iso()}

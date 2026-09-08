@@ -14,4 +14,6 @@ export const api = {
   endNeg: (id, action) => axios.post(`${API}/negotiations/${id}/end`, { action }).then(r => r.data.negotiation),
   stats: () => axios.get(`${API}/users/me/stats`).then(r => r.data),
   recommended: () => axios.get(`${API}/users/me/recommended`).then(r => r.data),
+  frameworkStats: () => axios.get(`${API}/users/me/framework-stats`).then(r => r.data),
+  coachHint: (negId) => axios.post(`${API}/coach/hint`, { negotiation_id: negId }).then(r => r.data),
 };
