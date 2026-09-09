@@ -14,7 +14,7 @@ export default function Landing() {
   const isRu = lang === "ru";
   const T = {
     heroTitle: isRu ? ["Не просто изучайте переговоры.", "Практикуйтесь."] : ["Don't just study negotiations.", "Practice them."],
-    heroSub: isRu ? "Тренируйте переговорные навыки в реалистичных AI-симуляциях со скрытыми интересами, BATNA и полным разбором." : "Train your negotiation skills in realistic AI simulations with hidden interests, BATNA, and full debrief.",
+    heroSub: isRu ? "Реалистичные переговоры с AI-персонажами. Выбирайте стратегию, ведите диалог, принимайте решения под давлением и получайте персональный разбор." : "Realistic negotiations with AI characters. Choose strategy, lead the dialogue, decide under pressure — and get a personal debrief.",
     ctaPrimary: isRu ? "Начать симуляцию" : "Start Simulation",
     ctaSecondary: isRu ? "Смотреть сценарии" : "Explore Scenarios",
     section1: isRu ? "Переговорным навыкам не научиться только по учебнику." : "Negotiation skills can't be learned from a textbook.",
@@ -73,12 +73,12 @@ export default function Landing() {
   const scenarios = T.scenarioList;
 
   return (
-    <div className="min-h-screen bg-[#F7F5F0] text-[#1A1A1A]">
+    <div className="min-h-screen bg-[#FAF9F6] text-[#1E293B]" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
       {/* HEADER */}
-      <header className="sticky top-0 z-40 bg-[#F7F5F0]/85 backdrop-blur-xl border-b border-black/5">
+      <header className="sticky top-0 z-40 bg-[#FAF9F6]/85 backdrop-blur-xl border-b border-[#E2E8F0]">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2" data-testid="brand-link-landing">
-            <div className="w-8 h-8 rounded-lg bg-[#1A1A1A] flex items-center justify-center font-black text-white text-sm">N</div>
+            <div className="w-8 h-8 rounded-lg bg-[#4F46E5] flex items-center justify-center font-black text-white text-sm">N</div>
             <span className="font-display font-bold text-lg tracking-tight">NEGOTIA</span>
           </Link>
           <div className="hidden md:flex items-center gap-6 text-sm text-neutral-600">
@@ -99,13 +99,13 @@ export default function Landing() {
               </DropdownMenuContent>
             </DropdownMenu>
             {user ? (
-              <Button onClick={() => nav("/dashboard")} data-testid="cta-dashboard" className="bg-[#1A1A1A] hover:bg-black text-white rounded-full px-5">
+              <Button onClick={() => nav("/dashboard")} data-testid="cta-dashboard" className="bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-full px-5">
                 {isRu ? "Панель" : "Dashboard"}
               </Button>
             ) : (
               <>
                 <Link to="/auth" className="text-sm text-neutral-600 hover:text-black" data-testid="cta-signin">{isRu ? "Войти" : "Sign in"}</Link>
-                <Button onClick={go} data-testid="cta-signup" className="bg-[#1A1A1A] hover:bg-black text-white rounded-full px-5">
+                <Button onClick={go} data-testid="cta-signup" className="bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-full px-5">
                   {isRu ? "Начать" : "Get started"}
                 </Button>
               </>
@@ -120,11 +120,11 @@ export default function Landing() {
           <Sparkles className="w-3 h-3" /> AI Negotiation Simulator
         </div>
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-extrabold leading-[1.05] tracking-tight max-w-3xl mx-auto">
-          {T.heroTitle[0]} <span className="text-[#2563EB]">{T.heroTitle[1]}</span>
+          {T.heroTitle[0]} <span className="text-[#4F46E5]">{T.heroTitle[1]}</span>
         </h1>
         <p className="mt-5 text-base sm:text-lg text-neutral-600 max-w-xl mx-auto">{T.heroSub}</p>
         <div className="mt-8 flex flex-wrap gap-3 justify-center">
-          <Button onClick={go} data-testid="hero-start" className="bg-[#1A1A1A] hover:bg-black text-white rounded-full px-6 h-12">
+          <Button onClick={go} data-testid="hero-start" className="bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-full px-6 h-12">
             {T.ctaPrimary}<ArrowRight className="w-4 h-4 ml-2" />
           </Button>
           <Button onClick={go} data-testid="hero-explore" variant="outline" className="rounded-full px-6 h-12 border-black/15 bg-white hover:bg-neutral-50 text-black">
@@ -241,7 +241,7 @@ export default function Landing() {
         <div className="mt-10 grid sm:grid-cols-3 gap-4">
           {modes.map((m, i) => (
             <div key={i} className="bg-white rounded-2xl border border-black/8 p-6">
-              <m.i className="w-6 h-6 text-[#2563EB] mb-4" />
+              <m.i className="w-6 h-6 text-[#4F46E5] mb-4" />
               <div className="font-display font-semibold text-lg mb-2">{m.n}</div>
               <div className="text-sm text-neutral-600">{m.d}</div>
             </div>
@@ -254,7 +254,7 @@ export default function Landing() {
         <div>
           <h2 className="text-3xl sm:text-4xl font-display font-bold leading-tight">{T.debriefTitle}</h2>
           <p className="mt-4 text-neutral-600">{T.debriefSub}</p>
-          <Button onClick={go} className="mt-6 bg-[#1A1A1A] hover:bg-black text-white rounded-full px-6 h-12">
+          <Button onClick={go} className="mt-6 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-full px-6 h-12">
             {T.ctaPrimary}<ArrowRight className="w-4 h-4 ml-2" />
           </Button>
         </div>
@@ -266,14 +266,14 @@ export default function Landing() {
             </div>
             <div className="text-right">
               <div className="text-xs text-neutral-500">Overall</div>
-              <div className="font-mono font-black text-3xl text-[#2563EB]">84</div>
+              <div className="font-mono font-black text-3xl text-[#4F46E5]">84</div>
             </div>
           </div>
           <div className="space-y-2">
             {[["Questioning", 91], ["Active Listening", 84], ["BATNA", 78], ["Concessions", 68]].map(([k, v]) => (
               <div key={k}>
                 <div className="flex justify-between text-xs mb-1"><span className="text-neutral-700">{k}</span><span className="font-mono text-neutral-500">{v}</span></div>
-                <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden"><div className="h-full bg-[#2563EB]" style={{ width: `${v}%` }} /></div>
+                <div className="h-1.5 bg-neutral-100 rounded-full overflow-hidden"><div className="h-full bg-[#4F46E5]" style={{ width: `${v}%` }} /></div>
               </div>
             ))}
           </div>
@@ -300,9 +300,9 @@ export default function Landing() {
       {/* FINAL CTA */}
       <section className="max-w-[1200px] mx-auto px-4 sm:px-6 py-24 text-center">
         <div className="bg-white rounded-3xl border border-black/8 p-12 max-w-3xl mx-auto">
-          <Zap className="w-8 h-8 text-[#2563EB] mx-auto mb-4" />
+          <Zap className="w-8 h-8 text-[#4F46E5] mx-auto mb-4" />
           <h2 className="text-3xl sm:text-4xl font-display font-extrabold leading-tight max-w-xl mx-auto">{T.finalCta}</h2>
-          <Button onClick={go} data-testid="cta-final" className="mt-8 bg-[#1A1A1A] hover:bg-black text-white rounded-full px-8 h-14 text-base">
+          <Button onClick={go} data-testid="cta-final" className="mt-8 bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-full px-8 h-14 text-base">
             {T.ctaPrimary}<ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </div>
