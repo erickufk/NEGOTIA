@@ -167,12 +167,17 @@ export default function Landing() {
           </div>
         </div>
         <div className="relative">
-          <div className="rounded-2xl overflow-hidden bg-neutral-900 aspect-[4/3] flex items-center justify-center text-white/40">
-            <Play className="w-16 h-16 opacity-40" />
+          <div className="rounded-2xl overflow-hidden aspect-[4/3] border border-black/10 shadow-xl shadow-black/5">
+            <img
+              src="https://customer-assets-v7afamib.emergentagent.net/job_b1184cb2-06b5-448b-8b62-d908172fda40/artifacts/nye6dg94_image.png"
+              alt={isRu ? "Переговоры в офисе" : "Negotiation in office"}
+              className="w-full h-full object-cover"
+              data-testid="landing-img-textbook"
+            />
           </div>
           <div className="absolute -bottom-4 -left-4 bg-white rounded-xl border border-black/10 shadow-lg p-3 text-xs max-w-[220px]">
             <div className="font-mono text-emerald-600 mb-1">● LIVE</div>
-            <div className="text-neutral-700">Выявление интересов оппонента через открытые вопросы</div>
+            <div className="text-neutral-700">{isRu ? "Выявление интересов оппонента через открытые вопросы" : "Uncovering the counterpart's interests through open questions"}</div>
           </div>
         </div>
       </section>
@@ -195,9 +200,17 @@ export default function Landing() {
       <section className="max-w-[1200px] mx-auto px-4 sm:px-6 py-16">
         <h2 className="text-3xl sm:text-4xl font-display font-bold text-center max-w-2xl mx-auto">{T.videoTitle}</h2>
         <p className="text-center text-neutral-600 mt-3 max-w-xl mx-auto">{T.videoSub}</p>
-        <div className="mt-10 rounded-2xl overflow-hidden bg-gradient-to-br from-neutral-900 to-neutral-800 aspect-video flex items-center justify-center border border-black/10">
-          <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur flex items-center justify-center border border-white/20 cursor-pointer hover:bg-white/20 transition">
-            <Play className="w-8 h-8 text-white ml-1" />
+        <div className="mt-10 relative rounded-2xl overflow-hidden aspect-video border border-black/10 shadow-xl shadow-black/5">
+          <img
+            src="https://customer-assets-v7afamib.emergentagent.net/job_b1184cb2-06b5-448b-8b62-d908172fda40/artifacts/42tlayq6_image.png"
+            alt={isRu ? "Переговоры в переговорной" : "Boardroom negotiation"}
+            className="w-full h-full object-cover"
+            data-testid="landing-img-video"
+          />
+          <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+            <div className="w-20 h-20 rounded-full bg-white/15 backdrop-blur flex items-center justify-center border border-white/30 cursor-pointer hover:bg-white/25 transition">
+              <Play className="w-8 h-8 text-white ml-1" />
+            </div>
           </div>
         </div>
       </section>
