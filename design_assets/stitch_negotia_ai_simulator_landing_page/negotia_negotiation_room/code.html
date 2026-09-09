@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NEGOTIA — Simulation Room</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "outline": "#8a8c9a",
+          "on-tertiary-fixed-variant": "#5b21b6",
+          "on-surface": "#2e3040",
+          "secondary-fixed-dim": "#b8baca",
+          "on-secondary-fixed": "#1a1b26",
+          "surface-container": "#e2e4ea",
+          "primary-fixed-dim": "#a5b4fc",
+          "surface-variant": "#dcdee4",
+          "on-tertiary-container": "#3b1f63",
+          "on-surface-variant": "#585a68",
+          "secondary-container": "#d8dae6",
+          "surface-container-low": "#e5e7ed",
+          "inverse-on-surface": "#e8eaf0",
+          "secondary": "#6c6e7e",
+          "on-primary": "#ffffff",
+          "outline-variant": "#d0d2dc",
+          "on-primary-fixed": "#1e1b4b",
+          "surface-container-lowest": "#f0f2f8",
+          "background": "#e8eaf0",
+          "surface": "#e8eaf0",
+          "tertiary-container": "#a78bfa",
+          "on-primary-container": "#e0e2ff",
+          "secondary-fixed": "#d8dae6",
+          "on-error": "#ffffff",
+          "error": "#dc2626",
+          "on-secondary": "#ffffff",
+          "primary-container": "#818cf8",
+          "on-tertiary-fixed": "#2e1065",
+          "on-background": "#2e3040",
+          "surface-container-highest": "#d6d8de",
+          "on-tertiary": "#ffffff",
+          "tertiary-fixed": "#ede9fe",
+          "tertiary-fixed-dim": "#c4b5fd",
+          "surface-tint": "#6366f1",
+          "surface-bright": "#edeef4",
+          "on-secondary-fixed-variant": "#404252",
+          "primary-fixed": "#e0e2ff",
+          "error-container": "#fee2e2",
+          "inverse-surface": "#2e3040",
+          "tertiary": "#7c3aed",
+          "on-primary-fixed-variant": "#4338ca",
+          "on-secondary-container": "#585a68",
+          "primary": "#6366f1",
+          "on-error-container": "#991b1b",
+          "inverse-primary": "#a5b4fc",
+          "surface-dim": "#d4d6dc",
+          "surface-container-high": "#dcdee4"
+        },
+        borderRadius: {
+          "DEFAULT": "0.5rem",
+          "lg": "1rem",
+          "xl": "1.5rem",
+          "full": "9999px"
+        },
+        fontFamily: {
+          "headline": ["Plus Jakarta Sans", "sans-serif"],
+          "display": ["Plus Jakarta Sans", "sans-serif"],
+          "body": ["Plus Jakarta Sans", "sans-serif"],
+          "label": ["Plus Jakarta Sans", "sans-serif"],
+          "mono": ["JetBrains Mono", "monospace"]
+        }
+      }
+    }
+  }
+  </script>
+<style>
+    /* Neomorphic / Silk Extruded Light Shadows */
+    .neo-raised {
+      background-color: #e8eaf0;
+      box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.08), -6px -6px 14px rgba(255, 255, 255, 0.7);
+    }
+    .neo-raised-sm {
+      background-color: #e8eaf0;
+      box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.06), -3px -3px 8px rgba(255, 255, 255, 0.65);
+    }
+    .neo-inset {
+      background-color: #e8eaf0;
+      box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.07), inset -4px -4px 8px rgba(255, 255, 255, 0.6);
+    }
+    .neo-pill-active {
+      background-color: #e8eaf0;
+      box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.08), inset -2px -2px 5px rgba(255, 255, 255, 0.7);
+    }
+    .neo-button-primary {
+      box-shadow: 4px 4px 10px rgba(99, 102, 241, 0.3), -4px -4px 10px rgba(255, 255, 255, 0.8);
+    }
+    .neo-button-primary:active {
+      box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.2);
+    }
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #e8eaf0;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c8cad2;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col antialiased selection:bg-primary-fixed selection:text-primary">
+<!-- Top App Navigation Shell -->
+<header class="sticky top-0 z-50 bg-surface neo-raised-sm px-6 py-3.5 w-full">
+<div class="max-w-[1600px] mx-auto flex items-center justify-between">
+<!-- Brand & Simulator Info -->
+<div class="flex items-center gap-5">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-xl neo-raised flex items-center justify-center text-primary font-bold text-lg">
+            N
+          </div>
+<span class="font-headline text-lg font-bold tracking-tight text-on-surface">NEGOTIA</span>
+</div>
+<div class="h-5 w-[1.5px] bg-outline-variant/60"></div>
+<div class="flex items-center gap-2">
+<span class="font-mono text-xs uppercase px-2.5 py-1 rounded-md neo-inset text-primary font-semibold tracking-wider">
+            AI SIMULATOR
+          </span>
+<span class="text-sm font-semibold text-on-surface ml-1">
+            Повышение стоимости контракта
+          </span>
+<span class="text-xs text-secondary ml-1 font-medium">· Раунд 3 из 10</span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full neo-inset">
+<span class="w-2 h-2 rounded-full bg-teal-500 animate-pulse"></span>
+<span class="text-xs font-medium text-teal-700">В процессе</span>
+</div>
+</div>
+<!-- Action & Timer Controls -->
+<div class="flex items-center gap-4">
+<!-- Digital Timer -->
+<div class="flex items-center gap-2 px-3.5 py-1.5 rounded-xl neo-inset font-mono text-sm font-semibold text-on-surface">
+<span class="material-symbols-outlined text-primary text-base">timer</span>
+<span>08:42</span>
+</div>
+<!-- End Session Action -->
+<button class="px-4 py-2 rounded-xl neo-raised hover:text-error text-on-surface-variant text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base">stop_circle</span>
+<span>Завершить переговоры</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Split Canvas -->
+<main class="flex-1 max-w-[1600px] w-full mx-auto p-6 grid grid-cols-12 gap-6 overflow-hidden">
+<!-- LEFT PANEL (68% approx -> 8 cols on 12-col grid) : Conversation Stream & Composer -->
+<section class="col-span-12 lg:col-span-8 flex flex-col h-[calc(100vh-6.5rem)] min-h-[640px]">
+<!-- Dialogue Stream Container (Raised Neomorphic Canvas) -->
+<div class="flex-1 rounded-2xl neo-raised p-6 flex flex-col justify-between overflow-hidden">
+<!-- Messages Area -->
+<div class="flex-1 overflow-y-auto pr-3 space-y-5">
+<!-- Turn 1: Opponent -->
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-2xl neo-raised flex-shrink-0 flex items-center justify-center font-bold text-tertiary text-sm">
+              МВ
+            </div>
+<div class="max-w-[85%] space-y-1.5">
+<div class="flex items-center gap-2">
+<span class="text-xs font-semibold text-on-surface">Мария Васильева</span>
+<span class="text-[11px] text-secondary">Директор по закупкам, Vendor Cloud</span>
+<span class="text-[10px] font-mono text-secondary ml-auto">10:14</span>
+</div>
+<div class="p-4 rounded-2xl neo-inset text-sm text-on-surface leading-relaxed">
+                Мы пересмотрели условия договора в связи с обновлением серверной архитектуры. Минимальное повышение базовой ставки, которое мы готовы рассмотреть, — <strong class="text-error font-semibold">+15%</strong>.
+              </div>
+</div>
+</div>
+<!-- Turn 2: User Message -->
+<div class="flex items-start justify-end gap-4">
+<div class="max-w-[85%] space-y-1.5">
+<div class="flex items-center justify-end gap-2">
+<span class="text-[10px] font-mono text-secondary mr-auto">10:15</span>
+<span class="text-[11px] text-primary font-medium">Lead Negotiator</span>
+<span class="text-xs font-semibold text-on-surface">Вы</span>
+</div>
+<div class="p-4 rounded-2xl neo-raised text-sm text-on-surface leading-relaxed bg-surface border-l-2 border-primary">
+                Что именно привело к такому увеличению при текущем гарантированном объеме поставок? Мы рассчитывали на сохранение условий при продлении.
+              </div>
+</div>
+<div class="w-10 h-10 rounded-2xl neo-inset flex-shrink-0 flex items-center justify-center font-bold text-primary text-sm">
+              YOU
+            </div>
+</div>
+<!-- Turn 3: Opponent Response -->
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-2xl neo-raised flex-shrink-0 flex items-center justify-center font-bold text-tertiary text-sm">
+              МВ
+            </div>
+<div class="max-w-[85%] space-y-1.5">
+<div class="flex items-center gap-2">
+<span class="text-xs font-semibold text-on-surface">Мария Васильева</span>
+<span class="text-[11px] text-secondary">Директор по закупкам, Vendor Cloud</span>
+<span class="text-[10px] font-mono text-secondary ml-auto">10:16</span>
+</div>
+<div class="p-4 rounded-2xl neo-inset text-sm text-on-surface leading-relaxed">
+                Основная причина — рост стоимости трансграничной логистики и круглосуточной техподдержки Tier-3. Однако при условии фиксации объёма сразу на 2 года мы открыты к пересмотру ставки.
+              </div>
+</div>
+</div>
+<!-- AI Tactical Observation / Hint -->
+<div class="p-4 rounded-2xl neo-raised-sm bg-surface flex items-start gap-3.5 border-l-4 border-primary mt-2">
+<div class="w-8 h-8 rounded-xl neo-inset flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+</div>
+<div class="space-y-1">
+<div class="text-xs font-bold text-primary uppercase tracking-wider font-mono">Тактическое наблюдение AI</div>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+                Оппонент несколько раз возвращается к <span class="font-semibold text-on-surface">сроку контракта</span>. Появилось окно для размена фиксации срока на сдерживание базовой ставки. Рекомендуется протестировать диапазон 5–7%.
+              </p>
+</div>
+</div>
+</div>
+<!-- Input Composer Section -->
+<div class="mt-4 pt-4 border-t border-outline-variant/30">
+<!-- Mode Tabs -->
+<div class="flex items-center justify-between mb-3">
+<div class="flex items-center gap-2 p-1 rounded-xl neo-inset">
+<button class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-primary neo-pill-active flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">edit_note</span>
+                Текст
+              </button>
+<button class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-secondary hover:text-on-surface transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">mic</span>
+                Голос
+              </button>
+<button class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-secondary hover:text-on-surface transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-sm">tune</span>
+                Challenge (Тактический выбор)
+              </button>
+</div>
+<!-- Quick Template Prompt -->
+<button class="text-[11px] font-medium text-primary hover:underline flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">auto_fix_high</span>
+              Подставить гарвардский контр-аргумент
+            </button>
+</div>
+<!-- Textarea & Actions -->
+<div class="relative">
+<textarea class="w-full rounded-2xl neo-inset p-4 text-sm text-on-surface placeholder-secondary/70 resize-none border-0 focus:ring-2 focus:ring-primary focus:outline-none" placeholder="Введите ваш аргумент или предложение (например: «Если мы зафиксируем 24 месяца, готовы ли вы зафиксировать повышение на уровне 6.5%?»)..." rows="3"></textarea>
+<div class="flex items-center justify-between mt-3 px-1">
+<div class="flex items-center gap-2">
+<button class="w-9 h-9 rounded-xl neo-raised flex items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95" title="Запись голоса">
+<span class="material-symbols-outlined text-lg">mic</span>
+</button>
+<button class="w-9 h-9 rounded-xl neo-raised flex items-center justify-center text-secondary hover:text-primary transition-colors active:scale-95" title="Прикрепить факт/условие">
+<span class="material-symbols-outlined text-lg">attach_file</span>
+</button>
+<span class="text-[11px] text-secondary font-mono ml-2">Символов: 0 / 500</span>
+</div>
+<!-- Submit Move Button -->
+<button class="px-5 py-2.5 rounded-xl neo-raised text-primary font-semibold text-sm flex items-center gap-2 active:scale-95 transition-all neo-button-primary">
+<span>Отправить ход</span>
+<span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- RIGHT PANEL (32% approx -> 4 cols on 12-col grid) : Negotiation State & Intelligence -->
+<aside class="col-span-12 lg:col-span-4 flex flex-col gap-5 h-[calc(100vh-6.5rem)] min-h-[640px] overflow-y-auto pr-1">
+<!-- Top Card: Goal & Target Status -->
+<div class="p-5 rounded-2xl neo-raised space-y-4">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold uppercase tracking-wider font-mono text-secondary">Целевой вектор</span>
+<span class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-100 text-emerald-800">
+            Раунд 3/10
+          </span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="p-3 rounded-xl neo-inset text-center">
+<span class="text-[11px] text-secondary block">Ваша цель</span>
+<span class="font-mono text-base font-bold text-emerald-600">≤ +7.0%</span>
+</div>
+<div class="p-3 rounded-xl neo-inset text-center">
+<span class="text-[11px] text-secondary block">Оппонент требует</span>
+<span class="font-mono text-base font-bold text-error">+15.0%</span>
+</div>
+</div>
+</div>
+<!-- Live Dynamic Negotiation Metrics -->
+<div class="p-5 rounded-2xl neo-raised space-y-4">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold uppercase tracking-wider font-mono text-secondary">Динамика сессии</span>
+<span class="text-xs font-mono text-primary font-semibold">Live Analytics</span>
+</div>
+<!-- Metric 1: Pressure Level -->
+<div class="space-y-1.5">
+<div class="flex justify-between text-xs">
+<span class="text-secondary font-medium">Уровень давления оппонента</span>
+<span class="font-mono text-amber-600 font-semibold">Высокое (72%)</span>
+</div>
+<!-- Neomorphic bar -->
+<div class="h-2.5 w-full rounded-full neo-inset p-0.5 overflow-hidden flex">
+<div class="h-full rounded-full bg-amber-500" style="width: 72%;"></div>
+</div>
+</div>
+<!-- Metric 2: Trust Index -->
+<div class="space-y-1.5">
+<div class="flex justify-between text-xs">
+<span class="text-secondary font-medium">Индекс взаимного доверия</span>
+<span class="font-mono text-primary font-semibold">68%</span>
+</div>
+<div class="h-2.5 w-full rounded-full neo-inset p-0.5 overflow-hidden flex">
+<div class="h-full rounded-full bg-primary" style="width: 68%;"></div>
+</div>
+</div>
+<!-- Metric 3 & 4: Speed & Strategic Balance -->
+<div class="grid grid-cols-2 gap-3 pt-2">
+<div class="p-3 rounded-xl neo-inset">
+<span class="text-[10px] text-secondary font-medium block">Темп речи / ход</span>
+<span class="font-mono text-xs font-bold text-on-surface">132 сл/мин</span>
+</div>
+<div class="p-3 rounded-xl neo-inset">
+<span class="text-[10px] text-secondary font-medium block">Переговорный баланс</span>
+<span class="font-mono text-xs font-bold text-teal-600">+24 в вашу пользу</span>
+</div>
+</div>
+</div>
+<!-- ZOPA Spectrum (Zone of Possible Agreement) -->
+<div class="p-5 rounded-2xl neo-raised space-y-3.5">
+<div class="flex items-center justify-between">
+<span class="text-xs font-bold uppercase tracking-wider font-mono text-secondary">Коридор ZOPA</span>
+<span class="material-symbols-outlined text-secondary text-sm" title="Зона возможного соглашения">help_outline</span>
+</div>
+<!-- ZOPA Bar Visual -->
+<div class="p-3 rounded-xl neo-inset space-y-2">
+<div class="h-2 w-full rounded-full bg-surface-variant relative">
+<!-- Optimal Range Highlight -->
+<div class="absolute left-[30%] right-[45%] top-0 bottom-0 bg-teal-500 rounded-full"></div>
+<!-- BATNA point -->
+<div class="absolute left-[65%] -top-1 w-2.5 h-4 bg-amber-500 rounded-sm shadow-sm" title="BATNA +10%"></div>
+<!-- Current Stance Indicator -->
+<div class="absolute left-[88%] -top-1 w-2.5 h-4 bg-error rounded-sm shadow-sm" title="Текущее +15%"></div>
+</div>
+<div class="flex justify-between items-center text-[10px] font-mono text-secondary pt-1">
+<span>+4% (Идеал)</span>
+<span class="text-teal-700 font-bold">4–7% (ZOPA)</span>
+<span class="text-amber-700 font-semibold">BATNA: +10%</span>
+<span class="text-error font-semibold">+15%</span>
+</div>
+</div>
+<p class="text-[11px] text-secondary leading-relaxed">
+          Оппонент снизил стартовую жесткость после запроса конкретных причин логистики. Размен срока может вернуть сделку в диапазон BATNA.
+        </p>
+</div>
+<!-- Strategy Memo & Leverage Cards -->
+<div class="p-5 rounded-2xl neo-raised space-y-3 flex-1 flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-3">
+<span class="text-xs font-bold uppercase tracking-wider font-mono text-secondary">Подготовленные козыри</span>
+<span class="text-[11px] text-primary font-medium cursor-pointer hover:underline">+ Добавить</span>
+</div>
+<ul class="space-y-2">
+<li class="flex items-start gap-2 text-xs p-2.5 rounded-xl neo-inset text-on-surface">
+<span class="material-symbols-outlined text-teal-600 text-base">check_circle</span>
+<span>Двухлетняя фиксация объема поставок</span>
+</li>
+<li class="flex items-start gap-2 text-xs p-2.5 rounded-xl neo-inset text-on-surface">
+<span class="material-symbols-outlined text-teal-600 text-base">check_circle</span>
+<span>Квартальная авансовая предоплата</span>
+</li>
+<li class="flex items-start gap-2 text-xs p-2.5 rounded-xl neo-inset text-on-surface">
+<span class="material-symbols-outlined text-amber-600 text-base">pending</span>
+<span>Сокращение SLA до стандартного (Tier-2)</span>
+</li>
+</ul>
+</div>
+<!-- Harvard Method Tag -->
+<div class="pt-3 border-t border-outline-variant/30 flex items-center justify-between text-[11px] text-secondary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">verified</span>
+            Гарвардский принципиальный метод
+          </span>
+<span class="font-mono text-primary font-medium">Negotiation Lab</span>
+</div>
+</div>
+</aside>
+</main>
+</body></html>

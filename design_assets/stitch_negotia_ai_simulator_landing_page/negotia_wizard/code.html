@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+
+<html class="light" lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NEGOTIA — New Simulation Wizard</title>
+<!-- Material Symbols Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Fonts: Plus Jakarta Sans & JetBrains Mono for metadata -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "outline": "#8a8c9a",
+            "on-tertiary-fixed-variant": "#5b21b6",
+            "on-surface": "#2e3040",
+            "secondary-fixed-dim": "#b8baca",
+            "on-secondary-fixed": "#1a1b26",
+            "surface-container": "#e2e4ea",
+            "primary-fixed-dim": "#a5b4fc",
+            "surface-variant": "#dcdee4",
+            "on-tertiary-container": "#3b1f63",
+            "on-surface-variant": "#585a68",
+            "secondary-container": "#d8dae6",
+            "surface-container-low": "#e5e7ed",
+            "inverse-on-surface": "#e8eaf0",
+            "secondary": "#6c6e7e",
+            "on-primary": "#ffffff",
+            "outline-variant": "#d0d2dc",
+            "on-primary-fixed": "#1e1b4b",
+            "surface-container-lowest": "#f0f2f8",
+            "background": "#e8eaf0",
+            "surface": "#e8eaf0",
+            "tertiary-container": "#a78bfa",
+            "on-primary-container": "#e0e2ff",
+            "secondary-fixed": "#d8dae6",
+            "on-error": "#ffffff",
+            "error": "#dc2626",
+            "on-secondary": "#ffffff",
+            "primary-container": "#818cf8",
+            "on-tertiary-fixed": "#2e1065",
+            "on-background": "#2e3040",
+            "surface-container-highest": "#d6d8de",
+            "on-tertiary": "#ffffff",
+            "tertiary-fixed": "#ede9fe",
+            "tertiary-fixed-dim": "#c4b5fd",
+            "surface-tint": "#6366f1",
+            "surface-bright": "#edeef4",
+            "on-secondary-fixed-variant": "#404252",
+            "primary-fixed": "#e0e2ff",
+            "error-container": "#fee2e2",
+            "inverse-surface": "#2e3040",
+            "tertiary": "#7c3aed",
+            "on-primary-fixed-variant": "#4338ca",
+            "on-secondary-container": "#585a68",
+            "primary": "#6366f1",
+            "on-error-container": "#991b1b",
+            "inverse-primary": "#a5b4fc",
+            "surface-dim": "#d4d6dc",
+            "surface-container-high": "#dcdee4"
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            headline: ["Plus Jakarta Sans", "sans-serif"],
+            display: ["Plus Jakarta Sans", "sans-serif"],
+            body: ["Plus Jakarta Sans", "sans-serif"],
+            label: ["Plus Jakarta Sans", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Neomorphic / Silk Core Soft Shadows strictly on #e8eaf0 canvas */
+    .neo-raised {
+      background-color: #e8eaf0;
+      box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.07), -6px -6px 14px rgba(255, 255, 255, 0.7);
+    }
+    .neo-raised-sm {
+      background-color: #e8eaf0;
+      box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.06), -3px -3px 8px rgba(255, 255, 255, 0.65);
+    }
+    .neo-raised-hover:hover {
+      box-shadow: 8px 8px 18px rgba(0, 0, 0, 0.09), -8px -8px 18px rgba(255, 255, 255, 0.8);
+      transform: translateY(-1px);
+    }
+    .neo-inset {
+      background-color: #e8eaf0;
+      box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.06), inset -4px -4px 8px rgba(255, 255, 255, 0.55);
+    }
+    .neo-inset-focus:focus-within, .neo-inset-focus:focus {
+      box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.08), inset -4px -4px 8px rgba(255, 255, 255, 0.6), 0 0 0 2px #6366f1;
+    }
+    .neo-active-pill {
+      background-color: #e8eaf0;
+      box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.08), inset -3px -3px 6px rgba(255, 255, 255, 0.65);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #e8eaf0;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #c4b5fd;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col antialiased selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- ==================== TOP NAVIGATION BAR (Shared Anchor) ==================== -->
+<header class="sticky top-0 z-50 bg-surface-container-lowest/80 dark:bg-surface-container-lowest/80 backdrop-blur-md shadow-sm dark:shadow-none w-full">
+<div class="flex items-center justify-between px-6 md:px-12 py-3 w-full max-w-7xl mx-auto">
+<!-- Brand Anchor -->
+<div class="flex items-center gap-3">
+<a class="flex items-center gap-2.5 group" href="#">
+<div class="w-9 h-9 rounded-xl neo-raised flex items-center justify-center text-primary transition-transform duration-150 group-hover:scale-105">
+<span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+<span class="font-headline text-2xl font-bold tracking-tight text-on-surface">NEGOTIA</span>
+</a>
+<span class="font-mono text-[11px] font-semibold tracking-wider text-primary bg-primary-fixed/60 px-2 py-0.5 rounded-md neo-raised-sm uppercase">AI SIMULATOR</span>
+</div>
+<!-- Links (Top Navigation Shared Anchor) -->
+<nav class="hidden md:flex items-center gap-8 text-sm">
+<a class="text-secondary hover:text-on-surface transition-colors font-medium" href="#">Как это работает</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-semibold" href="#">Сценарии</a>
+<a class="text-secondary hover:text-on-surface transition-colors font-medium" href="#">Методологии</a>
+<a class="text-secondary hover:text-on-surface transition-colors font-medium" href="#">Возможности</a>
+</nav>
+<!-- Trailing Action Cluster -->
+<div class="flex items-center gap-3.5">
+<button class="hidden sm:flex items-center gap-1 font-mono text-xs text-secondary hover:text-on-surface px-2.5 py-1.5 rounded-lg neo-raised-sm transition-all duration-150 active:scale-[0.98]">
+<span class="material-symbols-outlined text-[16px]">translate</span>
+<span>RU</span>
+</button>
+<button aria-label="Notifications" class="w-9 h-9 rounded-full neo-raised flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors active:scale-[0.98] relative">
+<span class="material-symbols-outlined text-[18px]">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary ring-2 ring-background"></span>
+</button>
+<div class="flex items-center gap-2 pl-2 border-l border-outline-variant/30">
+<div class="w-8 h-8 rounded-full neo-inset p-0.5 flex items-center justify-center text-primary font-bold text-xs">
+            DU
+          </div>
+<div class="hidden lg:block text-left leading-tight">
+<div class="text-xs font-semibold text-on-surface">Demo User</div>
+<div class="text-[10px] font-mono text-on-surface-variant">Level 4 · Pro</div>
+</div>
+<span class="material-symbols-outlined text-secondary text-[16px] cursor-pointer">expand_more</span>
+</div>
+</div>
+</div>
+</header>
+<!-- ==================== MAIN CONTENT CANVAS ==================== -->
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-12 py-8 flex flex-col gap-8">
+<!-- Wizard Header Breadcrumb & Stepper -->
+<div class="flex flex-col gap-6">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<div class="flex items-center gap-2 text-xs font-mono text-primary font-semibold tracking-wider uppercase mb-1">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span>Конструктор симуляции</span>
+<span class="text-outline">/</span>
+<span class="text-on-surface-variant">Сессия #AI-8492</span>
+</div>
+<h1 class="text-2xl md:text-3xl font-headline font-semibold text-on-surface tracking-tight">
+            Создание переговорного раунда
+          </h1>
+</div>
+<!-- Quick Summary Pill / Time to Start -->
+<div class="flex items-center gap-3 self-start md:self-auto">
+<div class="neo-raised-sm rounded-full px-3.5 py-1.5 flex items-center gap-2 text-xs font-mono text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-tertiary">bolt</span>
+<span>Оппонент: <strong class="text-on-surface">AI Claude 3.5 Sonnet</strong></span>
+</div>
+<button class="neo-raised hover:neo-raised-hover active:neo-inset px-4 py-1.5 rounded-full text-xs font-medium text-secondary transition-all flex items-center gap-1.5" onclick="saveDraftNotification()">
+<span class="material-symbols-outlined text-[15px]">bookmark</span>
+<span>Сохранить черновик</span>
+</button>
+</div>
+</div>
+<!-- 5-Step Interactive Neomorphic Stepper Bar -->
+<div class="w-full neo-inset p-2 rounded-2xl overflow-x-auto scrollbar-none">
+<div class="flex items-center justify-between min-w-[720px] gap-2">
+<!-- Step 01 -->
+<button class="step-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition-all duration-200 group text-on-surface-variant hover:text-on-surface" id="stepper-tab-1" onclick="goToStep(1)" type="button">
+<span class="w-6 h-6 rounded-full neo-raised-sm flex items-center justify-center text-xs font-mono font-bold text-primary group-hover:bg-primary-fixed">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+</span>
+<div class="text-left leading-tight">
+<div class="text-[10px] font-mono uppercase text-secondary">01 Шаг</div>
+<div class="text-xs font-semibold">Сценарий</div>
+</div>
+</button>
+<span class="material-symbols-outlined text-outline-variant text-[14px]">chevron_right</span>
+<!-- Step 02 -->
+<button class="step-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition-all duration-200 group text-on-surface-variant hover:text-on-surface" id="stepper-tab-2" onclick="goToStep(2)" type="button">
+<span class="w-6 h-6 rounded-full neo-raised-sm flex items-center justify-center text-xs font-mono font-bold text-primary">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+</span>
+<div class="text-left leading-tight">
+<div class="text-[10px] font-mono uppercase text-secondary">02 Шаг</div>
+<div class="text-xs font-semibold">Методология</div>
+</div>
+</button>
+<span class="material-symbols-outlined text-outline-variant text-[14px]">chevron_right</span>
+<!-- Step 03 -->
+<button class="step-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition-all duration-200 group text-on-surface-variant hover:text-on-surface" id="stepper-tab-3" onclick="goToStep(3)" type="button">
+<span class="w-6 h-6 rounded-full neo-raised-sm flex items-center justify-center text-xs font-mono font-bold text-primary">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+</span>
+<div class="text-left leading-tight">
+<div class="text-[10px] font-mono uppercase text-secondary">03 Шаг</div>
+<div class="text-xs font-semibold">Формат</div>
+</div>
+</button>
+<span class="material-symbols-outlined text-outline-variant text-[14px]">chevron_right</span>
+<!-- Step 04 -->
+<button class="step-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition-all duration-200 group text-on-surface-variant hover:text-on-surface" id="stepper-tab-4" onclick="goToStep(4)" type="button">
+<span class="w-6 h-6 rounded-full neo-raised-sm flex items-center justify-center text-xs font-mono font-bold text-primary">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+</span>
+<div class="text-left leading-tight">
+<div class="text-[10px] font-mono uppercase text-secondary">04 Шаг</div>
+<div class="text-xs font-semibold">Участники</div>
+</div>
+</button>
+<span class="material-symbols-outlined text-outline-variant text-[14px]">chevron_right</span>
+<!-- Step 05 (Active by default for Briefing showcase) -->
+<button class="step-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl transition-all duration-200 group neo-raised text-primary" id="stepper-tab-5" onclick="goToStep(5)" type="button">
+<span class="w-6 h-6 rounded-full neo-inset flex items-center justify-center text-xs font-mono font-bold text-primary">
+              05
+            </span>
+<div class="text-left leading-tight">
+<div class="text-[10px] font-mono uppercase text-primary font-semibold">05 Шаг · Активен</div>
+<div class="text-xs font-bold text-on-surface">Подготовка (Бриф)</div>
+</div>
+</button>
+</div>
+</div>
+</div>
+<!-- ==================== WIZARD STEPS PANELS ==================== -->
+<div class="relative w-full">
+<!-- ================= STEP 01: SCENARIOS ================= -->
+<section class="step-panel hidden flex-col gap-6" id="step-panel-1">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="text-xl font-headline font-semibold text-on-surface">01. Выберите сценарий переговоров</h2>
+<p class="text-sm text-on-surface-variant">Какую реальную переговорную динамику вы хотите отработать сегодня?</p>
+</div>
+<a class="text-xs font-medium text-primary hover:underline flex items-center gap-1" href="#">
+<span>Библиотека сценариев (12+)</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+<!-- Card 1 -->
+<div class="scenario-card neo-raised neo-raised-hover cursor-pointer p-5 rounded-2xl transition-all border-2 border-transparent relative selected-scenario ring-2 ring-primary" onclick="selectScenario(this, 'procurement')">
+<div class="absolute top-4 right-4">
+<span class="material-symbols-outlined text-primary text-xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="w-10 h-10 rounded-xl neo-inset flex items-center justify-center text-primary mb-3">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+<span class="font-mono text-[10px] font-semibold text-primary uppercase tracking-wider bg-primary-fixed/50 px-2 py-0.5 rounded">PROCUREMENT</span>
+<h3 class="text-base font-semibold text-on-surface mt-2 mb-1">Повышение цены поставщиком</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+              Критический поставщик облачных серверов требует поднять ежегодную ставку на 12%, ссылаясь на инфляцию и дефицит мощностей.
+            </p>
+<div class="mt-4 pt-3 border-t border-outline-variant/30 flex items-center justify-between text-[11px] font-mono text-secondary">
+<span>Сложность: <strong class="text-on-surface">Высокая</strong></span>
+<span>15–20 мин</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="scenario-card neo-raised neo-raised-hover cursor-pointer p-5 rounded-2xl transition-all border-2 border-transparent relative" onclick="selectScenario(this, 'salary')">
+<div class="w-10 h-10 rounded-xl neo-inset flex items-center justify-center text-secondary mb-3">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<span class="font-mono text-[10px] font-semibold text-on-tertiary-fixed-variant uppercase tracking-wider bg-tertiary-fixed px-2 py-0.5 rounded">CAREER</span>
+<h3 class="text-base font-semibold text-on-surface mt-2 mb-1">Пересмотр компенсации</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+              Переговоры с VP of Engineering о повышении базового оклада на 25% и расширении опционного пула при переходе на Lead роль.
+            </p>
+<div class="mt-4 pt-3 border-t border-outline-variant/30 flex items-center justify-between text-[11px] font-mono text-secondary">
+<span>Сложность: <strong class="text-on-surface">Средняя</strong></span>
+<span>10–15 мин</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="scenario-card neo-raised neo-raised-hover cursor-pointer p-5 rounded-2xl transition-all border-2 border-transparent relative" onclick="selectScenario(this, 'sales')">
+<div class="w-10 h-10 rounded-xl neo-inset flex items-center justify-center text-secondary mb-3">
+<span class="material-symbols-outlined">handshake</span>
+</div>
+<span class="font-mono text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider bg-secondary-fixed px-2 py-0.5 rounded">SALES</span>
+<h3 class="text-base font-semibold text-on-surface mt-2 mb-1">Enterprise Discount Push</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+              Крупный банк просит 35% скидку за годовой контракт за день до закрытия финквартала, шантажируя уходом к конкуренту.
+            </p>
+<div class="mt-4 pt-3 border-t border-outline-variant/30 flex items-center justify-between text-[11px] font-mono text-secondary">
+<span>Сложность: <strong class="text-on-surface">Эксперт</strong></span>
+<span>20 мин</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="scenario-card neo-raised neo-raised-hover cursor-pointer p-5 rounded-2xl transition-all border-2 border-transparent relative" onclick="selectScenario(this, 'conflict')">
+<div class="w-10 h-10 rounded-xl neo-inset flex items-center justify-center text-secondary mb-3">
+<span class="material-symbols-outlined">group_work</span>
+</div>
+<span class="font-mono text-[10px] font-semibold text-on-surface-variant uppercase tracking-wider bg-secondary-fixed px-2 py-0.5 rounded">MANAGEMENT</span>
+<h3 class="text-base font-semibold text-on-surface mt-2 mb-1">Борьба за ресурсы команд</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+              Конфликт приоритетов между Product и Security отделом за время старших разработчиков в преддверии релиза v2.
+            </p>
+<div class="mt-4 pt-3 border-t border-outline-variant/30 flex items-center justify-between text-[11px] font-mono text-secondary">
+<span>Сложность: <strong class="text-on-surface">Средняя</strong></span>
+<span>12–18 мин</span>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="scenario-card neo-raised neo-raised-hover cursor-pointer p-5 rounded-2xl transition-all border-2 border-transparent relative" onclick="selectScenario(this, 'partnership')">
+<div class="w-10 h-10 rounded-xl neo-inset flex items-center justify-center text-secondary mb-3">
+<span class="material-symbols-outlined">hub</span>
+</div>
+<span class="font-mono text-[10px] font-semibold text-on-tertiary-fixed-variant uppercase tracking-wider bg-tertiary-fixed px-2 py-0.5 rounded">PARTNERSHIP</span>
+<h3 class="text-base font-semibold text-on-surface mt-2 mb-1">Стратегическое СП</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+              Обсуждение долей участия, интеллектуальной собственности и прав вето при создании совместного финтех-продукта.
+            </p>
+<div class="mt-4 pt-3 border-t border-outline-variant/30 flex items-center justify-between text-[11px] font-mono text-secondary">
+<span>Сложность: <strong class="text-on-surface">Высокая</strong></span>
+<span>25 мин</span>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="scenario-card neo-raised neo-raised-hover cursor-pointer p-5 rounded-2xl transition-all border-2 border-transparent relative" onclick="selectScenario(this, 'crisis')">
+<div class="w-10 h-10 rounded-xl neo-inset flex items-center justify-center text-secondary mb-3">
+<span class="material-symbols-outlined">warning</span>
+</div>
+<span class="font-mono text-[10px] font-semibold text-error uppercase tracking-wider bg-error-container/60 px-2 py-0.5 rounded">CRISIS</span>
+<h3 class="text-base font-semibold text-on-surface mt-2 mb-1">Срыв SLA и штрафы</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">
+              Непредвиденный даунтайм 4 часа в пиковый день распродаж. Клиент готовит иск о неустойке на сумму свыше $200k.
+            </p>
+<div class="mt-4 pt-3 border-t border-outline-variant/30 flex items-center justify-between text-[11px] font-mono text-secondary">
+<span>Сложность: <strong class="text-on-surface">Критическая</strong></span>
+<span>15 мин</span>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= STEP 02: METHODOLOGY ================= -->
+<section class="step-panel hidden flex-col gap-6" id="step-panel-2">
+<div>
+<h2 class="text-xl font-headline font-semibold text-on-surface">02. Выберите методологию оценки</h2>
+<p class="text-sm text-on-surface-variant">По какой переговорной системе AI-ассистент будет анализировать ваши тактики и аргументы?</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+<!-- Card 1 -->
+<div class="neo-raised neo-raised-hover cursor-pointer p-6 rounded-2xl transition-all relative" onclick="selectMethodology(this)">
+<div class="flex items-start justify-between mb-4">
+<div class="w-12 h-12 rounded-xl neo-inset flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">school</span>
+</div>
+<span class="font-mono text-xs px-2.5 py-1 rounded-full neo-raised-sm text-secondary">Классика</span>
+</div>
+<h3 class="text-lg font-semibold text-on-surface mb-2">Гарвардский метод (Principled Negotiation)</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-4">
+              Отделение людей от проблемы, фокус на глубинных интересах, а не жестких позициях. Генерация взаимовыгодных опций (Win-Win) по объективным критериям.
+            </p>
+<ul class="text-xs space-y-2 text-on-surface font-mono">
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">check</span> Анализ ZOPA (Зоны возможного соглашения)</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">check</span> Оценка объективности рыночных бенчмарков</li>
+</ul>
+</div>
+<!-- Card 2: Recommended -->
+<div class="neo-raised neo-raised-hover cursor-pointer p-6 rounded-2xl transition-all relative ring-2 ring-primary" onclick="selectMethodology(this)">
+<div class="absolute -top-3 right-6">
+<span class="bg-primary text-on-primary text-[10px] font-mono uppercase tracking-wider font-bold py-1 px-3 rounded-full shadow-sm">РЕКОМЕНДУЕТСЯ</span>
+</div>
+<div class="flex items-start justify-between mb-4">
+<div class="w-12 h-12 rounded-xl neo-inset flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-2xl">radar</span>
+</div>
+<span class="font-mono text-xs px-2.5 py-1 rounded-full neo-raised-sm text-primary font-semibold">BATNA + SPIN</span>
+</div>
+<h3 class="text-lg font-semibold text-on-surface mb-2">Combined Strategic Approach</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-4">
+              Комбинация Harvard Principled, выявления скрытых болей через SPIN-вопросы и жесткого контроля границы выхода (BATNA &amp; Reservation Point).
+            </p>
+<ul class="text-xs space-y-2 text-on-surface font-mono">
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">check</span> Трекинг эмоционального давления оппонента</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">check</span> Оценка глубины зондирующих вопросов</li>
+</ul>
+</div>
+<!-- Card 3 -->
+<div class="neo-raised neo-raised-hover cursor-pointer p-6 rounded-2xl transition-all relative" onclick="selectMethodology(this)">
+<div class="flex items-start justify-between mb-4">
+<div class="w-12 h-12 rounded-xl neo-inset flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-2xl">quiz</span>
+</div>
+<span class="font-mono text-xs px-2.5 py-1 rounded-full neo-raised-sm text-secondary">Enterprise Sales</span>
+</div>
+<h3 class="text-lg font-semibold text-on-surface mb-2">SPIN Technique Focus</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-4">
+              Ситуационные, Проблемные, Извлекающие и Направляющие вопросы. Обучает не защищаться, а вести оппонента к осознанию реальной стоимости компромисса.
+            </p>
+<ul class="text-xs space-y-2 text-on-surface font-mono">
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">check</span> Метрика соотношения реплик (AI vs Вы)</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">check</span> Подсчет квалификационных формулировок</li>
+</ul>
+</div>
+<!-- Card 4 -->
+<div class="neo-raised neo-raised-hover cursor-pointer p-6 rounded-2xl transition-all relative" onclick="selectMethodology(this)">
+<div class="flex items-start justify-between mb-4">
+<div class="w-12 h-12 rounded-xl neo-inset flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-2xl">shield_lock</span>
+</div>
+<span class="font-mono text-xs px-2.5 py-1 rounded-full neo-raised-sm text-secondary">Кризисный контроль</span>
+</div>
+<h3 class="text-lg font-semibold text-on-surface mb-2">BATNA Control &amp; Hostage Empathy (Voss)</h3>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-4">
+              Методика Криса Восса: тактическое отражение (mirroring), маркировка эмоций (labeling), калиброванные вопросы «Как мне это сделать?».
+            </p>
+<ul class="text-xs space-y-2 text-on-surface font-mono">
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">check</span> Защита от преждевременных уступок</li>
+<li class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[16px]">check</span> Анализ снижения уровня агрессии оппонента</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- ================= STEP 03: FORMAT ================= -->
+<section class="step-panel hidden flex-col gap-6" id="step-panel-3">
+<div>
+<h2 class="text-xl font-headline font-semibold text-on-surface">03. Выберите формат проведения</h2>
+<p class="text-sm text-on-surface-variant">Какая форма взаимодействия с AI лучше всего отвечает вашей цели тренировки?</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+<!-- Format 1 -->
+<div class="neo-raised neo-raised-hover cursor-pointer p-6 rounded-2xl transition-all border-2 border-primary flex flex-col justify-between" onclick="selectFormat(this)">
+<div>
+<div class="w-12 h-12 rounded-xl neo-inset flex items-center justify-center text-primary mb-4">
+<span class="material-symbols-outlined text-2xl">forum</span>
+</div>
+<h3 class="text-base font-semibold text-on-surface mb-1">Интерактивный чат с анализом</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed mb-4">
+                Пошаговый обмен аргументами с моментальной подсветкой тактических ошибок, выявлением скрытых намерений и подсказками в реальном времени.
+              </p>
+</div>
+<div class="space-y-1.5 pt-4 border-t border-outline-variant/30 text-[11px] font-mono text-secondary">
+<div>• Темп: Без жесткого таймера</div>
+<div>• Обратная связь: Построчная</div>
+<div class="text-primary font-medium">✓ Выбран по умолчанию</div>
+</div>
+</div>
+<!-- Format 2 -->
+<div class="neo-raised neo-raised-hover cursor-pointer p-6 rounded-2xl transition-all border-2 border-transparent flex flex-col justify-between" onclick="selectFormat(this)">
+<div>
+<div class="w-12 h-12 rounded-xl neo-inset flex items-center justify-center text-secondary mb-4">
+<span class="material-symbols-outlined text-2xl">mic</span>
+</div>
+<h3 class="text-base font-semibold text-on-surface mb-1">Голосовой режим (Realtime Voice)</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed mb-4">
+                Живой диалог с синтезированным голосом с акцентом, эмоциями и перебиваниями. Максимальное погружение в стрессовую ситуацию.
+              </p>
+</div>
+<div class="space-y-1.5 pt-4 border-t border-outline-variant/30 text-[11px] font-mono text-secondary">
+<div>• Темп: Настоящий разговор</div>
+<div>• Задержка: &lt;450ms</div>
+<div>• Требуется: Микрофон</div>
+</div>
+</div>
+<!-- Format 3 -->
+<div class="neo-raised neo-raised-hover cursor-pointer p-6 rounded-2xl transition-all border-2 border-transparent flex flex-col justify-between" onclick="selectFormat(this)">
+<div>
+<div class="w-12 h-12 rounded-xl neo-inset flex items-center justify-center text-secondary mb-4">
+<span class="material-symbols-outlined text-2xl">timer</span>
+</div>
+<h3 class="text-base font-semibold text-on-surface mb-1">Challenge под давлением</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed mb-4">
+                60 секунд на ответ в каждом раунде. Жесткие выпады оппонента, ультиматумы и необходимость принимать быстрые тактические решения.
+              </p>
+</div>
+<div class="space-y-1.5 pt-4 border-t border-outline-variant/30 text-[11px] font-mono text-secondary">
+<div>• Темп: 60 сек на ход</div>
+<div>• Уровень стресса: 9/10</div>
+<div>• Оценка: Стрессоустойчивость</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= STEP 04: PARTICIPANTS ================= -->
+<section class="step-panel hidden flex-col gap-6" id="step-panel-4">
+<div>
+<h2 class="text-xl font-headline font-semibold text-on-surface">04. Конфигурация стола переговоров</h2>
+<p class="text-sm text-on-surface-variant">Выберите состав сторон. AI будет моделировать независимых участников с разными мотивациями.</p>
+</div>
+<!-- Table Topology Matrix -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 space-y-4">
+<div class="neo-raised p-5 rounded-2xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl neo-inset flex items-center justify-center text-primary font-bold">1x1</div>
+<div>
+<h4 class="text-sm font-semibold text-on-surface">Один на один (Диалог)</h4>
+<p class="text-xs text-on-surface-variant">Вы и Ключевой представитель поставщика (Account VP)</p>
+</div>
+</div>
+<input class="text-primary focus:ring-primary h-4 w-4 bg-background" name="table_mode" type="radio"/>
+</div>
+<div class="neo-raised p-5 rounded-2xl flex items-center justify-between ring-2 ring-primary">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl neo-inset flex items-center justify-center text-primary font-bold">1x2</div>
+<div>
+<h4 class="text-sm font-semibold text-on-surface">Вы против команды (Рекомендуется для сценария)</h4>
+<p class="text-xs text-on-surface-variant">Поставщик: Коммерческий директор + Архитектор инфраструктуры</p>
+</div>
+</div>
+<input checked="" class="text-primary focus:ring-primary h-4 w-4 bg-background" name="table_mode" type="radio"/>
+</div>
+<div class="neo-raised p-5 rounded-2xl flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl neo-inset flex items-center justify-center text-secondary font-bold">2x2</div>
+<div>
+<h4 class="text-sm font-semibold text-on-surface">Внутренняя коалиция</h4>
+<p class="text-xs text-on-surface-variant">Вы + AI-коллега (Ваш CFO) против команды поставщика</p>
+</div>
+</div>
+<input class="text-primary focus:ring-primary h-4 w-4 bg-background" name="table_mode" type="radio"/>
+</div>
+</div>
+<!-- Participants Public Dossier -->
+<div class="neo-raised p-5 rounded-2xl flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-2 text-xs font-mono uppercase text-secondary mb-3">
+<span class="material-symbols-outlined text-[16px] text-primary">visibility</span>
+<span>Публичные позиции (Без спойлеров)</span>
+</div>
+<div class="space-y-4">
+<!-- Person 1 -->
+<div class="flex items-start gap-3 p-3 rounded-xl neo-inset">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-xs shrink-0">
+                    МВ
+                  </div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Михаил Воронов</div>
+<div class="text-[10px] font-mono text-on-surface-variant">VP of Sales, CloudCore Inc.</div>
+<p class="text-[11px] text-on-surface-variant mt-1 italic">
+                      «Нам нужно либо скорректировать чек на +12%, либо пересмотреть объёмы резервирования серверов».
+                    </p>
+</div>
+</div>
+<!-- Person 2 -->
+<div class="flex items-start gap-3 p-3 rounded-xl neo-inset">
+<div class="w-8 h-8 rounded-full bg-tertiary-container text-on-primary flex items-center justify-center font-bold text-xs shrink-0">
+                    ЕК
+                  </div>
+<div>
+<div class="text-xs font-semibold text-on-surface">Елена Ковалева</div>
+<div class="text-[10px] font-mono text-on-surface-variant">Lead Technical Account Manager</div>
+<p class="text-[11px] text-on-surface-variant mt-1 italic">
+                      «Текущий тир поддержки не покрывает новые регуляторные требования без обновления лицензий».
+                    </p>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 p-3 rounded-xl neo-raised-sm text-[11px] text-on-surface-variant font-mono">
+              🔒 Скрытые интересы и reservation point будут раскрыты в итоговом разборе раунда.
+            </div>
+</div>
+</div>
+</section>
+<!-- ================= STEP 05: NEGOTIATION BRIEF (Visible by default) ================= -->
+<section class="step-panel flex flex-col gap-6" id="step-panel-5">
+<div>
+<div class="flex items-center gap-2 text-xs font-mono text-primary font-semibold uppercase">
+<span class="material-symbols-outlined text-[16px]">edit_note</span>
+<span>Стратегическая подготовка</span>
+</div>
+<h2 class="text-xl font-headline font-semibold text-on-surface">05. Negotiation Brief — Зафиксируйте свою позицию</h2>
+<p class="text-sm text-on-surface-variant">Успех переговоров закладывается до их начала. Заполните ключевые параметры перед запуском симулятора.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Form (8 cols) -->
+<div class="lg:col-span-8 flex flex-col gap-5">
+<!-- Context Banner -->
+<div class="neo-raised p-4 rounded-2xl flex items-center justify-between border-l-4 border-primary">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-2xl">info</span>
+<div>
+<div class="text-xs font-mono uppercase text-secondary">Текущий сценарий</div>
+<div class="text-sm font-semibold text-on-surface">Повышение цены поставщиком (Требование: +12%)</div>
+</div>
+</div>
+<button class="text-xs font-mono text-primary hover:underline" onclick="goToStep(1)">Изменить</button>
+</div>
+<!-- Field 1: Primary Goal -->
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-mono uppercase text-on-surface font-semibold flex items-center justify-between">
+<span>Ваша генеральная цель</span>
+<span class="text-primary font-normal">Что считается успехом?</span>
+</label>
+<div class="neo-inset neo-inset-focus rounded-xl p-3.5 transition-all">
+<input class="w-full bg-transparent border-0 p-0 text-sm text-on-surface focus:ring-0 focus:outline-none placeholder-outline font-medium" type="text" value="Удержать текущую цену контракта на 6 месяцев взамен на продление договора на 2 года"/>
+</div>
+</div>
+<!-- Two-column Goals: Target vs BATNA -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Desired Result -->
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-mono uppercase text-on-surface font-semibold flex items-center justify-between">
+<span>Желаемый результат</span>
+<span class="text-secondary font-normal">Target Price</span>
+</label>
+<div class="neo-inset neo-inset-focus rounded-xl p-3.5 transition-all">
+<input class="w-full bg-transparent border-0 p-0 text-sm text-on-surface focus:ring-0 focus:outline-none placeholder-outline" type="text" value="Рост цены 0% при сохранении SLA 99.95%"/>
+</div>
+<span class="text-[11px] text-on-surface-variant font-mono">Оптимальная точка соглашения (ZOPA верх)</span>
+</div>
+<!-- Reservation Point (BATNA) -->
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-mono uppercase text-on-surface font-semibold flex items-center justify-between">
+<span>Граница выхода (BATNA)</span>
+<span class="text-error font-mono text-[10px]">КРИТИЧЕСКИ ВАЖНО</span>
+</label>
+<div class="neo-inset neo-inset-focus rounded-xl p-3.5 transition-all">
+<input class="w-full bg-transparent border-0 p-0 text-sm text-on-surface focus:ring-0 focus:outline-none placeholder-outline font-medium" id="batna-input" type="text" value="Максимум +4% при условии отсрочки платежей на 60 дней"/>
+</div>
+<span class="text-[11px] text-on-surface-variant font-mono">Если требуют больше — переговоры прекращаются</span>
+</div>
+</div>
+<!-- Field 3: Other Party's Interests -->
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-mono uppercase text-on-surface font-semibold">
+                Что важно второй стороне? (Скрытые или открытые интересы поставщика)
+              </label>
+<div class="neo-inset neo-inset-focus rounded-xl p-3.5 transition-all">
+<textarea class="w-full bg-transparent border-0 p-0 text-sm text-on-surface focus:ring-0 focus:outline-none placeholder-outline resize-none" rows="3">Поставщику важна предсказуемость выручки для закрытия финансового года. Им тяжело терять крупного якорного клиента перед раундом аудита. Также у них растут расходы на оборудование в дата-центрах.</textarea>
+</div>
+</div>
+<!-- Field 4: Key Concessions & Leverage -->
+<div class="flex flex-col gap-1.5">
+<label class="text-xs font-mono uppercase text-on-surface font-semibold">
+                Ключевые разменные монеты и аргументы (Trade-offs)
+              </label>
+<div class="neo-inset neo-inset-focus rounded-xl p-3.5 transition-all">
+<textarea class="w-full bg-transparent border-0 p-0 text-sm text-on-surface focus:ring-0 focus:outline-none placeholder-outline resize-none" rows="2">1. Готовность дать публичный кейс-стади с логотипом. 2. 100% предоплата за квартал вперед взамен на заморозку тарифа. 3. Наличие оффера от резервного поставщика DataLine.</textarea>
+</div>
+</div>
+</div>
+<!-- Right Column: Live AI Brief Validator (4 cols) -->
+<div class="lg:col-span-4 flex flex-col gap-4">
+<div class="neo-raised p-6 rounded-2xl flex flex-col gap-4 sticky top-24">
+<div class="flex items-center justify-between pb-3 border-b border-outline-variant/30">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg neo-inset flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">psychology</span>
+</div>
+<span class="text-xs font-mono font-bold uppercase tracking-wide text-on-surface">AI-Аудит брифа</span>
+</div>
+<span class="font-mono text-xs text-primary font-bold bg-primary-fixed/50 px-2 py-0.5 rounded-full">84 / 100</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-2 rounded-full neo-inset overflow-hidden p-0.5">
+<div class="h-full bg-primary rounded-full transition-all duration-500" style="width: 84%"></div>
+</div>
+<!-- Recommendations List -->
+<div class="space-y-3 pt-2">
+<div class="neo-raised-sm p-3 rounded-xl flex items-start gap-2.5">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">check_circle</span>
+<div class="text-xs text-on-surface-variant">
+<strong class="text-on-surface">Цель сфокусирована:</strong> Есть конкретные метрики срока (6 мес.) и срока контракта (2 года).
+                  </div>
+</div>
+<div class="neo-raised-sm p-3 rounded-xl flex items-start gap-2.5 bg-surface-bright">
+<span class="material-symbols-outlined text-tertiary text-[18px] shrink-0 mt-0.5">tips_and_updates</span>
+<div class="text-xs text-on-surface-variant">
+<strong class="text-on-surface">BATNA рекомендация:</strong> Зафиксируйте запасного поставщика по имени перед входом в раунд. Это придаст вес фразе отказа при нажиме.
+                  </div>
+</div>
+<div class="neo-raised-sm p-3 rounded-xl flex items-start gap-2.5">
+<span class="material-symbols-outlined text-outline text-[18px] shrink-0 mt-0.5">help</span>
+<div class="text-xs text-on-surface-variant">
+<strong class="text-on-surface">Оппоненты:</strong> Готовы ли вы к вопросу: «Если цены на электричество выросли на 20%, почему мы должны терпеть убытки?»
+                  </div>
+</div>
+</div>
+<div class="pt-3 border-t border-outline-variant/30 flex items-center justify-between text-[11px] font-mono text-secondary">
+<span>Готовность к симуляции:</span>
+<span class="text-primary font-bold">Высокая</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- ==================== WIZARD BOTTOM ACTION BAR ==================== -->
+<div class="w-full neo-raised p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-4 z-40 bg-surface/95 backdrop-blur-md">
+<div class="flex items-center gap-3 w-full sm:w-auto">
+<button class="flex-1 sm:flex-initial neo-raised hover:neo-raised-hover active:neo-inset px-5 py-2.5 rounded-full text-xs font-semibold text-on-surface-variant flex items-center justify-center gap-2 transition-all" id="btn-prev" onclick="handlePrevStep()">
+<span class="material-symbols-outlined text-[16px]">arrow_back</span>
+<span>Назад</span>
+</button>
+<span class="hidden md:inline font-mono text-xs text-secondary">Шаг <span id="current-step-counter">5</span> из 5</span>
+</div>
+<div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+<button class="hidden sm:flex neo-raised hover:neo-raised-hover active:neo-inset px-5 py-2.5 rounded-full text-xs font-semibold text-secondary transition-all items-center gap-2" onclick="saveDraftNotification()">
+<span class="material-symbols-outlined text-[16px]">save</span>
+<span>Черновик</span>
+</button>
+<button class="w-full sm:w-auto px-8 py-3 rounded-full text-sm font-semibold text-on-primary bg-primary neo-raised hover:brightness-105 active:scale-[0.98] transition-all flex items-center justify-center gap-2.5 shadow-md shadow-primary/20" id="btn-next" onclick="handleNextStep()">
+<span id="btn-next-text">Начать переговоры</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</main>
+<!-- ==================== FOOTER (Shared Anchor) ==================== -->
+<footer class="w-full bg-surface-container-lowest dark:bg-surface-container-lowest border-t border-outline-variant/30 dark:border-outline-variant/20 mt-12">
+<div class="w-full py-8 px-6 md:px-12 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+<!-- Brand Copyright & Meta -->
+<div class="flex flex-col md:flex-row items-center gap-3 text-center md:text-left">
+<span class="font-headline text-lg font-bold text-on-surface">NEGOTIA</span>
+<span class="hidden md:inline text-outline-variant">|</span>
+<p class="text-xs text-secondary">
+          © 2025 NEGOTIA Inc. Все права защищены. Платформа симуляции когнитивных и стратегических переговоров.
+        </p>
+</div>
+<!-- Footer Anchors -->
+<div class="flex flex-wrap items-center justify-center gap-6 text-xs text-secondary">
+<a class="hover:text-on-surface transition-colors font-medium" href="#">Конфиденциальность</a>
+<a class="hover:text-on-surface transition-colors font-medium" href="#">Условия использования</a>
+<a class="hover:text-on-surface transition-colors font-medium text-primary" href="#">Методология</a>
+<a class="hover:text-on-surface transition-colors font-medium" href="#">Безопасность данных</a>
+<a class="hover:text-on-surface transition-colors font-medium" href="#">Служба поддержки</a>
+</div>
+</div>
+</footer>
+<!-- Notification Toast Container -->
+<div class="fixed top-20 right-6 z-50 neo-raised p-4 rounded-xl flex items-center gap-3 transition-opacity duration-300 opacity-0 pointer-events-none" id="toast">
+<span class="material-symbols-outlined text-primary text-xl">check_circle</span>
+<div class="text-xs font-medium text-on-surface" id="toast-message">Черновик симуляции сохранён</div>
+</div>
+<!-- Interactive JavaScript for Stepper Navigation -->
+<script>
+    let currentStep = 5; // Default starts at 5 to display complete negotiation brief requested
+
+    function updateStepUI() {
+      // Hide all panels
+      for (let i = 1; i <= 5; i++) {
+        const panel = document.getElementById(`step-panel-${i}`);
+        const tab = document.getElementById(`stepper-tab-${i}`);
+        if (panel) panel.classList.add('hidden');
+        if (tab) {
+          tab.classList.remove('neo-raised', 'text-primary');
+          tab.classList.add('text-on-surface-variant');
+        }
+      }
+
+      // Show current panel
+      const activePanel = document.getElementById(`step-panel-${currentStep}`);
+      if (activePanel) {
+        activePanel.classList.remove('hidden');
+        activePanel.classList.add('flex');
+      }
+
+      // Mark current tab as active
+      const activeTab = document.getElementById(`stepper-tab-${currentStep}`);
+      if (activeTab) {
+        activeTab.classList.add('neo-raised', 'text-primary');
+        activeTab.classList.remove('text-on-surface-variant');
+      }
+
+      // Update counters & buttons
+      document.getElementById('current-step-counter').textContent = currentStep;
+      const btnNextText = document.getElementById('btn-next-text');
+      const btnPrev = document.getElementById('btn-prev');
+
+      if (currentStep === 5) {
+        btnNextText.textContent = 'Начать переговоры';
+      } else {
+        btnNextText.textContent = 'Продолжить';
+      }
+
+      if (currentStep === 1) {
+        btnPrev.classList.add('opacity-50', 'pointer-events-none');
+      } else {
+        btnPrev.classList.remove('opacity-50', 'pointer-events-none');
+      }
+    }
+
+    function goToStep(step) {
+      if (step >= 1 && step <= 5) {
+        currentStep = step;
+        updateStepUI();
+        window.scrollTo({ top: 120, behavior: 'smooth' });
+      }
+    }
+
+    function handleNextStep() {
+      if (currentStep < 5) {
+        goToStep(currentStep + 1);
+      } else {
+        showToast('Инициализация сессии AI... Запуск симулятора!');
+        setTimeout(() => {
+          alert('Переход в интерактивную переговорную комнату с Claude 3.5 Sonnet...');
+        }, 800);
+      }
+    }
+
+    function handlePrevStep() {
+      if (currentStep > 1) {
+        goToStep(currentStep - 1);
+      }
+    }
+
+    // Selection helpers
+    function selectScenario(el, scenarioName) {
+      document.querySelectorAll('.scenario-card').forEach(card => {
+        card.classList.remove('ring-2', 'ring-primary');
+        const icon = card.querySelector('.selected-indicator');
+        if (icon) icon.remove();
+      });
+      el.classList.add('ring-2', 'ring-primary');
+      showToast(`Выбран сценарий: ${el.querySelector('h3').textContent}`);
+    }
+
+    function selectMethodology(el) {
+      el.parentElement.querySelectorAll('div').forEach(card => card.classList.remove('ring-2', 'ring-primary'));
+      el.classList.add('ring-2', 'ring-primary');
+      showToast(`Методология обновлена: ${el.querySelector('h3').textContent}`);
+    }
+
+    function selectFormat(el) {
+      el.parentElement.querySelectorAll('div').forEach(card => {
+        card.classList.remove('border-primary');
+        card.classList.add('border-transparent');
+      });
+      el.classList.remove('border-transparent');
+      el.classList.add('border-primary');
+      showToast(`Формат: ${el.querySelector('h3').textContent}`);
+    }
+
+    function saveDraftNotification() {
+      showToast('Черновик успешно зафиксирован в вашем профиле');
+    }
+
+    function showToast(text) {
+      const toast = document.getElementById('toast');
+      const msg = document.getElementById('toast-message');
+      msg.textContent = text;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+
+    // Initial setup on load
+    document.addEventListener('DOMContentLoaded', () => {
+      updateStepUI();
+    });
+  </script>
+</body></html>

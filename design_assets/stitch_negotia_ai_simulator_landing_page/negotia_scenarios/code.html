@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+
+<html lang="ru"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NEGOTIA — Библиотека сценариев</title>
+<!-- Google Fonts: Plus Jakarta Sans (Theme token) & JetBrains Mono for metadata/pills -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "tertiary-fixed-dim": "#c4b5fd",
+            "on-tertiary": "#ffffff",
+            "on-tertiary-container": "#3b1f63",
+            "inverse-surface": "#2e3040",
+            "inverse-on-surface": "#e8eaf0",
+            "on-secondary-container": "#585a68",
+            "secondary-fixed": "#d8dae6",
+            "surface-container-lowest": "#f0f2f8",
+            "secondary": "#6c6e7e",
+            "outline-variant": "#d0d2dc",
+            "on-secondary-fixed": "#1a1b26",
+            "primary": "#6366f1",
+            "on-error": "#ffffff",
+            "error": "#dc2626",
+            "tertiary-fixed": "#ede9fe",
+            "outline": "#8a8c9a",
+            "surface": "#e8eaf0",
+            "surface-container-highest": "#d6d8de",
+            "on-error-container": "#991b1b",
+            "surface-container-low": "#e5e7ed",
+            "primary-container": "#818cf8",
+            "on-primary-container": "#e0e2ff",
+            "surface-tint": "#6366f1",
+            "primary-fixed-dim": "#a5b4fc",
+            "surface-dim": "#d4d6dc",
+            "on-primary-fixed-variant": "#4338ca",
+            "background": "#e8eaf0",
+            "on-background": "#2e3040",
+            "on-primary-fixed": "#1e1b4b",
+            "on-secondary": "#ffffff",
+            "on-surface": "#2e3040",
+            "primary-fixed": "#e0e2ff",
+            "surface-container-high": "#dcdee4",
+            "secondary-container": "#d8dae6",
+            "on-tertiary-fixed-variant": "#5b21b6",
+            "tertiary-container": "#a78bfa",
+            "error-container": "#fee2e2",
+            "inverse-primary": "#a5b4fc",
+            "on-primary": "#ffffff",
+            "surface-variant": "#dcdee4",
+            "tertiary": "#7c3aed",
+            "on-tertiary-fixed": "#2e1065",
+            "secondary-fixed-dim": "#b8baca",
+            "surface-container": "#e2e4ea",
+            "surface-bright": "#edeef4",
+            "on-surface-variant": "#585a68",
+            "on-secondary-fixed-variant": "#404252"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+          "fontFamily": {
+            "headline": ["Plus Jakarta Sans", "sans-serif"],
+            "display": ["Plus Jakarta Sans", "sans-serif"],
+            "body": ["Plus Jakarta Sans", "sans-serif"],
+            "label": ["Plus Jakarta Sans", "sans-serif"],
+            "mono": ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Neomorphic / Extruded Light Soft UI Shadows */
+    .neo-raised {
+      box-shadow: 6px 6px 14px rgba(0, 0, 0, 0.06), -6px -6px 14px rgba(255, 255, 255, 0.7);
+    }
+    .neo-raised-sm {
+      box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.05), -3px -3px 8px rgba(255, 255, 255, 0.8);
+    }
+    .neo-raised-hover:hover {
+      box-shadow: 8px 8px 18px rgba(0, 0, 0, 0.08), -8px -8px 18px rgba(255, 255, 255, 0.9);
+      transform: translateY(-2px);
+    }
+    .neo-inset {
+      box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.06), inset -3px -3px 6px rgba(255, 255, 255, 0.7);
+    }
+    .neo-inset-deep {
+      box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.07), inset -4px -4px 8px rgba(255, 255, 255, 0.85);
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen antialiased flex flex-col selection:bg-primary-fixed selection:text-primary">
+<!-- TopAppBar (Based on Shared Components & Navigation requirement) -->
+<header class="sticky top-0 z-50 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/30">
+<div class="w-full max-w-7xl mx-auto px-4 md:px-8 py-3.5 flex items-center justify-between">
+<!-- Brand Cluster -->
+<div class="flex items-center gap-6">
+<a class="flex items-center gap-2.5 group" href="#">
+<div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-on-primary neo-raised-sm group-hover:scale-105 transition-transform duration-200">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">psychology</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="font-headline font-bold text-xl tracking-tight text-on-surface">NEGOTIA</span>
+<span class="font-mono text-[10px] uppercase font-semibold tracking-wider px-2 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed border border-primary/20">
+              AI SIMULATOR
+            </span>
+</div>
+</a>
+<!-- Desktop Navigation Links -->
+<nav class="hidden md:flex items-center gap-7 text-sm ml-4">
+<a class="text-secondary hover:text-on-surface font-medium transition-colors" href="#">Панель</a>
+<a class="text-primary font-semibold border-b-2 border-primary pb-1 flex items-center gap-1.5" href="#">
+<span>Сценарии</span>
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+</a>
+<a class="text-secondary hover:text-on-surface font-medium transition-colors" href="#">История</a>
+<a class="text-secondary hover:text-on-surface font-medium transition-colors" href="#">Профиль</a>
+</nav>
+</div>
+<!-- Right Utility Actions -->
+<div class="flex items-center gap-3">
+<!-- Language Switcher -->
+<button class="px-2.5 py-1.5 text-xs font-mono font-medium rounded-lg text-secondary hover:text-on-surface neo-raised-sm bg-surface transition-transform active:scale-95 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">language</span>
+          RU
+        </button>
+<!-- Notifications -->
+<button class="w-9 h-9 rounded-xl neo-raised-sm bg-surface flex items-center justify-center text-secondary hover:text-on-surface relative transition-transform active:scale-95">
+<span class="material-symbols-outlined text-[19px]">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary ring-2 ring-surface"></span>
+</button>
+<!-- User Profile Pill -->
+<div class="flex items-center gap-2.5 pl-2 py-1 pr-3 rounded-full neo-raised-sm bg-surface">
+<div class="w-7 h-7 rounded-full bg-gradient-to-tr from-primary to-tertiary text-on-primary text-xs font-semibold flex items-center justify-center">
+            DU
+          </div>
+<span class="text-xs font-medium text-on-surface">Demo User</span>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
+<!-- 1. Page Header with Title & Live Search -->
+<section class="space-y-6">
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+<div class="max-w-2xl space-y-2">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full neo-inset text-[11px] font-mono tracking-widest text-primary font-semibold uppercase">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+            КАТАЛОГ СИМУЛЯЦИЙ
+          </div>
+<h1 class="text-3xl md:text-4xl font-headline font-semibold text-on-surface tracking-tight">
+            Библиотека сценариев
+          </h1>
+<p class="text-secondary text-sm md:text-base leading-relaxed">
+            Выберите переговорную ситуацию и навык, который хотите отработать в реалистичном AI-диалоге с нелинейным поведением оппонента.
+          </p>
+</div>
+<!-- Integrated Search Bar -->
+<div class="w-full lg:w-96">
+<div class="relative flex items-center neo-inset rounded-2xl bg-surface px-4 py-3">
+<span class="material-symbols-outlined text-outline text-[20px] mr-3">search</span>
+<input class="w-full bg-transparent text-sm text-on-surface placeholder:text-outline focus:outline-none font-body" placeholder="Поиск по названию, роли или навыку..." type="text"/>
+<span class="text-[10px] font-mono uppercase bg-surface-container-high text-secondary px-1.5 py-0.5 rounded ml-2">⌘K</span>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. Compact Interactive Filter Bar -->
+<section class="p-5 rounded-2xl neo-raised bg-surface space-y-4">
+<!-- Filter Row: Категории -->
+<div class="flex flex-wrap items-center gap-2">
+<span class="text-xs font-mono font-medium text-secondary min-w-[90px]">Категория:</span>
+<div class="flex flex-wrap items-center gap-1.5 text-xs">
+<button class="px-3.5 py-1.5 rounded-full neo-inset font-semibold text-primary transition-all">Все</button>
+<button class="px-3.5 py-1.5 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface transition-all">Карьера</button>
+<button class="px-3.5 py-1.5 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface transition-all">Продажи</button>
+<button class="px-3.5 py-1.5 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface transition-all">Закупки</button>
+<button class="px-3.5 py-1.5 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface transition-all">Конфликты</button>
+<button class="px-3.5 py-1.5 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface transition-all">Партнёрство</button>
+<button class="px-3.5 py-1.5 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface transition-all">Кризис</button>
+</div>
+</div>
+<div class="h-px bg-outline-variant/30 w-full"></div>
+<!-- Filter Row: Методология, Сложность & Формат -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+<!-- Методология -->
+<div class="flex items-center gap-2">
+<span class="text-xs font-mono font-medium text-secondary min-w-[85px]">Метод:</span>
+<div class="flex flex-wrap items-center gap-1.5 text-xs">
+<button class="px-2.5 py-1 rounded-full neo-inset font-semibold text-primary">Все</button>
+<button class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface">Harvard</button>
+<button class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface">SPIN</button>
+<button class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface">BATNA</button>
+</div>
+</div>
+<!-- Сложность -->
+<div class="flex items-center gap-2">
+<span class="text-xs font-mono font-medium text-secondary min-w-[85px]">Сложность:</span>
+<div class="flex flex-wrap items-center gap-1.5 text-xs">
+<button class="px-2.5 py-1 rounded-full neo-inset font-semibold text-primary">Все</button>
+<button class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface">Базовая</button>
+<button class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface">Средняя</button>
+<button class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface">Эксперт</button>
+</div>
+</div>
+<!-- Формат -->
+<div class="flex items-center gap-2">
+<span class="text-xs font-mono font-medium text-secondary min-w-[65px]">Формат:</span>
+<div class="flex flex-wrap items-center gap-1.5 text-xs">
+<button class="px-2.5 py-1 rounded-full neo-inset font-semibold text-primary">Все</button>
+<button class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">chat</span>
+              Текст
+            </button>
+<button class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-secondary hover:text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">mic</span>
+              Голос
+            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. Scenario Cards Grid (3 columns on desktop) -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Card 1: ЗАКУПКИ (Рекомендуемая) -->
+<div class="p-6 rounded-2xl neo-raised bg-surface neo-raised-hover transition-all duration-200 flex flex-col justify-between relative border border-primary/20">
+<div class="absolute -top-3 right-5">
+<span class="bg-primary text-on-primary text-[10px] font-mono uppercase tracking-wider px-3 py-1 rounded-full font-semibold neo-raised-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">star</span>
+            РЕКОМЕНДУЕМ
+          </span>
+</div>
+<div class="space-y-4">
+<!-- Meta Pill Tags -->
+<div class="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-secondary">
+<span class="px-2 py-0.5 rounded-md neo-inset font-medium text-primary">ЗАКУПКИ</span>
+<span>·</span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container-high">СРЕДНЯЯ</span>
+<span>·</span>
+<span>10-15 МИН</span>
+<span>·</span>
+<span class="font-semibold">1×1</span>
+</div>
+<!-- Title & Context -->
+<div>
+<h3 class="text-lg font-headline font-semibold text-on-surface">Повышение цены поставщиком</h3>
+<p class="mt-2 text-xs md:text-sm text-secondary leading-relaxed">
+              Поставщик IT-инфраструктуры требует индексацию на 12%. Проведите переговоры по Гарвардскому методу и защитите бюджет компании.
+            </p>
+</div>
+<!-- Skills tags -->
+<div class="space-y-1.5">
+<div class="text-[10px] font-mono uppercase text-outline">Отрабатываемые навыки:</div>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">BATNA</span>
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">Уступки</span>
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">Аргументация</span>
+</div>
+</div>
+<!-- Opponent Avatar & Persona -->
+<div class="pt-2 flex items-center gap-2.5 border-t border-outline-variant/30">
+<div class="w-7 h-7 rounded-lg neo-inset flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[16px]">smart_toy</span>
+</div>
+<div>
+<span class="text-[10px] uppercase font-mono text-secondary block">Оппонент</span>
+<span class="text-xs font-semibold text-on-surface">CPO Vendor Cloud</span>
+</div>
+</div>
+</div>
+<!-- Footer / Action Area -->
+<div class="mt-6 pt-4 border-t border-outline-variant/30 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 text-secondary text-[11px]">
+<span class="material-symbols-outlined text-[15px] text-tertiary">analytics</span>
+<span>Успех: <strong class="text-on-surface font-semibold">42%</strong></span>
+</div>
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary text-xs font-semibold neo-raised-sm hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-1">
+            Начать симуляцию
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 2: КАРЬЕРА -->
+<div class="p-6 rounded-2xl neo-raised bg-surface neo-raised-hover transition-all duration-200 flex flex-col justify-between">
+<div class="space-y-4">
+<!-- Meta Pill Tags -->
+<div class="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-secondary">
+<span class="px-2 py-0.5 rounded-md neo-inset font-medium text-primary">КАРЬЕРА</span>
+<span>·</span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container-high">СРЕДНЯЯ</span>
+<span>·</span>
+<span>10 МИН</span>
+<span>·</span>
+<span class="font-semibold">1×1</span>
+</div>
+<div>
+<h3 class="text-lg font-headline font-semibold text-on-surface">Повышение зарплаты и расширение роли</h3>
+<p class="mt-2 text-xs md:text-sm text-secondary leading-relaxed">
+              Вы второй год в роли Lead PM. Зона ответственности выросла втрое. Договоритесь с CPO о пересмотре грейда и фиксации KPI для бонуса.
+            </p>
+</div>
+<div class="space-y-1.5">
+<div class="text-[10px] font-mono uppercase text-outline">Отрабатываемые навыки:</div>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">Якорение</span>
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">BATNA</span>
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">Фрейминг</span>
+</div>
+</div>
+<div class="pt-2 flex items-center gap-2.5 border-t border-outline-variant/30">
+<div class="w-7 h-7 rounded-lg neo-inset flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[16px]">person</span>
+</div>
+<div>
+<span class="text-[10px] uppercase font-mono text-secondary block">Оппонент</span>
+<span class="text-xs font-semibold text-on-surface">Chief Product Officer</span>
+</div>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/30 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 text-secondary text-[11px]">
+<span class="material-symbols-outlined text-[15px] text-tertiary">analytics</span>
+<span>Успех: <strong class="text-on-surface font-semibold">38%</strong></span>
+</div>
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary text-xs font-semibold neo-raised-sm hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-1">
+            Начать симуляцию
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 3: ПРОДАЖИ -->
+<div class="p-6 rounded-2xl neo-raised bg-surface neo-raised-hover transition-all duration-200 flex flex-col justify-between">
+<div class="space-y-4">
+<!-- Meta Pill Tags -->
+<div class="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-secondary">
+<span class="px-2 py-0.5 rounded-md neo-inset font-medium text-primary">ПРОДАЖИ</span>
+<span>·</span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container-high text-error font-medium">ВЫСОКАЯ</span>
+<span>·</span>
+<span>15-20 МИН</span>
+<span>·</span>
+<span class="font-semibold text-primary">1×2</span>
+</div>
+<div>
+<h3 class="text-lg font-headline font-semibold text-on-surface">Скидка для ключевого enterprise-клиента</h3>
+<p class="mt-2 text-xs md:text-sm text-secondary leading-relaxed">
+              Клиент шантажирует уходом к конкуренту и требует 30% скидки в конце финансового квартала. Защитите маржу.
+            </p>
+</div>
+<div class="space-y-1.5">
+<div class="text-[10px] font-mono uppercase text-outline">Отрабатываемые навыки:</div>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">SPIN-вопросы</span>
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">Ценностное предложение</span>
+</div>
+</div>
+<div class="pt-2 flex items-center gap-2.5 border-t border-outline-variant/30">
+<div class="w-7 h-7 rounded-lg neo-inset flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[16px]">groups</span>
+</div>
+<div>
+<span class="text-[10px] uppercase font-mono text-secondary block">Оппоненты</span>
+<span class="text-xs font-semibold text-on-surface">Procurement VP + Finance Director</span>
+</div>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/30 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 text-secondary text-[11px]">
+<span class="material-symbols-outlined text-[15px] text-tertiary">analytics</span>
+<span>Успех: <strong class="text-on-surface font-semibold">29%</strong></span>
+</div>
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary text-xs font-semibold neo-raised-sm hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-1">
+            Начать симуляцию
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 4: УПРАВЛЕНИЕ / КОНФЛИКТ -->
+<div class="p-6 rounded-2xl neo-raised bg-surface neo-raised-hover transition-all duration-200 flex flex-col justify-between">
+<div class="space-y-4">
+<!-- Meta Pill Tags -->
+<div class="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-secondary">
+<span class="px-2 py-0.5 rounded-md neo-inset font-medium text-primary">УПРАВЛЕНИЕ</span>
+<span>·</span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container-high">СРЕДНЯЯ</span>
+<span>·</span>
+<span>12 МИН</span>
+<span>·</span>
+<span class="font-semibold">1×1</span>
+</div>
+<div>
+<h3 class="text-lg font-headline font-semibold text-on-surface">Конфликт ресурсов между командами</h3>
+<p class="mt-2 text-xs md:text-sm text-secondary leading-relaxed">
+              Два тимлида претендуют на единственного Senior DevOps инженера перед релизом. Найдите взаимовыгодный размен.
+            </p>
+</div>
+<div class="space-y-1.5">
+<div class="text-[10px] font-mono uppercase text-outline">Отрабатываемые навыки:</div>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">Поиск интересов</span>
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">Деэскалация</span>
+</div>
+</div>
+<div class="pt-2 flex items-center gap-2.5 border-t border-outline-variant/30">
+<div class="w-7 h-7 rounded-lg neo-inset flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[16px]">engineering</span>
+</div>
+<div>
+<span class="text-[10px] uppercase font-mono text-secondary block">Оппонент</span>
+<span class="text-xs font-semibold text-on-surface">Lead Core Engineer</span>
+</div>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/30 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 text-secondary text-[11px]">
+<span class="material-symbols-outlined text-[15px] text-tertiary">analytics</span>
+<span>Успех: <strong class="text-on-surface font-semibold">51%</strong></span>
+</div>
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary text-xs font-semibold neo-raised-sm hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-1">
+            Начать симуляцию
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 5: ПАРТНЁРСТВО -->
+<div class="p-6 rounded-2xl neo-raised bg-surface neo-raised-hover transition-all duration-200 flex flex-col justify-between">
+<div class="space-y-4">
+<!-- Meta Pill Tags -->
+<div class="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-secondary">
+<span class="px-2 py-0.5 rounded-md neo-inset font-medium text-primary">ПАРТНЁРСТВО</span>
+<span>·</span>
+<span class="px-2 py-0.5 rounded-md bg-surface-container-high text-error font-medium">ВЫСОКАЯ</span>
+<span>·</span>
+<span>20 МИН</span>
+<span>·</span>
+<span class="font-semibold text-primary">1×3</span>
+</div>
+<div>
+<h3 class="text-lg font-headline font-semibold text-on-surface">Стратегический альянс и доли владения</h3>
+<p class="mt-2 text-xs md:text-sm text-secondary leading-relaxed">
+              Многосторонние переговоры о создании СП: согласование долей участия, интеллектуальной собственности и права вето.
+            </p>
+</div>
+<div class="space-y-1.5">
+<div class="text-[10px] font-mono uppercase text-outline">Отрабатываемые навыки:</div>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">Коалиции</span>
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">Многосторонний торг</span>
+</div>
+</div>
+<div class="pt-2 flex items-center gap-2.5 border-t border-outline-variant/30">
+<div class="w-7 h-7 rounded-lg neo-inset flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[16px]">handshake</span>
+</div>
+<div>
+<span class="text-[10px] uppercase font-mono text-secondary block">Оппоненты</span>
+<span class="text-xs font-semibold text-on-surface">Совет инвесторов (3 стороны)</span>
+</div>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/30 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 text-secondary text-[11px]">
+<span class="material-symbols-outlined text-[15px] text-tertiary">analytics</span>
+<span>Успех: <strong class="text-on-surface font-semibold">24%</strong></span>
+</div>
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary text-xs font-semibold neo-raised-sm hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-1">
+            Начать симуляцию
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 6: КРИЗИС -->
+<div class="p-6 rounded-2xl neo-raised bg-surface neo-raised-hover transition-all duration-200 flex flex-col justify-between">
+<div class="space-y-4">
+<!-- Meta Pill Tags -->
+<div class="flex flex-wrap items-center gap-1.5 text-[11px] font-mono text-secondary">
+<span class="px-2 py-0.5 rounded-md neo-inset font-medium text-primary">КРИЗИС</span>
+<span>·</span>
+<span class="px-2 py-0.5 rounded-md bg-error/10 text-error font-semibold">ЭКСПЕРТ</span>
+<span>·</span>
+<span>15 МИН</span>
+<span>·</span>
+<span class="font-semibold">1×1</span>
+</div>
+<div>
+<h3 class="text-lg font-headline font-semibold text-on-surface">Спасение сорванного контракта</h3>
+<p class="mt-2 text-xs md:text-sm text-secondary leading-relaxed">
+              Критический сбой в инфраструктуре привел к убыткам клиента. Предотвратите судебный иск и расторжение договора.
+            </p>
+</div>
+<div class="space-y-1.5">
+<div class="text-[10px] font-mono uppercase text-outline">Отрабатываемые навыки:</div>
+<div class="flex flex-wrap gap-1.5">
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">Управление гневом</span>
+<span class="px-2.5 py-1 rounded-full neo-raised-sm bg-surface text-[11px] font-medium text-on-surface">Репутационные гарантии</span>
+</div>
+</div>
+<div class="pt-2 flex items-center gap-2.5 border-t border-outline-variant/30">
+<div class="w-7 h-7 rounded-lg neo-inset flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+</div>
+<div>
+<span class="text-[10px] uppercase font-mono text-secondary block">Оппонент</span>
+<span class="text-xs font-semibold text-on-surface">Managing Partner &amp; Legal Council</span>
+</div>
+</div>
+</div>
+<div class="mt-6 pt-4 border-t border-outline-variant/30 flex items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 text-secondary text-[11px]">
+<span class="material-symbols-outlined text-[15px] text-tertiary">analytics</span>
+<span>Успех: <strong class="text-on-surface font-semibold">18%</strong></span>
+</div>
+<button class="px-4 py-2 rounded-full bg-primary text-on-primary text-xs font-semibold neo-raised-sm hover:bg-primary/90 active:scale-95 transition-all flex items-center gap-1">
+            Начать симуляцию
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+<!-- 4. Bottom Custom Scenario Builder Box -->
+<section class="p-8 rounded-2xl neo-raised bg-surface relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6 border border-primary-fixed-dim/40">
+<div class="flex items-start gap-4">
+<div class="w-12 h-12 rounded-2xl neo-inset flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+</div>
+<div class="space-y-1">
+<h4 class="text-base md:text-lg font-headline font-semibold text-on-surface">
+            Не нашли подходящую ситуацию?
+          </h4>
+<p class="text-xs md:text-sm text-secondary max-w-xl">
+            Создайте собственный сценарий с AI-конструктором за 2 минуты. Задайте контекст, психотип оппонента, скрытые интересы и метрики победы.
+          </p>
+</div>
+</div>
+<button class="px-6 py-3 rounded-full border border-primary text-primary hover:bg-primary hover:text-on-primary font-semibold text-xs md:text-sm neo-raised-sm active:scale-95 transition-all whitespace-nowrap flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+        + Собрать свой сценарий
+      </button>
+</section>
+</main>
+<!-- Footer (Per Shared Components JSON & Specifications) -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant/30 mt-12">
+<div class="w-full py-8 px-4 md:px-8 max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+<!-- Brand Copyright & Description -->
+<div class="flex flex-col md:flex-row items-center md:items-start gap-2 md:gap-4 text-center md:text-left">
+<span class="font-headline font-bold text-base text-on-surface">NEGOTIA</span>
+<span class="text-xs text-secondary max-w-md">
+          © 2025 NEGOTIA Inc. Все права защищены. Платформа симуляции когнитивных и стратегических переговоров.
+        </span>
+</div>
+<!-- Footer Legal Links -->
+<div class="flex flex-wrap items-center justify-center gap-5 text-xs text-secondary">
+<a class="hover:text-on-surface transition-colors" href="#">Конфиденциальность</a>
+<a class="hover:text-on-surface transition-colors" href="#">Условия использования</a>
+<a class="hover:text-on-surface transition-colors" href="#">Методология</a>
+<a class="hover:text-on-surface transition-colors" href="#">Безопасность данных</a>
+<a class="hover:text-on-surface transition-colors" href="#">Служба поддержки</a>
+</div>
+</div>
+</footer>
+</body></html>
