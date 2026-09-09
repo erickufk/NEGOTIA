@@ -4,9 +4,10 @@ import AppShell from "../components/AppShell";
 import { useI18n } from "../i18n/I18nProvider";
 import { useAuth } from "../auth/AuthProvider";
 import { api } from "../lib/api";
-import { Button } from "../components/ui/button";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from "recharts";
-import { Play } from "lucide-react";
+import { Play, ShieldCheck, AlertTriangle, User as UserIcon, Sparkles, Radar as RadarIcon, ArrowRight } from "lucide-react";
+
+const skillColor = v => v >= 70 ? "bg-emerald-500" : v >= 50 ? "bg-[#4F46E5]" : "bg-amber-500";
 
 export default function Profile() {
   const { t } = useI18n();
@@ -17,8 +18,8 @@ export default function Profile() {
   const [fwStats, setFwStats] = useState(null);
 
   useEffect(() => {
-    api.stats().then(setStats);
-    api.recommended().then(setRec);
+    api.stats().then(setStats).catch(() => {});
+    api.recommended().then(setRec).catch(() => {});
     api.frameworkStats().then(setFwStats).catch(() => {});
   }, []);
 
@@ -31,108 +32,128 @@ export default function Profile() {
 
   return (
     <AppShell>
-      <div className="mb-8">
-        <div className="text-xs uppercase tracking-wider text-slate-500">{t.profile.title}</div>
-        <h1 className="text-3xl sm:text-4xl font-display font-extrabold">{user?.name}</h1>
-        <div className="text-sm text-slate-400">{user?.email}</div>
-      </div>
+      {/* Header */}
+      <section className="mb-8 flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl neo-raised-sm bg-gradient-to-br from-[#4F46E5]/10 to-[#7C3AED]/10 text-[#4F46E5] flex items-center justify-center font-bold text-2xl">
+          {user?.name?.[0]?.toUpperCase() || <UserIcon className="w-6 h-6" />}
+        </div>
+        <div>
+          <div className="text-xs uppercase tracking-wider text-slate-500 font-mono">{t.profile.title.toUpperCase()}</div>
+          <h1 className="text-2xl md:text-3xl font-display font-bold" data-testid="profile-name">{user?.name}</h1>
+          <div className="text-sm text-slate-500">{user?.email}</div>
+        </div>
+      </section>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* KPI */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { l: t.dashboard.total, v: stats?.total ?? 0 },
-          { l: t.dashboard.avg, v: stats?.avg_score ?? 0 },
-          { l: t.dashboard.best, v: stats?.best_score ?? 0 },
-          { l: "Success rate", v: (stats?.success_rate ?? 0) + "%" },
+          { l: t.dashboard.total, v: stats?.total ?? 0, suffix: "" },
+          { l: t.dashboard.avg, v: stats?.avg_score ?? 0, suffix: " / 100" },
+          { l: t.dashboard.best, v: stats?.best_score ?? 0, suffix: " / 100" },
+          { l: "Success rate", v: (stats?.success_rate ?? 0) + "%", suffix: "" },
         ].map((k, i) => (
-          <div key={i} className="card-glow rounded-xl p-5">
-            <div className="text-xs uppercase text-slate-500 mb-2">{k.l}</div>
-            <div className="font-mono font-bold text-3xl text-sky-400">{k.v}</div>
+          <div key={i} className="neo-raised p-5 neo-raised-hover">
+            <div className="text-[11px] uppercase text-slate-500 tracking-wider mb-2">{k.l}</div>
+            <div className="font-mono font-bold text-2xl md:text-3xl">{k.v}{k.suffix && <span className="text-sm text-slate-400 font-normal">{k.suffix}</span>}</div>
           </div>
         ))}
-      </div>
+      </section>
 
-      <div className="grid lg:grid-cols-2 gap-6 mb-6">
-        <div className="card-glow rounded-2xl p-6">
-          <h2 className="font-display font-bold text-xl mb-4">{t.dashboard.skills}</h2>
-          {radarData.length > 0 && (
-            <ResponsiveContainer width="100%" height={320}>
-              <RadarChart data={radarData}>
-                <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                <PolarAngleAxis dataKey="skill" tick={{ fill: "#94A3B8", fontSize: 10 }} />
-                <Radar dataKey="value" stroke="#38BDF8" fill="#38BDF8" fillOpacity={0.3} />
-              </RadarChart>
-            </ResponsiveContainer>
-          )}
+      {/* Radar + Strengths/Weaknesses */}
+      <section className="grid lg:grid-cols-2 gap-5 mb-6">
+        <div className="neo-raised p-6">
+          <h2 className="font-display font-bold text-lg mb-4 flex items-center gap-2"><RadarIcon className="w-4 h-4 text-[#4F46E5]" />{t.dashboard.skills}</h2>
+          <div className="neo-inset p-3 rounded-2xl">
+            {radarData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart data={radarData}>
+                  <PolarGrid stroke="rgba(15,23,42,0.12)" />
+                  <PolarAngleAxis dataKey="skill" tick={{ fill: "#64748B", fontSize: 10 }} />
+                  <Radar dataKey="value" stroke="#4F46E5" fill="#4F46E5" fillOpacity={0.3} />
+                </RadarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="text-sm text-slate-500 py-16 text-center">Complete a simulation to see your profile.</div>
+            )}
+          </div>
         </div>
-        <div className="grid grid-rows-2 gap-6">
-          <div className="card-glow rounded-2xl p-6">
-            <h3 className="font-display font-bold mb-3">{t.profile.strengths}</h3>
+        <div className="grid grid-rows-2 gap-5">
+          <div className="neo-raised p-5 border-l-4 border-l-emerald-500">
+            <div className="flex items-center gap-2 mb-3">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <h3 className="font-display font-bold text-sm uppercase tracking-wider text-emerald-700">{t.profile.strengths}</h3>
+            </div>
             <div className="space-y-2">
               {strengths.map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between text-sm">
-                  <span className="text-slate-300">{k}</span>
-                  <span className="font-mono text-emerald-400 font-bold">{v}</span>
+                <div key={k}>
+                  <div className="flex items-center justify-between text-xs mb-1"><span className="text-[#1E293B]">{k}</span><span className="font-mono font-bold text-emerald-600">{v}</span></div>
+                  <div className="h-1.5 rounded-full neo-inset overflow-hidden p-0.5"><div className={`h-full rounded-full ${skillColor(v)}`} style={{ width: `${v}%` }} /></div>
                 </div>
               ))}
             </div>
           </div>
-          <div className="card-glow rounded-2xl p-6">
-            <h3 className="font-display font-bold mb-3">{t.profile.weaknesses}</h3>
+          <div className="neo-raised p-5 border-l-4 border-l-amber-500">
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="w-4 h-4 text-amber-600" />
+              <h3 className="font-display font-bold text-sm uppercase tracking-wider text-amber-700">{t.profile.weaknesses}</h3>
+            </div>
             <div className="space-y-2">
               {weaknesses.map(([k, v]) => (
-                <div key={k} className="flex items-center justify-between text-sm">
-                  <span className="text-slate-300">{k}</span>
-                  <span className="font-mono text-amber-400 font-bold">{v}</span>
+                <div key={k}>
+                  <div className="flex items-center justify-between text-xs mb-1"><span className="text-[#1E293B]">{k}</span><span className="font-mono font-bold text-amber-600">{v}</span></div>
+                  <div className="h-1.5 rounded-full neo-inset overflow-hidden p-0.5"><div className={`h-full rounded-full ${skillColor(v)}`} style={{ width: `${v}%` }} /></div>
                 </div>
               ))}
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
+      {/* Framework Performance */}
       {fwStats?.stats && (
-        <div className="card-glow rounded-2xl p-6 mb-6">
+        <section className="neo-raised p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display font-bold text-xl">Framework Performance</h2>
-            {fwStats.weakest !== "combined" && (
-              <span className="chip chip-amber">Weakest: {fwStats.weakest.toUpperCase()}</span>
+            <h2 className="font-display font-bold text-lg">{t.profile.frameworkPerf}</h2>
+            {fwStats.weakest && fwStats.weakest !== "combined" && (
+              <span className="chip chip-amber">{t.profile.growthArea}: {fwStats.weakest.toUpperCase()}</span>
             )}
           </div>
           <div className="grid md:grid-cols-3 gap-4">
             {["harvard", "spin", "batna"].map(fw => {
               const s = fwStats.stats[fw] || { count: 0, avg: 0, best: 0 };
+              const highlight = fwStats.weakest === fw;
               return (
-                <div key={fw} className={`p-4 rounded-lg bg-white/5 ${fwStats.weakest===fw?"ring-1 ring-amber-500/30":""}`} data-testid={`fw-stat-${fw}`}>
-                  <div className="text-xs uppercase text-slate-500 font-mono mb-2">{fw}</div>
-                  <div className="font-mono font-bold text-3xl text-sky-400">{s.avg}</div>
-                  <div className="text-xs text-slate-500 mt-1">Best {s.best} · {s.count} sims</div>
+                <div key={fw} className={`p-4 rounded-xl neo-raised-sm ${highlight ? "ring-2 ring-amber-400" : ""}`} data-testid={`fw-stat-${fw}`}>
+                  <div className="text-[10px] uppercase text-slate-500 font-mono tracking-wider mb-2">{fw}</div>
+                  <div className={`font-mono font-bold text-2xl ${highlight ? "text-amber-700" : "text-[#4F46E5]"}`}>{s.avg}<span className="text-sm text-slate-400 font-normal"> / 100</span></div>
+                  <div className="text-[11px] text-slate-500 mt-1">Best {s.best} · {s.count} sims</div>
+                  <div className="mt-2 h-1 rounded-full neo-inset overflow-hidden p-0.5">
+                    <div className={`h-full rounded-full ${highlight ? "bg-amber-500" : "bg-[#4F46E5]"}`} style={{ width: `${s.avg}%` }} />
+                  </div>
                 </div>
               );
             })}
           </div>
-          {fwStats.weakest !== "combined" && rec?.scenarios?.[0] && (
-            <div className="mt-4 p-3 rounded-lg bg-amber-500/5 border border-amber-500/10 text-sm text-slate-300">
-              Your <span className="text-amber-400 font-semibold">{fwStats.weakest.toUpperCase()}</span> performance is your weakest area. Try practicing it on <span className="text-sky-400">{rec.scenarios[0].title}</span>.
-            </div>
-          )}
-        </div>
+        </section>
       )}
 
+      {/* Recommended */}
       {rec?.scenarios?.length > 0 && (
-        <div className="card-glow rounded-2xl p-6">
-          <h2 className="font-display font-bold text-xl mb-4">{t.profile.recommended}</h2>
+        <section className="neo-raised p-6">
+          <h2 className="font-display font-bold text-lg mb-4 flex items-center gap-2"><Sparkles className="w-4 h-4 text-[#4F46E5]" />{t.profile.recommended}</h2>
           <div className="grid md:grid-cols-3 gap-3">
             {rec.scenarios.map(s => (
-              <div key={s.slug} className="p-4 rounded-xl bg-white/5">
-                <span className="chip chip-indigo mb-2">{s.category}</span>
-                <div className="font-semibold text-sm mb-3">{s.title}</div>
-                <Button size="sm" className="btn-primary rounded-full w-full" onClick={() => nav(`/simulate?scenario=${s.slug}`)} data-testid={`profile-rec-${s.slug}`}>
-                  <Play className="w-3 h-3 mr-1" />{t.scenarios.start}
-                </Button>
+              <div key={s.slug} className="p-4 rounded-xl neo-inset">
+                <span className="chip chip-primary mb-2">{s.category}</span>
+                <div className="font-semibold text-sm mb-3 mt-2">{s.title}</div>
+                <button onClick={() => nav(`/simulate?scenario=${s.slug}`)} data-testid={`profile-rec-${s.slug}`}
+                  className="btn-primary w-full py-2 text-xs flex items-center justify-center gap-1.5">
+                  <Play className="w-3 h-3" />{t.scenarios.start}<ArrowRight className="w-3 h-3" />
+                </button>
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
     </AppShell>
   );

@@ -1,0 +1,52 @@
+{
+  "summary": "Comprehensive E2E test of NEGOTIA iteration 2 (neomorphic redesign + SSE streaming + Voice STT/TTS + RU/EN language switcher). Backend pytest suite: 18/18 pass (health, auth, register, scenarios (12, hidden fields scrubbed), frameworks (4), prep autofill, negotiation create, SSE stream with proper user→ai_start→ai_chunk→ai_end→done sequence, legacy message, end with score/skills/feedback, voice transcribe empty->400 + WAV->200, voice tts empty->400 + EN mp3>=1KB + RU mp3>=1KB, user stats, framework stats, coach hint). Frontend smoke: login → dashboard → scenarios (12 cards, filter pills) → history → profile (radar + strengths/weaknesses + framework breakdown) → negotiation room (participants sidebar with trust/pressure meters, live signals, message sent with SSE typing-caret .typing-caret confirmed rendering, btn-mic present, btn-voice-toggle present). Body background is #FAF9F6, no #0B0F17 dark remnants. AppShell testids all present (brand-link, nav-*, lang-switch, user-menu).",
+  "tested_scope": ["backend", "frontend", "integration", "sse", "voice"],
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/negotiations/:id/end", "issue": "Response is wrapped in {negotiation:{...}} (outcome/score/skill_scores are nested under negotiation.feedback or negotiation itself). Confirmed working, just nested; ensure Debrief.jsx unwraps consistently."},
+      {"endpoint": "POST /api/prep/analyze", "issue": "Response is wrapped as {preparation:{...}} with keys batna/priorities/theirs/offer/opening/close (6 keys — different keys than review spec listed but 6 present)."},
+      {"endpoint": "POST /api/negotiations", "issue": "Response is wrapped in {negotiation:{...}}. framework_name is populated inside negotiation object. Verify frontend unwraps correctly (SimulationWizard, Room)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [
+      {
+        "flow": "i18n / language switcher on all pages",
+        "issue": "Many Russian strings are hardcoded and NOT routed through I18nProvider. When lang=EN, the following pages still render Russian text: (a) Dashboard/History recent-simulation status pill 'В процессе' (should be 'In progress'), (b) NegotiationRoom sidebar: 'Оппоненты' (Opponents), 'Доверие' (Trust), 'Давление' (Pressure), 'Ваша подготовка' (Your Preparation), 'LIVE-СИГНАЛЫ' (Live Signals), 'Сделайте первый ход.' (Make the first move), 'Подготовка не заполнена.' (Preparation not filled), (c) Profile: 'Эффективность по методологиям' (Framework Performance), 'Зона роста: SPIN' (Growth Area: SPIN). This breaks the RU/EN switcher promise for these components.",
+        "affected_selectors": ["dashboard recent-sim status", "history list status", "NegotiationRoom.jsx participants sidebar", "NegotiationRoom.jsx live-signals panel", "Profile.jsx framework performance section"],
+        "priority": "MEDIUM"
+      }
+    ],
+    "design_issues": [
+      {"screen": "all", "issues": ["Neomorphic style is consistently applied. No #0B0F17 remnants found. Body bg = rgb(250,249,246) = #FAF9F6 as expected. Plus Jakarta Sans + JetBrains Mono in use."]}
+    ]
+  },
+  "sse_and_voice_verified": {
+    "sse_stream": "PASS — SSE event ordering (user → ai_start → ai_chunk×N → ai_end → done) confirmed via requests iter_lines. Content-Type is text/event-stream. done payload contains state. UI shows .typing-caret element while streaming — verified via DOM query.",
+    "voice_stt": "PASS — /api/voice/transcribe returns 400 on empty, 200 on silent WAV.",
+    "voice_tts": "PASS — /api/voice/tts returns 400 on empty, audio/mpeg >=1KB for both EN and RU text.",
+    "voice_ui": "btn-mic and btn-voice-toggle both present on NegotiationRoom in free mode (data-testids match spec)."
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_negotia_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "critical_code_review_comments": [
+    "backend/server.py is 883 lines — approaching 700-line split threshold; consider splitting into routers/ (auth, scenarios, negotiations, voice, coach).",
+    "Response wrapping is inconsistent — /negotiations returns {negotiation:{...}}, /prep returns {preparation:{...}}, /health returns flat. Standardize response envelope.",
+    "Many negotiation-room UI strings are hardcoded in Russian bypassing i18n — breaks EN mode.",
+    "STT endpoint uses OpenAISpeechToText SDK with try/except TypeError fallback — brittle. Consider adopting whichever API signature is stable in emergentintegrations.",
+    "Streaming endpoint updates doc[state] and then writes once at 'done'. If client disconnects mid-stream, message accumulates on client but never persists. Consider incremental updates or a finally-block persist."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_negotia_api.py (new pytest suite)"
+  ],
+  "success_rate": {"backend": "100% (18/18)", "frontend": "95% (i18n gaps on some pages)"},
+  "test_credentials": "demo@negotia.app / Demo1234! (auto-seeded, working)",
+  "seed_data_creation": "None (test creates one TEST_ user via register and multiple negotiations under demo user — no cleanup needed).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Backend fully green with new pytest suite at /app/backend/tests/test_negotia_api.py. All new SSE + Voice endpoints work. Only outstanding issue is i18n coverage: NegotiationRoom sidebar/signals, Dashboard/History status pill, and Profile framework-performance section contain hardcoded Russian text — needs to move to i18n keys. Response wrapping ({negotiation:{...}}, {preparation:{...}}) is intentional; frontend already handles it."
+}

@@ -7,9 +7,14 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
+import asyncio
+import io
+import re
+
 import bcrypt
 import jwt
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File, Form
+from fastapi.responses import StreamingResponse, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -17,6 +22,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr
 
 from emergentintegrations.llm.chat import LlmChat, UserMessage
+from emergentintegrations.llm.openai import OpenAISpeechToText, OpenAITextToSpeech
 
 from scenarios_seed import SCENARIOS
 from frameworks import FRAMEWORKS, classify_spin
@@ -701,6 +707,165 @@ async def coach_hint(body: CoachIn, user=Depends(get_current_user)):
         if sig.get("batna_ref", 0) == 0:
             hint = "Signal your alternative — remind them you have options if this deal doesn't work."
     return {"hint": hint, "framework": fw["name"]}
+
+
+# ---------- Streaming message endpoint (SSE) ----------
+def _chunk_text(text: str, target_chunks: int = 30) -> List[str]:
+    """Split text into small chunks that look like token streaming."""
+    if not text:
+        return []
+    tokens = re.findall(r"\S+\s*", text)
+    if not tokens:
+        return [text]
+    if len(tokens) <= target_chunks:
+        return tokens
+    # group tokens
+    size = max(1, len(tokens) // target_chunks)
+    grouped = []
+    for i in range(0, len(tokens), size):
+        grouped.append("".join(tokens[i:i + size]))
+    return grouped
+
+
+@api.post("/negotiations/{neg_id}/message-stream")
+async def post_message_stream(neg_id: str, body: MessageIn, user=Depends(get_current_user)):
+    doc = await db.negotiations.find_one({"id": neg_id, "user_id": user["id"]}, {"_id": 0})
+    if not doc:
+        raise HTTPException(404, "Not found")
+    if doc["status"] != "active":
+        raise HTTPException(400, "Negotiation ended")
+
+    scenario = await db.scenarios.find_one({"slug": doc["scenario_slug"]}, {"_id": 0})
+    parts = [p for p in scenario["participants"] if any(pp["name"] == p["name"] for pp in doc["participants"])]
+
+    async def event_gen():
+        try:
+            # analyze user turn
+            signals = await _analyze_turn(body.content)
+            for k, v in signals.items():
+                if v:
+                    doc["state"]["signals"][k] = doc["state"]["signals"].get(k, 0) + 1
+            tl = body.content.lower()
+            if any(w in tl for w in ["benchmark", "market rate", "industry standard", "standard practice", "рынок"]):
+                doc["state"]["signals"]["objective_criteria"] = doc["state"]["signals"].get("objective_criteria", 0) + 1
+            if any(w in tl for w in ["in exchange", "in return", "if you", "trade", "swap"]):
+                doc["state"]["signals"]["trades"] = doc["state"]["signals"].get("trades", 0) + 1
+            if any(w in tl for w in ["stupid", "ridiculous", "you people", "your fault", "incompetent"]):
+                doc["state"]["signals"]["personal_attack"] = doc["state"]["signals"].get("personal_attack", 0) + 1
+            spin_cat = classify_spin(body.content)
+            doc["state"].setdefault("spin_counts", {"situation": 0, "problem": 0, "implication": 0, "need_payoff": 0, "other": 0})
+            doc["state"]["spin_counts"][spin_cat] = doc["state"]["spin_counts"].get(spin_cat, 0) + 1
+
+            user_msg = {"id": str(uuid.uuid4()), "role": "user", "content": body.content, "at": now_iso()}
+            doc["messages"].append(user_msg)
+            doc["state"]["round"] = doc["state"].get("round", 0) + 1
+
+            yield f"data: {json.dumps({'type': 'user', 'message': user_msg})}\n\n"
+
+            ai_replies = []
+            fw_id = doc.get("training_framework", "combined")
+            for p in parts[:2]:
+                sys_prompt = _build_system_prompt(scenario, p, doc["state"], parts, fw_id)
+                try:
+                    ai_text = await _ai_respond(sys_prompt, doc["messages"][:-1], body.content, f"{neg_id}-{p['name']}")
+                except Exception:
+                    logger.exception("AI error")
+                    ai_text = f"[{p['name']} pauses] Let me think about your offer."
+
+                ai_msg_id = str(uuid.uuid4())
+                ai_msg = {"id": ai_msg_id, "role": "ai", "participant": p["name"], "content": ai_text, "at": now_iso()}
+                doc["messages"].append(ai_msg)
+                ai_replies.append(ai_msg)
+
+                # stream token chunks
+                yield f"data: {json.dumps({'type': 'ai_start', 'message': {'id': ai_msg_id, 'role': 'ai', 'participant': p['name'], 'at': ai_msg['at']}})}\n\n"
+                for chunk in _chunk_text(ai_text, target_chunks=24):
+                    yield f"data: {json.dumps({'type': 'ai_chunk', 'id': ai_msg_id, 'chunk': chunk})}\n\n"
+                    await asyncio.sleep(0.04)
+                yield f"data: {json.dumps({'type': 'ai_end', 'id': ai_msg_id})}\n\n"
+
+                if signals.get("empathy"):
+                    doc["state"]["trust"][p["name"]] = min(100, doc["state"]["trust"].get(p["name"], 50) + 5)
+                if signals.get("pressure"):
+                    doc["state"]["pressure"][p["name"]] = min(100, doc["state"]["pressure"].get(p["name"], 30) + 8)
+
+            choices = None
+            if doc["mode"] == "challenge" and doc["status"] == "active":
+                try:
+                    choices = await _generate_choices(scenario, doc)
+                except Exception:
+                    choices = None
+
+            await db.negotiations.update_one(
+                {"id": neg_id},
+                {"$set": {"messages": doc["messages"], "state": doc["state"]}},
+            )
+            yield f"data: {json.dumps({'type': 'done', 'state': doc['state'], 'choices': choices})}\n\n"
+        except Exception as e:
+            logger.exception("stream failed")
+            yield f"data: {json.dumps({'type': 'error', 'message': str(e)})}\n\n"
+
+    return StreamingResponse(event_gen(), media_type="text/event-stream", headers={
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+    })
+
+
+# ---------- Voice: STT + TTS ----------
+_stt = OpenAISpeechToText(api_key=EMERGENT_LLM_KEY)
+_tts = OpenAITextToSpeech(api_key=EMERGENT_LLM_KEY)
+
+
+def _clean_for_tts(text: str) -> str:
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"[*_#>~|`]", "", text)
+    return re.sub(r"\s+", " ", text).strip()[:4000]
+
+
+@api.post("/voice/transcribe")
+async def transcribe(file: UploadFile = File(...), language: str = Form("en"), user=Depends(get_current_user)):
+    try:
+        data = await file.read()
+        if not data:
+            raise HTTPException(400, "Empty file")
+        buf = io.BytesIO(data)
+        # give the file a name so the SDK can infer type
+        name = file.filename or "audio.webm"
+        buf.name = name
+        try:
+            resp = await _stt.transcribe(file=buf, model="whisper-1", response_format="json", language=language[:2] if language else None)
+        except TypeError:
+            buf.seek(0)
+            resp = await _stt.transcribe(file=buf, model="whisper-1", response_format="json")
+        text = getattr(resp, "text", None) or (resp.get("text") if isinstance(resp, dict) else str(resp))
+        return {"text": text or ""}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("transcribe failed")
+        raise HTTPException(500, f"Transcription failed: {e}")
+
+
+class TtsIn(BaseModel):
+    text: str
+    language: str = "en"
+    voice: str = "nova"
+
+
+@api.post("/voice/tts")
+async def tts_endpoint(body: TtsIn, user=Depends(get_current_user)):
+    try:
+        clean = _clean_for_tts(body.text)
+        if not clean:
+            raise HTTPException(400, "Empty text")
+        audio_bytes = await _tts.generate_speech(text=clean, model="tts-1", voice=body.voice, response_format="mp3")
+        return Response(content=audio_bytes, media_type="audio/mpeg", headers={"Cache-Control": "public, max-age=3600"})
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("tts failed")
+        raise HTTPException(500, f"TTS failed: {e}")
 
 
 @api.get("/health")

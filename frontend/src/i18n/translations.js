@@ -44,11 +44,15 @@ export const en = {
     total: "Simulations", avg: "Avg. Score", best: "Best Score", streak: "Streak",
     skills: "Skills", recent: "Recent Simulations", viewAll: "View all history",
     recommended: "Recommended for you", weakestNote: "Improve your weakest skill:",
-    startRec: "Start Recommended Simulation", empty: "Your first negotiation is waiting.",
+    startRec: "Start Recommended", empty: "Your first negotiation is waiting.",
+    subline: "Continue ongoing simulations or pick a fresh scenario tuned to your weakest skill.",
+    emptySkills: "Complete a simulation to see your skills radar.",
+    inProgress: "In progress",
   },
   scenarios: {
     title: "Scenario Library", filters: "Filters", category: "Category", difficulty: "Difficulty",
     all: "All", start: "Start", participants: "participants", min: "min", skills: "Skills",
+    subline: "A catalog of real business situations — from vendor pricing to difficult clients.",
   },
   wizard: {
     step: "Step", of: "of", back: "Back", next: "Continue", start: "Start Negotiation",
@@ -72,6 +76,10 @@ export const en = {
     thinking: "Thinking...", pickChoice: "Pick your next move",
     quality: { strong: "Strong", acceptable: "Acceptable", weak: "Weak", risky: "Risky" },
     hint: "Coach hint",
+    opponents: "Opponents", trust: "Trust", pressure: "Pressure",
+    preparation: "Your preparation", liveSignals: "Live signals",
+    firstMove: "Make your opening move.", prepEmpty: "Preparation not filled.",
+    transcribing: "Transcribing...",
   },
   debrief: {
     title: "Negotiation Complete", overall: "Overall Score", outcome: "Outcome",
@@ -86,6 +94,7 @@ export const en = {
   profile: {
     title: "Negotiation Profile", strengths: "Strengths", weaknesses: "Areas to Improve",
     recommended: "Recommended Training",
+    frameworkPerf: "Framework Performance", growthArea: "Growth area",
   },
   common: { loading: "Loading...", error: "Something went wrong", cancel: "Cancel", save: "Save" },
 };
@@ -131,10 +140,14 @@ export const ru = {
     skills: "Навыки", recent: "Недавние симуляции", viewAll: "Вся история",
     recommended: "Рекомендуем", weakestNote: "Прокачайте слабый навык:",
     startRec: "Начать рекомендованную", empty: "Ваша первая симуляция ждёт.",
+    subline: "Продолжайте начатые переговоры или выберите тренировку под ваш слабый навык.",
+    emptySkills: "Завершите одну симуляцию, чтобы увидеть радар навыков.",
+    inProgress: "В процессе",
   },
   scenarios: {
     title: "Библиотека сценариев", filters: "Фильтры", category: "Категория", difficulty: "Сложность",
     all: "Все", start: "Начать", participants: "участников", min: "мин", skills: "Навыки",
+    subline: "Каталог реальных ситуаций — от торга по цене до сложных клиентов.",
   },
   wizard: {
     step: "Шаг", of: "из", back: "Назад", next: "Далее", start: "Начать переговоры",
@@ -157,6 +170,10 @@ export const ru = {
     thinking: "Обдумывает...", pickChoice: "Выберите ход",
     quality: { strong: "Сильный", acceptable: "Приемлемый", weak: "Слабый", risky: "Рискованный" },
     hint: "Подсказка",
+    opponents: "Оппоненты", trust: "Доверие", pressure: "Давление",
+    preparation: "Ваша подготовка", liveSignals: "Live-сигналы",
+    firstMove: "Сделайте первый ход.", prepEmpty: "Подготовка не заполнена.",
+    transcribing: "Распознаю...",
   },
   debrief: {
     title: "Переговоры завершены", overall: "Общий счёт", outcome: "Исход",
@@ -171,6 +188,7 @@ export const ru = {
   profile: {
     title: "Переговорный профиль", strengths: "Сильные стороны", weaknesses: "Зоны роста",
     recommended: "Рекомендуемая тренировка",
+    frameworkPerf: "Эффективность по методологиям", growthArea: "Зона роста",
   },
   common: { loading: "Загрузка...", error: "Что-то пошло не так", cancel: "Отмена", save: "Сохранить" },
 };

@@ -2,6 +2,9 @@ import axios from "axios";
 
 export const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
+const token = () => localStorage.getItem("negotia_token");
+const authHeaders = () => token() ? { Authorization: `Bearer ${token()}` } : {};
+
 export const api = {
   scenarios: () => axios.get(`${API}/scenarios`).then(r => r.data.scenarios),
   scenario: (slug) => axios.get(`${API}/scenarios/${slug}`).then(r => r.data.scenario),
@@ -16,4 +19,20 @@ export const api = {
   recommended: () => axios.get(`${API}/users/me/recommended`).then(r => r.data),
   frameworkStats: () => axios.get(`${API}/users/me/framework-stats`).then(r => r.data),
   coachHint: (negId) => axios.post(`${API}/coach/hint`, { negotiation_id: negId }).then(r => r.data),
+
+  // Voice
+  transcribe: async (blob, lang = "en") => {
+    const fd = new FormData();
+    fd.append("file", blob, "audio.webm");
+    fd.append("language", lang);
+    const r = await axios.post(`${API}/voice/transcribe`, fd, { headers: { ...authHeaders(), "Content-Type": "multipart/form-data" } });
+    return r.data.text;
+  },
+  tts: async (text, lang = "en") => {
+    const r = await axios.post(`${API}/voice/tts`, { text, language: lang }, {
+      headers: { ...authHeaders() },
+      responseType: "blob",
+    });
+    return URL.createObjectURL(r.data);
+  },
 };

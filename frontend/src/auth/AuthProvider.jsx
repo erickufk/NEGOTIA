@@ -4,6 +4,12 @@ import axios from "axios";
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 const AuthCtx = createContext();
 
+// Set axios auth header eagerly from localStorage before any component mounts,
+// so React children (which useEffect BEFORE the AuthProvider parent) still
+// see the token on their initial API calls after a hard page reload.
+const _boot = typeof window !== "undefined" ? localStorage.getItem("negotia_token") : null;
+if (_boot) axios.defaults.headers.common["Authorization"] = `Bearer ${_boot}`;
+
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("negotia_token"));
   const [user, setUser] = useState(() => {

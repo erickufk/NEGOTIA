@@ -4,8 +4,7 @@ import AppShell from "../components/AppShell";
 import { useI18n } from "../i18n/I18nProvider";
 import { useAuth } from "../auth/AuthProvider";
 import { api } from "../lib/api";
-import { Button } from "../components/ui/button";
-import { Plus, Trophy, Target, Flame, ArrowRight, Sparkles } from "lucide-react";
+import { Plus, TrendingUp, Sparkles, Trophy, Flame, ArrowRight, Target, Activity, Radar as RadarIcon } from "lucide-react";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from "recharts";
 
 export default function Dashboard() {
@@ -23,64 +22,128 @@ export default function Dashboard() {
   }, []);
 
   const kpi = [
-    { label: t.dashboard.total, value: stats?.total ?? 0, icon: Target, c: "sky" },
-    { label: t.dashboard.avg, value: stats?.avg_score ?? 0, icon: Sparkles, c: "amber" },
-    { label: t.dashboard.best, value: stats?.best_score ?? 0, icon: Trophy, c: "emerald" },
-    { label: t.dashboard.streak, value: stats?.streak ?? 0, icon: Flame, c: "rose" },
+    { label: t.dashboard.total, value: stats?.total ?? 0, icon: Activity, suffix: "" },
+    { label: t.dashboard.avg, value: stats?.avg_score ?? 0, icon: Target, suffix: " / 100" },
+    { label: t.dashboard.best, value: stats?.best_score ?? 0, icon: Trophy, suffix: " / 100" },
+    { label: t.dashboard.streak, value: stats?.streak ?? 0, icon: Flame, suffix: "" },
   ];
   const radarData = stats?.skills ? Object.entries(stats.skills).map(([k, v]) => ({ skill: k, value: v })) : [];
 
   return (
     <AppShell>
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+      {/* Greeting + Action */}
+      <section className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
         <div>
-          <div className="text-sm text-slate-500 uppercase tracking-wider">{t.dashboard.welcome}</div>
-          <h1 className="text-3xl sm:text-4xl font-display font-extrabold" data-testid="dashboard-welcome">{user?.name}</h1>
+          <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold tracking-wider text-[#4F46E5] mb-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#4F46E5] pulse-dot !p-0 before:content-none" />
+            <span>{t.dashboard.welcome.toUpperCase()}</span>
+          </div>
+          <h1 className="text-2xl md:text-3xl font-display font-bold tracking-tight" data-testid="dashboard-welcome">
+            {t.dashboard.welcome}, {user?.name}
+          </h1>
+          <p className="text-sm text-slate-500 mt-1 max-w-2xl">
+            {t.dashboard.subline || "Continue your ongoing simulations or pick a fresh scenario tuned to your weakest skill."}
+          </p>
         </div>
-        <Button className="btn-primary rounded-full px-6 h-12" onClick={() => nav("/simulate")} data-testid="new-sim-btn">
-          <Plus className="w-4 h-4 mr-2" />{t.dashboard.newSim}
-        </Button>
-      </div>
+        <button onClick={() => nav("/simulate")} data-testid="new-sim-btn"
+          className="btn-primary px-5 py-2.5 text-sm flex items-center gap-2">
+          <Plus className="w-4 h-4" />{t.dashboard.newSim}
+        </button>
+      </section>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {kpi.map((k, i) => (
-          <div key={i} className="card-glow rounded-xl p-5" data-testid={`kpi-${k.label}`}>
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs uppercase tracking-wider text-slate-500">{k.label}</span>
-              <k.icon className={`w-4 h-4 text-${k.c}-400`} />
+      {/* Hero recommended */}
+      {rec?.scenarios?.[0] && (
+        <section className="neo-raised p-6 md:p-8 mb-8 relative overflow-hidden">
+          <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-[#4F46E5]/5 blur-3xl pointer-events-none" />
+          <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+            <div className="space-y-3 max-w-3xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full neo-inset text-xs font-mono font-semibold text-[#4F46E5]">
+                <Sparkles className="w-3 h-3" />
+                <span>{t.dashboard.recommended.toUpperCase()} · AI DIAGNOSTIC</span>
+              </div>
+              <div>
+                <h2 className="text-xl md:text-2xl font-display font-bold">{rec.scenarios[0].title}</h2>
+                <p className="text-sm md:text-base text-slate-500 mt-2 leading-relaxed">{rec.scenarios[0].description}</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="chip chip-slate">{rec.scenarios[0].category}</span>
+                <span className="chip chip-slate">{rec.scenarios[0].difficulty}</span>
+                <span className="chip chip-primary flex items-center gap-1">
+                  {t.dashboard.weakestNote} <span className="font-bold">{rec.weakest_skill}</span>
+                </span>
+              </div>
             </div>
-            <div className={`font-mono font-bold text-3xl text-${k.c}-400`}>{k.value}</div>
+            <div className="flex flex-col sm:flex-row lg:flex-col gap-3 w-full lg:w-auto shrink-0">
+              <button onClick={() => nav(`/simulate?scenario=${rec.scenarios[0].slug}`)} data-testid="start-recommended"
+                className="btn-primary px-6 py-3 text-sm flex items-center justify-center gap-2">
+                <span>{t.dashboard.startRec}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* KPI Grid */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {kpi.map((k, i) => (
+          <div key={i} className="neo-raised p-5 neo-raised-hover" data-testid={`kpi-${k.label}`}>
+            <div className="flex items-center justify-between text-slate-500">
+              <span className="text-xs font-medium uppercase tracking-wider">{k.label}</span>
+              <k.icon className="w-4 h-4 text-[#4F46E5]" />
+            </div>
+            <div className="mt-3 font-mono font-bold text-2xl md:text-3xl text-[#1E293B]">
+              {k.value}{k.suffix && <span className="text-sm font-normal text-slate-400">{k.suffix}</span>}
+            </div>
           </div>
         ))}
-      </div>
+      </section>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 card-glow rounded-2xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display font-bold text-xl">{t.dashboard.recent}</h2>
-            <Button variant="ghost" size="sm" onClick={() => nav("/history")} data-testid="view-all-history" className="text-slate-400">
-              {t.dashboard.viewAll} <ArrowRight className="w-3 h-3 ml-1" />
-            </Button>
+      {/* Two-col main */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <div className="lg:col-span-7 space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-[#4F46E5]" />
+              <h2 className="font-display font-bold text-lg">{t.dashboard.recent}</h2>
+            </div>
+            <button onClick={() => nav("/history")} data-testid="view-all-history"
+              className="text-xs font-semibold text-[#4F46E5] hover:underline flex items-center gap-1">
+              <span>{t.dashboard.viewAll}</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
           {recent.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="neo-raised p-10 text-center">
               <div className="text-slate-500 mb-4">{t.dashboard.empty}</div>
-              <Button className="btn-primary rounded-full" onClick={() => nav("/simulate")} data-testid="empty-start-btn">
-                {t.dashboard.newSim}
-              </Button>
+              <button onClick={() => nav("/simulate")} data-testid="empty-start-btn" className="btn-primary px-5 py-2.5 text-sm inline-flex items-center gap-2">
+                <Plus className="w-4 h-4" />{t.dashboard.newSim}
+              </button>
             </div>
           ) : (
-            <div className="divide-y divide-white/5">
+            <div className="space-y-3">
               {recent.map(r => (
-                <div key={r.id} onClick={() => nav(`/history/${r.id}`)} data-testid={`recent-${r.id}`}
-                  className="py-3 flex items-center justify-between cursor-pointer hover:bg-white/5 -mx-2 px-2 rounded-lg transition">
-                  <div>
-                    <div className="font-medium">{r.scenario_title}</div>
-                    <div className="text-xs text-slate-500 font-mono">{r.mode.toUpperCase()} · {new Date(r.created_at).toLocaleDateString()}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-mono font-bold text-xl text-sky-400">{r.score ?? "—"}</div>
-                    <div className="text-xs text-slate-500">{r.outcome || r.status}</div>
+                <div key={r.id} onClick={() => nav(r.status === "completed" ? `/debrief/${r.id}` : `/negotiation/${r.id}`)}
+                  data-testid={`recent-${r.id}`}
+                  className={`neo-raised p-5 neo-raised-hover cursor-pointer ${r.status === "active" ? "border-l-4 border-l-[#4F46E5]" : ""}`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center gap-2 text-xs font-mono text-slate-500">
+                        {r.status === "active" ? (
+                          <span className="chip chip-emerald pulse-dot">{t.dashboard.inProgress}</span>
+                        ) : null}
+                        <span className="chip chip-slate !text-[10px]">{r.mode?.toUpperCase()}</span>
+                        <span className="chip chip-slate !text-[10px]">{(r.framework_name || "Combined").toUpperCase()}</span>
+                        <span>{new Date(r.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <h3 className="font-display font-semibold text-base">{r.scenario_title}</h3>
+                      {r.outcome && <div className="text-xs text-slate-500">{r.outcome}</div>}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className={`text-lg font-mono font-bold ${r.score >= 70 ? "text-emerald-600" : r.score >= 50 ? "text-[#1E293B]" : "text-rose-600"}`}>
+                        {r.score ?? "—"}<span className="text-xs font-normal text-slate-400"> / 100</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -88,36 +151,31 @@ export default function Dashboard() {
           )}
         </div>
 
-        <div className="card-glow rounded-2xl p-6">
-          <h2 className="font-display font-bold text-xl mb-4">{t.dashboard.skills}</h2>
-          {radarData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={280}>
-              <RadarChart data={radarData}>
-                <PolarGrid stroke="rgba(255,255,255,0.08)" />
-                <PolarAngleAxis dataKey="skill" tick={{ fill: "#94A3B8", fontSize: 10 }} />
-                <Radar dataKey="value" stroke="#38BDF8" fill="#38BDF8" fillOpacity={0.25} />
-              </RadarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="text-sm text-slate-500 py-8 text-center">Complete a simulation to see your skills.</div>
-          )}
-        </div>
-      </div>
-
-      {rec?.scenarios?.[0] && (
-        <div className="mt-8 card-glow rounded-2xl p-6 border-sky-500/20">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-            <div>
-              <span className="chip chip-sky mb-2">{t.dashboard.recommended}</span>
-              <div className="font-display font-semibold text-lg">{rec.scenarios[0].title}</div>
-              <div className="text-sm text-slate-400">{t.dashboard.weakestNote} <span className="text-amber-400 font-mono">{rec.weakest_skill}</span></div>
+        {/* Radar */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <RadarIcon className="w-5 h-5 text-[#4F46E5]" />
+            <h2 className="font-display font-bold text-lg">{t.dashboard.skills}</h2>
+          </div>
+          <div className="neo-raised p-6">
+            <div className="neo-inset rounded-2xl p-4">
+              {radarData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={280}>
+                  <RadarChart data={radarData}>
+                    <PolarGrid stroke="rgba(15,23,42,0.12)" />
+                    <PolarAngleAxis dataKey="skill" tick={{ fill: "#64748B", fontSize: 10 }} />
+                    <Radar dataKey="value" stroke="#4F46E5" fill="#4F46E5" fillOpacity={0.25} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="text-sm text-slate-500 py-16 text-center">
+                  {t.dashboard.emptySkills || "Complete a simulation to see your skills."}
+                </div>
+              )}
             </div>
-            <Button className="btn-primary rounded-full px-5" onClick={() => nav(`/simulate?scenario=${rec.scenarios[0].slug}`)} data-testid="start-recommended">
-              {t.dashboard.startRec} <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
           </div>
         </div>
-      )}
+      </section>
     </AppShell>
   );
 }

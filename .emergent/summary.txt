@@ -1,0 +1,157 @@
+<analysis>**original_problem_statement**: 
+Develop **NEGOTIA**, an AI Negotiation Simulator (SaaS). Users must be able to register, choose a negotiation scenario, define parameters, prepare, and negotiate with AI participants via text, multiple-choice, or voice mode. 
+Key components:
+- End-to-End flow: Landing → Auth → Dashboard → Simulation Wizard → Negotiation Room → AI Debrief → History → Profile.
+- Training Methodology Layer supporting Harvard, SPIN, BATNA, and Combined frameworks.
+- Tech Stack: React, Tailwind, FastAPI, MongoDB. 
+- Integrations: Claude Sonnet 5 for AI reasoning, OpenAI Whisper/TTS for voice mode, JWT for auth.
+
+**User's preferred language**: Russian (The user interacts in a mix of Russian and English, but specifically requested the application UI and prompt logic to focus on Russian. INSTRUCT next agent to respond in the user's preferred language (Russian) when chatting directly).
+
+**what currently exists?** 
+A functional full-stack app with React/FastAPI/MongoDB. JWT Auth is implemented. 12 negotiation scenarios are seeded in the DB. The Training Methodology Layer (Harvard, SPIN, BATNA) is fully functional and tracked in the DB and user profile stats. The AI can auto-fill user preparation fields. The Landing page has been completely rewritten to match a new Stitch UI design (warm cream/indigo palette). Source files for 6 additional Stitch UI screen designs are downloaded and waiting to be applied.
+
+**Last working item**:
+- Last item agent was working: Applying the Stitch UI design to the frontend Landing Page () using user-provided HTML reference code.
+- Status: COMPLETED
+- Agent Testing Done: Y (via screenshot tool)
+- Which testing method agent to use? NA
+- User Testing Done: N
+
+**All Pending/In progress Issue list**:
+  - Issue 1: Fake Client-Side Streaming vs True Server-Side Streaming
+     - Attempted fixes: The previous agent implemented a client-side typing-reveal effect for AI messages to simulate streaming.
+     - Next debug checklist: Check 's  endpoint. It currently returns a standard JSON response. It needs to be converted to return an SSE (Server-Sent Events) stream using the Emergent LLM token streaming capabilities.
+     - Why fix this issue and what will be achieved with the fix? The user explicitly requested: Make the AI opponents type their replies token by token so each round feels like a real live conversation.
+     - Status: NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? both
+     - Blocked on other issue: None
+  
+  - Issue 2: Missing Russian Localization Switcher
+     - Attempted fixes: Frontend has  and , but no actual language switcher in the header to allow users to change languages dynamically.
+     - Next debug checklist: Check  and  headers.
+     - Why fix this issue and what will be achieved with the fix? User requested: Add rUSSIAN to the header switcher so global learners can train in their own language.
+     - Status: NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? frontend
+     - Blocked on other issue: None
+
+**In progress Task List**:
+  - Task 1: Rewrite Remaining 6 Pages to match Stitch UI Designs
+     - Where to resume: Iterate through the folders in  (negotia_dashboard, negotia_scenarios, negotia_wizard, negotia_negotiation_room, negotia_ai_debrief, negotia_profile_skills). Read the  and  for each to update the corresponding React pages in .
+     - What will be achieved with this? The entire SaaS UI will match the newly requested design system.
+     - Status: NOT STARTED
+     - Should Test frontend/backend/both after fix? frontend
+     - Blocked on something: None (Assets are already on disk)
+
+**Upcoming and Future Tasks**:
+    P0: Apply Stitch UI designs to Dashboard, Scenarios, Wizard, Negotiation Room, Debrief, and Profile pages.
+    P1: Implement real Server-Side token streaming (SSE) for AI text generation.
+    P1: Implement Voice Mode using OpenAI Whisper STT + OpenAI TTS (Deferred by previous agent due to context budget).
+    P2: Add functional Language Switcher (RU/EN) to the App Header.
+    P3: Update the Coaching Toggle hint system to use real-time personalized Claude inferences rather than static/rule-based suggestions.
+
+**Completed work in this session**:
+- Project initial setup with Docker/FastAPI/React (DONE)
+- JWT Auth and MongoDB Integration (DONE)
+- 12 Seed Scenarios created (DONE)
+- Training Methodology Layer implemented (Harvard, SPIN, BATNA, Combined) in  (DONE)
+- AI-autofill for negotiation preparation step (DONE)
+- Profile Framework Stats tracking (DONE)
+- Landing page () UI updated to match Stitch design (DONE)
+
+**Earlier issues found/mentioned but not fixed**:
+   - Issue 1: Voice Mode (OpenAI Whisper STT / TTS)
+     - Debug checklist: Requires integration subagent to configure audio transcription and text-to-speech for AI opponent replies.
+     - Why to solve this issue and what will be achieved with this? Core requested feature for practicing verbal negotiations.
+     - Should Test frontend/backend/both after fix: both
+     - Is recurring issue? N
+
+**Known issue recurrence from previous fork**:
+  - Issue recurrence in previous fork: N/A (First fork)
+  - Recurrence count: 0
+  - Status: NOT STARTED
+
+**Code Architecture**:
+
+
+**Key Technical Concepts**:
+React SPA (React Router, Tailwind CSS, Shadcn UI), FastAPI, MongoDB (Motor Async). Core AI interactions use Claude Sonnet 5 via Universal Key.
+
+**key DB schema**:
+  - : {id, email, hashed_password, name, created_at}
+  - : {id, title, category, description, difficulty, objective, context}
+  - : {id, user_id, scenario_id, training_framework, status, scores, framework_scores}
+
+**changes in tech stack**:
+  - None.
+
+**All files of reference**:
+  -  (Contains subfolders with  and  for all pending UI rewrites)
+  -  (Rewritten as reference for the new UI paradigm)
+  -  (Core logic for the Training Methodology Layer)
+
+**Areas that need refactoring**:
+  -  and  : Needs to transition from a block-response model to Server-Sent Events (SSE) for true token-by-token streaming.
+
+**key api endpoints**:
+  -  (AI response generation)
+  -  (AI form completion for preparation)
+  -  (Fetches user's training methodology performance)
+
+**Critical Info for New Agent**:
+  - **IMPORTANT:** 6 screens of UI design assets (HTML & PNG) have been downloaded and unzipped to . Your highest priority is using these assets to rewrite Dashboard, Scenarios, Wizard, Negotiation Room, Debrief, and Profile pages.
+  - When rewriting these UI components, **preserve all existing API bindings, routing,  attributes, and i18n logic**. Do not rip out the application logic just to match the visual design.
+  - You MUST use  for OpenAI TTS/STT integration when you get to Voice mode.
+  - Use Universal Key for Claude Sonnet 5 text generations.
+
+**documents and test reports created in this job**:
+  - /app/test_reports/iteration_1.json
+  - /app/memory/test_credentials.md
+
+**Last 10 User Messages and any pending HUMAN messages**:
+1. User asked for specific architectural details: Claude Sonnet 5, JWT email/password, OpenAI Whisper/TTS, and 12 scenario seed data. (Completed)
+2. User requested additional features: Training Methodology Layer (Harvard/SPIN/BATNA), AI-autofill for preparation, and framework stats in history. (Completed)
+3. User requested Server Voice (Whisper/TTS), Server-side Token Streaming, and Russian Language Switcher. (Missed/Deferred)
+4. User asked to update the Landing Page using a provided Figma link. Agent could not access the Figma link.
+5. User provided another Figma link. Still inaccessible.
+6. User requested the easiest way to give the UI. Agent suggested ZIP or images.
+7. User uploaded a ZIP containing 7 Stitch UI screens ().
+8. Agent unzipped the files and suggested a new fork due to context limits.
+9. User asked how to fork. Agent provided instructions.
+10. User uploaded  for the  page specifically and asked the agent to update it. Agent updated  and finished the session.
+*Pending Tasks from these messages:* Implement the remaining 6 UI screens from the provided ZIP, implement Server Voice, implement SSE Streaming, and add the Russian language switcher.
+
+**Project Health Check:**
+Healthy. Fully functional E2E flow.
+
+**3rd Party Integrations**:
+  - Claude Sonnet 5 (Text Generation) — uses Emergent LLM Key
+
+**Testing status**:
+  - Testing agent used after significant changes: YES
+  - Troubleshoot agent used after agent stuck in loop: NO
+  - Test files created: 
+  - Known regressions: None
+
+**Credentials to test flow:**
+Check  (e.g., demo@negotia.app created during automated tests).
+
+**What agent forgot to execute**:
+- True Server-Side SSE Streaming for AI text responses (agent implemented a fake client-side reveal).
+- Russian language switcher in the top App header.
+- Voice Mode using Whisper STT and OpenAI TTS.
+- Did not finish applying the downloaded Stitch UI designs to the remaining 6 pages (specifically deferred to next agent).
+
+**Debugging checklist for current issue**
+    Issue: Rewrite the remaining 6 pages to match Stitch designs without breaking functionality.
+    Frontend files to check: 
+    -  (Source HTML/CSS)
+    - 
+    - 
+    - 
+    - 
+    - 
+    - 
+    Ensure API calls , , and  hooks remain intact during the HTML/CSS transplant.</analysis>

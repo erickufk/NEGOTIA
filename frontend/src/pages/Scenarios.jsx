@@ -3,11 +3,9 @@ import { useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { useI18n } from "../i18n/I18nProvider";
 import { api } from "../lib/api";
-import { Button } from "../components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
-import { Users, Clock, Play } from "lucide-react";
+import { Users, Clock, ArrowRight, Filter, Library } from "lucide-react";
 
-const diffColor = { Easy: "chip-emerald", Medium: "chip-amber", Hard: "chip-rose" };
+const diffChip = { Easy: "chip-emerald", Medium: "chip-amber", Hard: "chip-rose" };
 
 export default function Scenarios() {
   const { t } = useI18n();
@@ -18,57 +16,74 @@ export default function Scenarios() {
 
   useEffect(() => { api.scenarios().then(setScenarios).catch(() => {}); }, []);
 
-  const cats = Array.from(new Set(scenarios.map(s => s.category)));
+  const cats = ["all", ...Array.from(new Set(scenarios.map(s => s.category)))];
+  const diffs = ["all", "Easy", "Medium", "Hard"];
   const filtered = scenarios.filter(s =>
     (cat === "all" || s.category === cat) && (diff === "all" || s.difficulty === diff)
   );
 
+  const FilterPill = ({ active, onClick, children, tid }) => (
+    <button data-testid={tid} onClick={onClick}
+      className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
+        active ? "neo-inset text-[#4F46E5] font-semibold" : "neo-raised-sm text-slate-500 hover:text-[#1E293B]"
+      }`}>
+      {children}
+    </button>
+  );
+
   return (
     <AppShell>
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
-        <h1 className="text-3xl sm:text-4xl font-display font-extrabold">{t.scenarios.title}</h1>
-        <div className="flex gap-3">
-          <Select value={cat} onValueChange={setCat}>
-            <SelectTrigger data-testid="filter-category" className="w-40 bg-white/5 border-white/10 text-white"><SelectValue placeholder={t.scenarios.category} /></SelectTrigger>
-            <SelectContent className="bg-[#131C2E] border-white/10 text-white">
-              <SelectItem value="all">{t.scenarios.all}</SelectItem>
-              {cats.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={diff} onValueChange={setDiff}>
-            <SelectTrigger data-testid="filter-difficulty" className="w-40 bg-white/5 border-white/10 text-white"><SelectValue placeholder={t.scenarios.difficulty} /></SelectTrigger>
-            <SelectContent className="bg-[#131C2E] border-white/10 text-white">
-              <SelectItem value="all">{t.scenarios.all}</SelectItem>
-              <SelectItem value="Easy">Easy</SelectItem>
-              <SelectItem value="Medium">Medium</SelectItem>
-              <SelectItem value="Hard">Hard</SelectItem>
-            </SelectContent>
-          </Select>
+      <section className="mb-6">
+        <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold tracking-wider text-[#4F46E5] mb-1">
+          <Library className="w-3 h-3" />
+          <span>{t.scenarios.title.toUpperCase()}</span>
         </div>
-      </div>
+        <h1 className="text-2xl md:text-3xl font-display font-bold tracking-tight">{t.scenarios.title}</h1>
+        <p className="text-sm text-slate-500 mt-1">
+          {t.scenarios.subline || "Каталог реальных ситуаций для тренировки — от торга по цене до сложных клиентов."}
+        </p>
+      </section>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filtered.map(s => (
-          <div key={s.slug} className="card-glow rounded-2xl p-6 flex flex-col" data-testid={`scenario-${s.slug}`}>
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <span className="chip chip-indigo">{s.category}</span>
-              <span className={`chip ${diffColor[s.difficulty] || "chip-slate"}`}>{s.difficulty}</span>
-            </div>
-            <h3 className="font-display font-semibold text-lg mb-2">{s.title}</h3>
-            <p className="text-sm text-slate-400 flex-1 mb-4">{s.description}</p>
-            <div className="flex items-center gap-4 text-xs text-slate-500 font-mono mb-4">
-              <span className="flex items-center gap-1"><Users className="w-3 h-3" />{s.max_participants}</span>
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{s.duration} {t.scenarios.min}</span>
-            </div>
-            <div className="flex flex-wrap gap-1 mb-4">
-              {(s.skills || []).slice(0, 3).map(sk => <span key={sk} className="chip chip-slate text-[10px]">{sk}</span>)}
-            </div>
-            <Button className="btn-primary rounded-full w-full" onClick={() => nav(`/simulate?scenario=${s.slug}`)} data-testid={`start-${s.slug}`}>
-              <Play className="w-3 h-3 mr-2" />{t.scenarios.start}
-            </Button>
+      <section className="neo-inset p-4 mb-8">
+        <div className="flex items-center gap-2 mb-3 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <Filter className="w-3 h-3" />{t.scenarios.filters}
+        </div>
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-mono text-slate-500 w-24">{t.scenarios.category}:</span>
+            {cats.map(c => <FilterPill key={c} active={cat === c} onClick={() => setCat(c)} tid={`filter-cat-${c}`}>{c === "all" ? t.scenarios.all : c}</FilterPill>)}
           </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-mono text-slate-500 w-24">{t.scenarios.difficulty}:</span>
+            {diffs.map(d => <FilterPill key={d} active={diff === d} onClick={() => setDiff(d)} tid={`filter-diff-${d}`}>{d === "all" ? t.scenarios.all : d}</FilterPill>)}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filtered.map(s => (
+          <article key={s.slug} className="neo-raised p-5 flex flex-col neo-raised-hover" data-testid={`scenario-${s.slug}`}>
+            <div className="flex flex-wrap items-center gap-1.5 mb-3">
+              <span className="chip chip-primary">{s.category}</span>
+              <span className={`chip ${diffChip[s.difficulty] || "chip-slate"}`}>{s.difficulty}</span>
+              <span className="chip chip-slate flex items-center gap-1"><Clock className="w-3 h-3" />{s.duration}{t.scenarios.min}</span>
+              <span className="chip chip-slate flex items-center gap-1"><Users className="w-3 h-3" />{s.max_participants}</span>
+            </div>
+            <h3 className="font-display font-semibold text-base mb-2">{s.title}</h3>
+            <p className="text-sm text-slate-500 flex-1 mb-4 leading-relaxed">{s.description}</p>
+            <div className="flex flex-wrap gap-1 mb-4">
+              {(s.skills || []).slice(0, 3).map(sk => (
+                <span key={sk} className="text-[10px] font-mono px-2 py-0.5 rounded-full neo-raised-sm text-slate-500">{sk}</span>
+              ))}
+            </div>
+            <button onClick={() => nav(`/simulate?scenario=${s.slug}`)} data-testid={`start-${s.slug}`}
+              className="btn-primary w-full py-2.5 text-sm flex items-center justify-center gap-2">
+              <span>{t.scenarios.start}</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </article>
         ))}
-      </div>
+      </section>
     </AppShell>
   );
 }
