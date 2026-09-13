@@ -6,8 +6,8 @@ const token = () => localStorage.getItem("negotia_token");
 const authHeaders = () => token() ? { Authorization: `Bearer ${token()}` } : {};
 
 export const api = {
-  scenarios: () => axios.get(`${API}/scenarios`).then(r => r.data.scenarios),
-  scenario: (slug) => axios.get(`${API}/scenarios/${slug}`).then(r => r.data.scenario),
+  scenarios: (lang = "en") => axios.get(`${API}/scenarios`, { params: { lang } }).then(r => r.data.scenarios),
+  scenario: (slug, lang = "en") => axios.get(`${API}/scenarios/${slug}`, { params: { lang } }).then(r => r.data.scenario),
   frameworks: () => axios.get(`${API}/frameworks`).then(r => r.data.frameworks),
   analyzePrep: (payload) => axios.post(`${API}/prep/analyze`, payload).then(r => r.data.preparation),
   createNeg: (payload) => axios.post(`${API}/negotiations`, payload).then(r => r.data.negotiation),
@@ -16,7 +16,7 @@ export const api = {
   sendMsg: (id, content) => axios.post(`${API}/negotiations/${id}/message`, { content }).then(r => r.data),
   endNeg: (id, action) => axios.post(`${API}/negotiations/${id}/end`, { action }).then(r => r.data.negotiation),
   stats: () => axios.get(`${API}/users/me/stats`).then(r => r.data),
-  recommended: () => axios.get(`${API}/users/me/recommended`).then(r => r.data),
+  recommended: (lang = "en") => axios.get(`${API}/users/me/recommended`, { params: { lang } }).then(r => r.data),
   frameworkStats: () => axios.get(`${API}/users/me/framework-stats`).then(r => r.data),
   coachHint: (negId) => axios.post(`${API}/coach/hint`, { negotiation_id: negId }).then(r => r.data),
 
@@ -28,8 +28,8 @@ export const api = {
     const r = await axios.post(`${API}/voice/transcribe`, fd, { headers: { ...authHeaders(), "Content-Type": "multipart/form-data" } });
     return r.data.text;
   },
-  tts: async (text, lang = "en") => {
-    const r = await axios.post(`${API}/voice/tts`, { text, language: lang }, {
+  tts: async (text, lang = "en", gender = null, voice = null) => {
+    const r = await axios.post(`${API}/voice/tts`, { text, language: lang, gender, voice }, {
       headers: { ...authHeaders() },
       responseType: "blob",
     });

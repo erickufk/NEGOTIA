@@ -14,7 +14,8 @@ const modes = [
 ];
 
 export default function SimulationWizard() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const L = t.labels;
   const nav = useNavigate();
   const [params] = useSearchParams();
   const preSlug = params.get("scenario");
@@ -32,17 +33,17 @@ export default function SimulationWizard() {
   const [analyzing, setAnalyzing] = useState(false);
 
   useEffect(() => {
-    api.scenarios().then(setScenarios).catch(() => {});
+    api.scenarios(lang).then(setScenarios).catch(() => {});
     api.frameworks().then(setFrameworks).catch(() => {});
-  }, []);
+  }, [lang]);
   useEffect(() => {
-    if (slug) api.scenario(slug).then(s => { setScenario(s); setParticipantsCount(s.max_participants); });
-  }, [slug]);
+    if (slug) api.scenario(slug, lang).then(s => { setScenario(s); setParticipantsCount(s.max_participants); });
+  }, [slug, lang]);
 
   const start = async () => {
     setCreating(true);
     try {
-      const neg = await api.createNeg({ scenario_slug: slug, mode, participants_count: participantsCount, preparation: prep, training_framework: framework });
+      const neg = await api.createNeg({ scenario_slug: slug, mode, participants_count: participantsCount, preparation: prep, training_framework: framework, language: lang });
       nav(`/negotiation/${neg.id}`);
     } catch (e) {
       toast.error("Failed to create negotiation");
@@ -52,14 +53,14 @@ export default function SimulationWizard() {
   const autofillPrep = async () => {
     setAnalyzing(true);
     try {
-      const data = await api.analyzePrep({ scenario_slug: slug, training_framework: framework });
+      const data = await api.analyzePrep({ scenario_slug: slug, training_framework: framework, language: lang });
       setPrep(p => ({ ...p, ...data }));
-      toast.success("Preparation drafted by AI. Edit as you wish.");
+      toast.success(t.wizard.autofillDone);
     } catch { toast.error("Autofill failed"); }
     finally { setAnalyzing(false); }
   };
 
-  const stepLabels = [t.wizard.s1, "Framework", t.wizard.s2, t.wizard.s3, t.wizard.s4, t.wizard.s5, t.wizard.s6];
+  const stepLabels = [t.wizard.s1, t.wizard.framework, t.wizard.s2, t.wizard.s3, t.wizard.s4, t.wizard.s5, t.wizard.s6];
 
   return (
     <AppShell>
@@ -96,8 +97,8 @@ export default function SimulationWizard() {
                     slug === s.slug ? "neo-inset ring-2 ring-[#4F46E5]" : "neo-raised-sm neo-raised-hover"
                   }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="chip chip-primary">{s.category}</span>
-                    <span className="chip chip-slate">{s.difficulty}</span>
+                    <span className="chip chip-primary">{L.categories[s.category] || s.category}</span>
+                    <span className="chip chip-slate">{L.difficulty[s.difficulty] || s.difficulty}</span>
                   </div>
                   <div className="font-semibold text-sm mb-1">{s.title}</div>
                   <div className="text-xs text-slate-500 line-clamp-2">{s.description}</div>
@@ -115,7 +116,7 @@ export default function SimulationWizard() {
                   }`}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="font-display font-semibold text-base">{f.name}</div>
-                    {f.id === "combined" && <span className="chip chip-emerald">Рекомендуется</span>}
+                    {f.id === "combined" && <span className="chip chip-emerald">{t.wizard.recommended}</span>}
                   </div>
                   <div className="text-sm text-slate-500 mb-3">{f.tagline}</div>
                   <div className="flex flex-wrap gap-1">
@@ -143,7 +144,7 @@ export default function SimulationWizard() {
 
           {step === 4 && scenario && (
             <div className="space-y-4">
-              <div className="text-sm text-slate-500">Выберите количество оппонентов.</div>
+              <div className="text-sm text-slate-500">{t.wizard.chooseOpponents}</div>
               <div className="grid grid-cols-4 gap-3">
                 {[1, 2, 3, 4].filter(n => n <= scenario.max_participants).map(n => (
                   <button key={n} data-testid={`w-parts-${n}`} onClick={() => setParticipantsCount(n)}
@@ -183,7 +184,7 @@ export default function SimulationWizard() {
                 <div className="text-[#1E293B] font-medium p-4 rounded-xl neo-inset">{scenario.objective}</div>
               </div>
               <div>
-                <div className="text-[10px] uppercase text-slate-500 font-mono mb-1 tracking-wider">Success</div>
+                <div className="text-[10px] uppercase text-slate-500 font-mono mb-1 tracking-wider">{t.wizard.success}</div>
                 <ul className="space-y-1.5 p-4 rounded-xl neo-inset">
                   {scenario.success_conditions.map((c, i) => (
                     <li key={i} className="flex items-start gap-2 text-[#1E293B]"><Check className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" /><span>{c}</span></li>
@@ -198,7 +199,7 @@ export default function SimulationWizard() {
               <div className="flex justify-end mb-3">
                 <button data-testid="autofill-prep" onClick={autofillPrep} disabled={analyzing || !slug}
                   className="neo-raised-sm px-4 py-2 rounded-full text-xs font-semibold text-[#4F46E5] hover:shadow-md transition-all inline-flex items-center gap-1.5 disabled:opacity-50">
-                  <Sparkles className="w-3.5 h-3.5" />{analyzing ? "Пишу..." : "AI Автозаполнение"}
+                  <Sparkles className="w-3.5 h-3.5" />{analyzing ? t.wizard.writing : t.wizard.autofill}
                 </button>
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -225,8 +226,8 @@ export default function SimulationWizard() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 {[
-                  { l: "Scenario", v: scenario.title },
-                  { l: "Framework", v: framework },
+                  { l: t.wizard.scenario, v: scenario.title },
+                  { l: t.wizard.frameworkLabel, v: framework },
                   { l: t.wizard.mode, v: mode },
                   { l: t.scenarios.participants, v: participantsCount },
                 ].map((row, i) => (
@@ -237,7 +238,7 @@ export default function SimulationWizard() {
                 ))}
               </div>
               <div className="p-4 rounded-xl bg-[#4F46E5]/5 border border-[#4F46E5]/10 text-sm">
-                <div className="font-semibold text-[#4F46E5] mb-1 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" />Primary Goal</div>
+                <div className="font-semibold text-[#4F46E5] mb-1 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" />{t.wizard.primaryGoal}</div>
                 <div className="text-[#1E293B]">{scenario.objective}</div>
               </div>
             </div>

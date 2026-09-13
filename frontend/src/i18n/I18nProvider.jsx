@@ -4,7 +4,7 @@ import { dict } from "./translations";
 const I18nCtx = createContext();
 
 export function I18nProvider({ children }) {
-  const [lang, setLang] = useState(() => localStorage.getItem("negotia_lang") || "en");
+  const [lang, setLang] = useState(() => localStorage.getItem("negotia_lang") || "ru");
   useEffect(() => { localStorage.setItem("negotia_lang", lang); }, [lang]);
   const t = dict[lang] || dict.en;
   return <I18nCtx.Provider value={{ lang, setLang, t }}>{children}</I18nCtx.Provider>;

@@ -3,35 +3,41 @@
 ## Original Problem Statement
 Develop NEGOTIA, an AI Negotiation Simulator (SaaS). Users register, choose a negotiation
 scenario, define parameters, prepare, and negotiate with AI participants via text or voice.
-UI must follow the "Stitch" design (Warm Silk palette, Inter + JetBrains Mono, Material
-Symbols). Features: SSE AI text streaming, RU/EN switcher, Voice Mode (STT/TTS RU), dynamic
-coaching hints. User language: Russian (respond in Russian).
+UI follows the "Stitch" design. Features: SSE AI text streaming, RU/EN switcher, Voice Mode
+(STT/TTS), dynamic coaching hints. User language: Russian — RUSSIAN IS THE PRIMARY LOCALE
+(UI now defaults to Russian). Respond to the user in Russian.
 
 ## Stack
-React (React Router, Tailwind, shadcn) + FastAPI + MongoDB (Motor). Claude Sonnet 5, OpenAI
-Whisper STT + OpenAI TTS via Emergent Universal Key. SSE for streaming. Context i18n.
+React (React Router, Tailwind, shadcn) + FastAPI + MongoDB (Motor). Claude Sonnet 5 text,
+OpenAI Whisper STT + OpenAI TTS via Emergent Universal Key. SSE streaming. Context i18n.
 
 ## Implemented
-- JWT auth, 12 seeded scenarios, training framework layer (Harvard/SPIN/BATNA), AI autofill.
-- Full Stitch neomorphic rewrite of 7 app pages.
-- SSE token streaming for AI replies; Voice Mode (Whisper STT + TTS RU); RU/EN i18n.
-- **2026-06: Landing page fully rebuilt to match the provided "Stitch" reference HTML**
-  (Warm Silk palette via arbitrary hex classes, Inter font, Material Symbols icons,
-  waveform CSS). Sections: interactive hero simulation mockup, market-reality problem,
-  4-step architecture, multi-party committee showcase, differentiation matrix, frameworks,
-  modes, scorecard + AI debrief editorial, replay + scenarios library, profile preview,
-  final CTA. Bilingual via inline `t(ru,en)` helper; CTAs wired to auth/dashboard.
-  Uses 3 user-supplied photos: executive (42tlayq6), boardroom group (2v4l1j4x),
-  1-on-1 debrief (nye6dg94). File: `/app/frontend/src/pages/Landing.jsx`.
-  index.css: added Inter @import (cyrillic subset) + `pulse-wave` keyframes.
+- JWT auth, 12 seeded scenarios, framework layer (Harvard/SPIN/BATNA), AI prep autofill.
+- Full Stitch neomorphic UI (7 app pages) + rebuilt marketing Landing page.
+- SSE token streaming; Voice Mode; RU/EN i18n.
+- **2026-06 — Full Russian localization + voice fixes (verified, iteration_3):**
+  - Scenarios localized to RU at API layer (`?lang=` -> SCENARIO_RU / ROLE_RU in
+    scenarios_seed.py). Participant `gender` exposed for voice.
+  - AI generation FORCED to the negotiation's language via `_build_system_prompt`
+    (stored `language` on negotiation at creation). Choices, debrief feedback, and
+    prep-autofill also generate in the chosen language.
+  - Frontend i18n `labels` block (skills, categories, difficulty, outcome, signals,
+    frameworkSub) applied across Dashboard/Scenarios/Wizard/Room/Debrief/History/Profile;
+    removed hardcoded English strings. UI default language = Russian.
+  - Voice input fixed: MediaRecorder mimeType detection, empty-recording guard, and
+    AUTO-SEND of transcription in voice mode. Unmount cleanup stops audio + recorder.
+  - TTS voice matches opponent gender: `/voice/tts` accepts `gender`
+    (male=onyx, female=shimmer); frontend passes opponent gender per AI message.
+  - Live signals now sort by value (surface active ones) with localized labels.
+  - Verified via curl (RU gen, gender TTS distinct audio, STT round-trip) and testing_agent
+    (26/26 backend tests, all frontend flows PASS). Tests: /app/backend/tests/.
 
 ## Backlog
-- P1: Dynamic coaching hints — `POST /api/coach/hint` should pass negotiation history to
-  Claude for context-aware tips (currently static). Files: backend/server.py,
-  frontend/src/pages/NegotiationRoom.jsx.
-- P1: Voice Mode playback safety on unmount (audio.pause cleanup in NegotiationRoom.jsx).
-- P2: Custom user-created scenarios saved to DB.
-- P3: Split server.py into modular routers.
+- P1: Dynamic coaching hints — pass negotiation history to Claude for context-aware tips
+  (`POST /api/coach/hint` currently rule-based).
+- P2: Custom user-created scenarios saved to DB (would also need RU/EN authoring).
+- P3: Split server.py (~950 lines) into modular routers (auth/scenarios/negotiations/voice/coach).
+- Nit: TTS request sends `voice: null` when only gender chosen (harmless).
 
 ## Credentials
 Demo: demo@negotia.app / Demo1234!

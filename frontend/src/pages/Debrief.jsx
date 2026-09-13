@@ -18,14 +18,15 @@ export default function Debrief() {
   const { id } = useParams();
   const nav = useNavigate();
   const { t } = useI18n();
+  const L = t.labels;
   const [neg, setNeg] = useState(null);
 
   useEffect(() => { api.getNeg(id).then(setNeg); }, [id]);
   if (!neg) return <AppShell><div className="text-slate-500 py-20 text-center">{t.common.loading}</div></AppShell>;
-  if (neg.status !== "completed") return <AppShell><div className="text-slate-500 py-20 text-center">Not completed yet.</div></AppShell>;
+  if (neg.status !== "completed") return <AppShell><div className="text-slate-500 py-20 text-center">{t.common.loading}</div></AppShell>;
 
   const skills = neg.skill_scores || {};
-  const radarData = Object.entries(skills).map(([k, v]) => ({ skill: k, value: v }));
+  const radarData = Object.entries(skills).map(([k, v]) => ({ skill: L.skills[k] || k, value: v }));
   const fb = neg.feedback || {};
 
   return (
@@ -43,7 +44,7 @@ export default function Debrief() {
               <h1 className="text-2xl md:text-4xl font-display font-bold tracking-tight" data-testid="debrief-title">{t.debrief.title}</h1>
               <div className="mt-3">
                 <span className={`chip ${outcomeChip[neg.outcome] || "chip-slate"} !text-xs !px-4 !py-1`} data-testid="debrief-outcome">
-                  <CheckCircle2 className="w-3 h-3" />{neg.outcome}
+                  <CheckCircle2 className="w-3 h-3" />{L.outcome[neg.outcome] || neg.outcome}
                 </span>
               </div>
             </div>
@@ -76,7 +77,7 @@ export default function Debrief() {
                 {Object.entries(skills).map(([k, v]) => (
                   <div key={k}>
                     <div className="flex justify-between text-xs mb-1">
-                      <span className="text-slate-600">{k}</span>
+                      <span className="text-slate-600">{L.skills[k] || k}</span>
                       <span className="font-mono font-bold">{v}<span className="text-slate-400"> / 100</span></span>
                     </div>
                     <div className="h-2 rounded-full neo-inset overflow-hidden p-0.5"><div className={`h-full rounded-full ${skillColor(v)}`} style={{ width: `${v}%` }} /></div>
@@ -87,7 +88,7 @@ export default function Debrief() {
           </div>
           <div className="neo-raised p-6">
             <div className="text-[10px] uppercase text-slate-500 font-mono tracking-wider mb-2">{t.debrief.agreement}</div>
-            <div className="text-sm text-[#1E293B] leading-relaxed mb-4">{fb.final_agreement || "Negotiation concluded."}</div>
+            <div className="text-sm text-[#1E293B] leading-relaxed mb-4">{fb.final_agreement || "—"}</div>
             <div className="neo-inset p-3 rounded-xl">
               <div className="text-[10px] uppercase text-slate-500 font-mono tracking-wider mb-1">Framework</div>
               <div className="font-display font-semibold text-sm">{(neg.framework_name || "Combined")}</div>
@@ -135,7 +136,7 @@ export default function Debrief() {
                   {Object.entries(neg.framework_scores[fw] || {}).map(([k, v]) => (
                     <div key={k} className="mb-2">
                       <div className="flex justify-between text-[11px] mb-1">
-                        <span className="text-slate-600">{k}</span>
+                        <span className="text-slate-600">{(L.frameworkSub[fw] && L.frameworkSub[fw][k]) || k}</span>
                         <span className="font-mono font-semibold">{v}</span>
                       </div>
                       <div className="h-1 rounded-full bg-black/5 overflow-hidden">

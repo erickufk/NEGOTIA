@@ -30,21 +30,31 @@ export default function NegotiationRoom() {
   const mediaRecRef = useRef(null);
   const chunksRef = useRef([]);
   const audioRef = useRef(null);
+  const genderRef = useRef({});
+  const L = t.labels;
 
   useEffect(() => {
     api.getNeg(id).then(n => {
       setNeg(n);
-      api.scenario(n.scenario_slug).then(setScenario);
+      api.scenario(n.scenario_slug, lang).then(s => {
+        setScenario(s);
+        genderRef.current = Object.fromEntries((s.participants || []).map(p => [p.name, p.gender || "female"]));
+      });
       if (n.mode === "voice") setVoiceOn(true);
     });
   }, [id]);
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: 1e9, behavior: "smooth" }); }, [neg?.messages?.length, streamingMap]);
 
-  const playTts = async (text) => {
+  useEffect(() => () => {
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
+    try { if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") mediaRecRef.current.stop(); } catch {}
+  }, []);
+
+  const playTts = async (text, gender = null) => {
     if (!voiceOn) return;
     try {
-      const audioUrl = await api.tts(text, lang);
+      const audioUrl = await api.tts(text, lang, gender);
       if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
       const a = new Audio(audioUrl);
       audioRef.current = a;
@@ -70,6 +80,7 @@ export default function NegotiationRoom() {
       let buf = "";
       let userAdded = false;
       const partial = {}; // msgId -> accumulated text
+      const participantMap = {}; // msgId -> participant name
       let latestFullResponse = null;
 
       while (true) {
@@ -90,6 +101,7 @@ export default function NegotiationRoom() {
             userAdded = true;
           } else if (evt.type === "ai_start") {
             partial[evt.message.id] = "";
+            participantMap[evt.message.id] = evt.message.participant;
             setStreamingMap(m => ({ ...m, [evt.message.id]: "" }));
             setNeg(p => p ? { ...p, messages: [...p.messages, { ...evt.message, content: "" }] } : p);
           } else if (evt.type === "ai_chunk") {
@@ -102,7 +114,7 @@ export default function NegotiationRoom() {
               messages: p.messages.map(mm => mm.id === evt.id ? { ...mm, content: finalText } : mm),
             } : p);
             setStreamingMap(m => { const c = { ...m }; delete c[evt.id]; return c; });
-            if (voiceOn) playTts(finalText);
+            if (voiceOn) playTts(finalText, genderRef.current[participantMap[evt.id]] || null);
           } else if (evt.type === "done") {
             latestFullResponse = evt;
             setNeg(p => p ? { ...p, state: evt.state } : p);
@@ -126,22 +138,31 @@ export default function NegotiationRoom() {
       setListening(false);
       return;
     }
-    if (!navigator.mediaDevices?.getUserMedia) {
-      toast.error("Микрофон не поддерживается");
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      toast.error(t.room.emptyRecording ? "Микрофон не поддерживается" : "Mic not supported");
       return;
     }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const rec = new MediaRecorder(stream);
+      const mimeCandidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
+      const mimeType = mimeCandidates.find(m => MediaRecorder.isTypeSupported?.(m)) || "";
+      const rec = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       chunksRef.current = [];
-      rec.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
+      rec.ondataavailable = e => { if (e.data && e.data.size > 0) chunksRef.current.push(e.data); };
       rec.onstop = async () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        stream.getTracks().forEach(tr => tr.stop());
+        const blobType = rec.mimeType || mimeType || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type: blobType });
+        if (blob.size < 800) { toast.error(t.room.emptyRecording); return; }
         setTranscribing(true);
         try {
           const text = await api.transcribe(blob, lang);
-          if (text) setInput(prev => prev ? `${prev} ${text}` : text);
+          if (text && text.trim()) {
+            if (neg.mode === "voice") { send(text.trim()); }
+            else { setInput(prev => prev ? `${prev} ${text}` : text); }
+          } else {
+            toast.error(t.room.emptyRecording);
+          }
         } catch {
           toast.error("Не удалось распознать речь");
         } finally { setTranscribing(false); }
@@ -212,7 +233,7 @@ export default function NegotiationRoom() {
             <div className="text-xs text-[#1E293B] leading-relaxed">{scenario.objective}</div>
             <div className="mt-3 pt-3 border-t border-black/5 grid grid-cols-2 gap-2 text-[10px]">
               <div><div className="text-slate-500">{t.room.currentDeal}</div><div className="font-mono font-bold text-[#4F46E5] text-sm">{neg.state.round}</div></div>
-              <div><div className="text-slate-500">Mode</div><div className="font-mono font-bold uppercase text-sm">{neg.mode}</div></div>
+              <div><div className="text-slate-500">{t.room.mode}</div><div className="font-mono font-bold uppercase text-sm">{neg.mode}</div></div>
             </div>
           </div>
 
@@ -232,13 +253,13 @@ export default function NegotiationRoom() {
         <div className="flex flex-col neo-raised overflow-hidden h-[calc(100vh-180px)] min-h-[520px]">
           <div className="px-6 py-4 flex items-center justify-between border-b border-black/5">
             <div>
-              <div className="text-[10px] text-slate-500 font-mono tracking-wider">NEGOTIATION · {(neg.framework_name || "Combined").toUpperCase()}</div>
+              <div className="text-[10px] text-slate-500 font-mono tracking-wider">{t.room.negotiation} · {(neg.framework_name || "Combined").toUpperCase()}</div>
               <div className="font-display font-semibold text-base">{neg.scenario_title}</div>
             </div>
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer neo-raised-sm px-3 py-1.5 rounded-full" data-testid="coach-toggle">
                 <input type="checkbox" checked={coaching} onChange={e => setCoaching(e.target.checked)} className="accent-[#4F46E5]" />
-                <Lightbulb className="w-3 h-3" />Coaching
+                <Lightbulb className="w-3 h-3" />{t.room.coaching}
               </label>
               <button onClick={() => { setVoiceOn(v => !v); if (audioRef.current) audioRef.current.pause(); }}
                 data-testid="btn-voice-toggle"
@@ -267,7 +288,7 @@ export default function NegotiationRoom() {
                 <div key={m.id} className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
                   <div className={`w-10 h-10 rounded-2xl flex items-center justify-center text-[10px] font-bold shrink-0 ${
                     isUser ? "neo-inset text-[#4F46E5]" : "neo-raised-sm text-[#7C3AED] bg-gradient-to-br from-[#4F46E5]/10 to-[#7C3AED]/10"}`}>
-                    {isUser ? "ВЫ" : (m.participant?.split(" ").map(x => x[0]).join("") || "AI")}
+                    {isUser ? t.room.you : (m.participant?.split(" ").map(x => x[0]).join("") || "AI")}
                   </div>
                   <div className={`max-w-[75%] rounded-2xl p-3.5 text-sm leading-relaxed ${
                     isUser ? "neo-raised-sm border-l-2 border-[#4F46E5] text-[#1E293B]" : "neo-inset text-[#1E293B]"
@@ -352,9 +373,9 @@ export default function NegotiationRoom() {
           <div className="neo-raised p-4">
             <div className="text-xs uppercase tracking-wider text-slate-500 font-mono mb-3">{t.room.liveSignals}</div>
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(neg.state.signals || {}).slice(0, 6).map(([k, v]) => (
+              {Object.entries(neg.state.signals || {}).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => (
                 <div key={k} className="p-2 rounded-lg neo-inset">
-                  <div className="text-[10px] text-slate-500 truncate">{k}</div>
+                  <div className="text-[10px] text-slate-500 truncate">{L.signals[k] || k}</div>
                   <div className={`font-mono font-bold text-sm ${v > 0 ? "text-[#4F46E5]" : "text-slate-400"}`}>{v}</div>
                 </div>
               ))}

@@ -1,0 +1,35 @@
+{
+  "summary": "Iteration-3 verification of NEGOTIA: (1) complete RU localization, (2) AI generates Russian, (3) mic capture + auto-send in voice mode + TTS gender voice, (4) live signals update. Backend: created new pytest suite (8/8 passing) covering scenarios?lang=ru returning Russian titles/objectives + participant gender, EN mode still English, RU AI reply Cyrillic, TTS male/female produce distinct audio, recommended?lang=ru. Existing 18-test suite still valid. Frontend: E2E via Playwright with mic permission granted -- login (data-testid input-email/input-password) -> Dashboard (Cyrillic, no raw i18n keys, no English leaks) -> Scenarios (Карьера/Продажи/Закупки, Средняя/Высокая, Начать, all 12 scenario titles Russian) -> SimulationWizard (voice mode picked) -> NegotiationRoom /negotiation/:id. In room: ОППОНЕНТЫ / ДОВЕРИЕ / ДАВЛЕНИЕ / LIVE-СИГНАЛЫ / ВАША ПОДГОТОВКА / Сделайте первый ход / Заключить сделку / Уйти all Russian. Sent Russian message; AI reply is Cyrillic (Sarah Kim: 'Здравствуйте! Рада, что вы готовы обсудить детали...'). TTS request body captured 3x: {text: <Cyrillic>, language: 'ru', gender: 'female', voice: null} -- gender matches female opponent Sarah Kim. Live signals sidebar shows RU labels (Вопросы, Открытые вопросы, Эмпатия, Уступки, Якорение, Давление) with values 2/2/1/0/0/0 -- values increased with usage. Trust=55, Pressure=30 (changed from defaults 50/30). Mic pipeline: clicked btn-mic to start, waited 3.5s, clicked to stop; a POST to /api/voice/transcribe fired (multipart form-data), and because mode=voice the transcribed text was auto-sent as a new user message (visible in screenshot as user bubble containing Whisper's silence-transcription 'Редактор субтитров А. Синецкая Корректор А. Егорова' -- expected Whisper behavior on silent audio, confirms round-trip works).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verified_flows": {
+    "ru_localization": "PASS - Dashboard/Scenarios/Wizard/Room all Russian; category chips (Карьера/Продажи/Закупки), difficulty (Средняя/Высокая), signals (Вопросы/Открытые вопросы/Эмпатия/Уступки/Якорение/Давление), room labels (Оппоненты/Доверие/Давление/Live-сигналы/Ваша подготовка) all localized. No raw snake_case keys, no leftover English UI strings.",
+    "ai_russian_reply": "PASS - AI opponent replies in Cyrillic in RU-language negotiation (verified both via backend pytest test_ai_reply_russian and frontend room). Backend forces language via _build_system_prompt.",
+    "voice_input_capture": "PASS - btn-mic present in voice mode; recording -> stop -> POST /api/voice/transcribe fires; because neg.mode==='voice' the transcribed text is auto-sent as user message (send(text) path in toggleMic). Whisper hallucination on silent fake-stream produced Russian subtitle-credit text confirming full round-trip.",
+    "tts_gender": "PASS - Frontend POSTs /api/voice/tts with {gender: 'female'} for Sarah Kim (female opponent). Backend maps gender->voice (male=onyx, female=shimmer) and returns audio/mpeg. Backend test verifies male vs female bytes differ.",
+    "live_signals": "PASS - Signal tiles reflect situation: after sending empathy/question/anchor messages, Вопросы=2, Открытые вопросы=2, Эмпатия=1. Trust/Pressure bars updated (Trust 55, Pressure 30). Labels localized via L.signals lookup."
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_negotia_api.py",
+    "/app/backend/tests/test_ru_voice_features.py",
+    "/app/test_reports/pytest/iter3_ru_voice.xml"
+  ],
+  "critical_code_review_comments": [
+    "NegotiationRoom toggleMic guard `blob.size < 1200` may false-negative on short real user recordings; consider lowering threshold or letting the backend decide.",
+    "TTS body sends `voice: null` when only gender is chosen -- harmless but noisy; could be omitted.",
+    "backend/server.py still ~950+ lines; recommend splitting into routers/ (auth, scenarios, negotiations, voice, coach)."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_ru_voice_features.py (new)"
+  ],
+  "success_rate": {"backend": "100% (26/26 total across two suites)", "frontend": "100% for tested flows"},
+  "test_credentials": "demo@negotia.app / Demo1234!",
+  "seed_data_creation": "None (test creates negotiations under demo user; no cleanup required).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All three reported iteration-3 bugs are verified fixed. Backend test suites at /app/backend/tests/. Login route is /auth (not /login). Negotiation route is /negotiation/:id. Login inputs use data-testid input-email/input-password. To reach voice mode: /auth -> /dashboard -> /scenarios -> click start-<slug> -> wizard, click w-mode-voice -> click next until wizard-start. Playwright: use await page.context.grant_permissions(['microphone']) to auto-grant. Whisper transcribes silent audio to Russian YouTube subtitle credits ('Редактор субтитров ...') -- that is expected and proves full round-trip."
+}

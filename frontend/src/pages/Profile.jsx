@@ -10,7 +10,8 @@ import { Play, ShieldCheck, AlertTriangle, User as UserIcon, Sparkles, Radar as 
 const skillColor = v => v >= 70 ? "bg-emerald-500" : v >= 50 ? "bg-[#4F46E5]" : "bg-amber-500";
 
 export default function Profile() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const L = t.labels;
   const { user } = useAuth();
   const nav = useNavigate();
   const [stats, setStats] = useState(null);
@@ -19,16 +20,16 @@ export default function Profile() {
 
   useEffect(() => {
     api.stats().then(setStats).catch(() => {});
-    api.recommended().then(setRec).catch(() => {});
+    api.recommended(lang).then(setRec).catch(() => {});
     api.frameworkStats().then(setFwStats).catch(() => {});
-  }, []);
+  }, [lang]);
 
   const skills = stats?.skills || {};
   const skillArr = Object.entries(skills);
   const sorted = [...skillArr].sort((a, b) => b[1] - a[1]);
   const strengths = sorted.slice(0, 3);
   const weaknesses = sorted.slice(-3).reverse();
-  const radarData = skillArr.map(([k, v]) => ({ skill: k, value: v }));
+  const radarData = skillArr.map(([k, v]) => ({ skill: L.skills[k] || k, value: v }));
 
   return (
     <AppShell>
@@ -50,7 +51,7 @@ export default function Profile() {
           { l: t.dashboard.total, v: stats?.total ?? 0, suffix: "" },
           { l: t.dashboard.avg, v: stats?.avg_score ?? 0, suffix: " / 100" },
           { l: t.dashboard.best, v: stats?.best_score ?? 0, suffix: " / 100" },
-          { l: "Success rate", v: (stats?.success_rate ?? 0) + "%", suffix: "" },
+          { l: t.profile.successRate, v: (stats?.success_rate ?? 0) + "%", suffix: "" },
         ].map((k, i) => (
           <div key={i} className="neo-raised p-5 neo-raised-hover">
             <div className="text-[11px] uppercase text-slate-500 tracking-wider mb-2">{k.l}</div>
@@ -73,7 +74,7 @@ export default function Profile() {
                 </RadarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="text-sm text-slate-500 py-16 text-center">Complete a simulation to see your profile.</div>
+              <div className="text-sm text-slate-500 py-16 text-center">{t.profile.emptyProfile}</div>
             )}
           </div>
         </div>
@@ -86,7 +87,7 @@ export default function Profile() {
             <div className="space-y-2">
               {strengths.map(([k, v]) => (
                 <div key={k}>
-                  <div className="flex items-center justify-between text-xs mb-1"><span className="text-[#1E293B]">{k}</span><span className="font-mono font-bold text-emerald-600">{v}</span></div>
+                  <div className="flex items-center justify-between text-xs mb-1"><span className="text-[#1E293B]">{L.skills[k] || k}</span><span className="font-mono font-bold text-emerald-600">{v}</span></div>
                   <div className="h-1.5 rounded-full neo-inset overflow-hidden p-0.5"><div className={`h-full rounded-full ${skillColor(v)}`} style={{ width: `${v}%` }} /></div>
                 </div>
               ))}
@@ -100,7 +101,7 @@ export default function Profile() {
             <div className="space-y-2">
               {weaknesses.map(([k, v]) => (
                 <div key={k}>
-                  <div className="flex items-center justify-between text-xs mb-1"><span className="text-[#1E293B]">{k}</span><span className="font-mono font-bold text-amber-600">{v}</span></div>
+                  <div className="flex items-center justify-between text-xs mb-1"><span className="text-[#1E293B]">{L.skills[k] || k}</span><span className="font-mono font-bold text-amber-600">{v}</span></div>
                   <div className="h-1.5 rounded-full neo-inset overflow-hidden p-0.5"><div className={`h-full rounded-full ${skillColor(v)}`} style={{ width: `${v}%` }} /></div>
                 </div>
               ))}
@@ -126,7 +127,7 @@ export default function Profile() {
                 <div key={fw} className={`p-4 rounded-xl neo-raised-sm ${highlight ? "ring-2 ring-amber-400" : ""}`} data-testid={`fw-stat-${fw}`}>
                   <div className="text-[10px] uppercase text-slate-500 font-mono tracking-wider mb-2">{fw}</div>
                   <div className={`font-mono font-bold text-2xl ${highlight ? "text-amber-700" : "text-[#4F46E5]"}`}>{s.avg}<span className="text-sm text-slate-400 font-normal"> / 100</span></div>
-                  <div className="text-[11px] text-slate-500 mt-1">Best {s.best} · {s.count} sims</div>
+                  <div className="text-[11px] text-slate-500 mt-1">{t.profile.best} {s.best} · {s.count} {t.profile.sims}</div>
                   <div className="mt-2 h-1 rounded-full neo-inset overflow-hidden p-0.5">
                     <div className={`h-full rounded-full ${highlight ? "bg-amber-500" : "bg-[#4F46E5]"}`} style={{ width: `${s.avg}%` }} />
                   </div>
@@ -144,7 +145,7 @@ export default function Profile() {
           <div className="grid md:grid-cols-3 gap-3">
             {rec.scenarios.map(s => (
               <div key={s.slug} className="p-4 rounded-xl neo-inset">
-                <span className="chip chip-primary mb-2">{s.category}</span>
+                <span className="chip chip-primary mb-2">{L.categories[s.category] || s.category}</span>
                 <div className="font-semibold text-sm mb-3 mt-2">{s.title}</div>
                 <button onClick={() => nav(`/simulate?scenario=${s.slug}`)} data-testid={`profile-rec-${s.slug}`}
                   className="btn-primary w-full py-2 text-xs flex items-center justify-center gap-1.5">

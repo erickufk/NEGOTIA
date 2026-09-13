@@ -68,6 +68,10 @@ export const en = {
     theirs: "What do you think they want?",
     offer: "What can you offer?", ideal: "Ideal outcome", minimum: "Minimum acceptable outcome",
     analyze: "Analyze My Preparation", summary: "Summary", mode: "Mode",
+    framework: "Framework", frameworkLabel: "Framework", recommended: "Recommended",
+    chooseOpponents: "Choose the number of opponents.", success: "Success",
+    autofill: "AI Autofill", writing: "Writing...", primaryGoal: "Primary Goal",
+    scenario: "Scenario", autofillDone: "Preparation drafted by AI. Edit as you wish.",
   },
   room: {
     title: "Negotiation", goal: "Your Goal", currentDeal: "Round",
@@ -80,6 +84,9 @@ export const en = {
     preparation: "Your preparation", liveSignals: "Live signals",
     firstMove: "Make your opening move.", prepEmpty: "Preparation not filled.",
     transcribing: "Transcribing...",
+    mode: "Mode", coaching: "Coaching", you: "YOU", negotiation: "NEGOTIATION",
+    listening: "Listening... tap to stop", micHint: "Hold a thought, then tap the mic to stop",
+    emptyRecording: "Nothing captured — speak a bit longer.",
   },
   debrief: {
     title: "Negotiation Complete", overall: "Overall Score", outcome: "Outcome",
@@ -95,8 +102,22 @@ export const en = {
     title: "Negotiation Profile", strengths: "Strengths", weaknesses: "Areas to Improve",
     recommended: "Recommended Training",
     frameworkPerf: "Framework Performance", growthArea: "Growth area",
+    successRate: "Success rate", best: "Best", sims: "sims",
+    emptyProfile: "Complete a simulation to see your profile.",
   },
   common: { loading: "Loading...", error: "Something went wrong", cancel: "Cancel", save: "Save" },
+  labels: {
+    skills: { Questioning: "Questioning", "Active Listening": "Active Listening", Argumentation: "Argumentation", Concessions: "Concessions", BATNA: "BATNA", "Conflict Management": "Conflict Management", Strategy: "Strategy", Relationship: "Relationship", Anchoring: "Anchoring", Empathy: "Empathy" },
+    categories: { Career: "Career", Sales: "Sales", Procurement: "Procurement", Management: "Management", Partnership: "Partnership", Conflict: "Conflict" },
+    difficulty: { Easy: "Easy", Medium: "Medium", Hard: "Hard", Expert: "Expert" },
+    outcome: { Excellent: "Excellent", Successful: "Successful", Compromise: "Compromise", "Weak outcome": "Weak outcome", Failed: "Failed", "Walk Away": "Walk Away" },
+    signals: { question: "Questions", open_question: "Open questions", concession: "Concessions", anchoring: "Anchoring", empathy: "Empathy", pressure: "Pressure", batna_ref: "BATNA refs", objective_criteria: "Objective criteria", trades: "Trades", personal_attack: "Personal attacks" },
+    frameworkSub: {
+      harvard: { "People vs Problem": "People vs Problem", "Interests vs Positions": "Interests vs Positions", "Options for Mutual Gain": "Options for Mutual Gain", "Objective Criteria": "Objective Criteria" },
+      spin: { "Situation": "Situation", "Problem": "Problem", "Implication": "Implication", "Need-Payoff": "Need-Payoff" },
+      batna: { "BATNA Clarity": "BATNA Clarity", "Leverage": "Leverage", "Reservation Discipline": "Reservation Discipline", "Concession Management": "Concession Management" },
+    },
+  },
 };
 
 export const ru = {
@@ -162,6 +183,10 @@ export const ru = {
     theirs: "Что, по-вашему, хотят они?",
     offer: "Что вы можете предложить?", ideal: "Идеальный исход", minimum: "Минимально приемлемый",
     analyze: "Проанализировать подготовку", summary: "Итог", mode: "Режим",
+    framework: "Методология", frameworkLabel: "Методология", recommended: "Рекомендуется",
+    chooseOpponents: "Выберите количество оппонентов.", success: "Условия успеха",
+    autofill: "AI Автозаполнение", writing: "Пишу...", primaryGoal: "Главная цель",
+    scenario: "Сценарий", autofillDone: "Подготовка составлена AI. Отредактируйте при желании.",
   },
   room: {
     title: "Переговоры", goal: "Ваша цель", currentDeal: "Раунд",
@@ -174,6 +199,9 @@ export const ru = {
     preparation: "Ваша подготовка", liveSignals: "Live-сигналы",
     firstMove: "Сделайте первый ход.", prepEmpty: "Подготовка не заполнена.",
     transcribing: "Распознаю...",
+    mode: "Режим", coaching: "Коучинг", you: "ВЫ", negotiation: "ПЕРЕГОВОРЫ",
+    listening: "Слушаю... нажмите, чтобы остановить", micHint: "Сформулируйте мысль, затем нажмите микрофон, чтобы остановить",
+    emptyRecording: "Ничего не записалось — говорите чуть дольше.",
   },
   debrief: {
     title: "Переговоры завершены", overall: "Общий счёт", outcome: "Исход",
@@ -189,8 +217,22 @@ export const ru = {
     title: "Переговорный профиль", strengths: "Сильные стороны", weaknesses: "Зоны роста",
     recommended: "Рекомендуемая тренировка",
     frameworkPerf: "Эффективность по методологиям", growthArea: "Зона роста",
+    successRate: "Успешность", best: "Лучший", sims: "сессий",
+    emptyProfile: "Завершите симуляцию, чтобы увидеть профиль.",
   },
   common: { loading: "Загрузка...", error: "Что-то пошло не так", cancel: "Отмена", save: "Сохранить" },
+  labels: {
+    skills: { Questioning: "Вопросы", "Active Listening": "Активное слушание", Argumentation: "Аргументация", Concessions: "Уступки", BATNA: "BATNA", "Conflict Management": "Управление конфликтом", Strategy: "Стратегия", Relationship: "Отношения", Anchoring: "Якорение", Empathy: "Эмпатия" },
+    categories: { Career: "Карьера", Sales: "Продажи", Procurement: "Закупки", Management: "Управление", Partnership: "Партнёрство", Conflict: "Кризис" },
+    difficulty: { Easy: "Лёгкая", Medium: "Средняя", Hard: "Высокая", Expert: "Экспертная" },
+    outcome: { Excellent: "Отлично", Successful: "Успешно", Compromise: "Компромисс", "Weak outcome": "Слабый результат", Failed: "Провал", "Walk Away": "Уход" },
+    signals: { question: "Вопросы", open_question: "Открытые вопросы", concession: "Уступки", anchoring: "Якорение", empathy: "Эмпатия", pressure: "Давление", batna_ref: "Упоминания BATNA", objective_criteria: "Объективные критерии", trades: "Обмены", personal_attack: "Личные выпады" },
+    frameworkSub: {
+      harvard: { "People vs Problem": "Люди vs Проблема", "Interests vs Positions": "Интересы vs Позиции", "Options for Mutual Gain": "Варианты взаимной выгоды", "Objective Criteria": "Объективные критерии" },
+      spin: { "Situation": "Ситуация", "Problem": "Проблема", "Implication": "Последствия", "Need-Payoff": "Выгода решения" },
+      batna: { "BATNA Clarity": "Ясность BATNA", "Leverage": "Рычаг", "Reservation Discipline": "Дисциплина резервной точки", "Concession Management": "Управление уступками" },
+    },
+  },
 };
 
 export const dict = { en, ru };

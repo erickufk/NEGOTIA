@@ -8,13 +8,14 @@ import { Users, Clock, ArrowRight, Filter, Library } from "lucide-react";
 const diffChip = { Easy: "chip-emerald", Medium: "chip-amber", Hard: "chip-rose" };
 
 export default function Scenarios() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const L = t.labels;
   const nav = useNavigate();
   const [scenarios, setScenarios] = useState([]);
   const [cat, setCat] = useState("all");
   const [diff, setDiff] = useState("all");
 
-  useEffect(() => { api.scenarios().then(setScenarios).catch(() => {}); }, []);
+  useEffect(() => { api.scenarios(lang).then(setScenarios).catch(() => {}); }, [lang]);
 
   const cats = ["all", ...Array.from(new Set(scenarios.map(s => s.category)))];
   const diffs = ["all", "Easy", "Medium", "Hard"];
@@ -51,11 +52,11 @@ export default function Scenarios() {
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11px] font-mono text-slate-500 w-24">{t.scenarios.category}:</span>
-            {cats.map(c => <FilterPill key={c} active={cat === c} onClick={() => setCat(c)} tid={`filter-cat-${c}`}>{c === "all" ? t.scenarios.all : c}</FilterPill>)}
+            {cats.map(c => <FilterPill key={c} active={cat === c} onClick={() => setCat(c)} tid={`filter-cat-${c}`}>{c === "all" ? t.scenarios.all : (L.categories[c] || c)}</FilterPill>)}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[11px] font-mono text-slate-500 w-24">{t.scenarios.difficulty}:</span>
-            {diffs.map(d => <FilterPill key={d} active={diff === d} onClick={() => setDiff(d)} tid={`filter-diff-${d}`}>{d === "all" ? t.scenarios.all : d}</FilterPill>)}
+            {diffs.map(d => <FilterPill key={d} active={diff === d} onClick={() => setDiff(d)} tid={`filter-diff-${d}`}>{d === "all" ? t.scenarios.all : (L.difficulty[d] || d)}</FilterPill>)}
           </div>
         </div>
       </section>
@@ -64,8 +65,8 @@ export default function Scenarios() {
         {filtered.map(s => (
           <article key={s.slug} className="neo-raised p-5 flex flex-col neo-raised-hover" data-testid={`scenario-${s.slug}`}>
             <div className="flex flex-wrap items-center gap-1.5 mb-3">
-              <span className="chip chip-primary">{s.category}</span>
-              <span className={`chip ${diffChip[s.difficulty] || "chip-slate"}`}>{s.difficulty}</span>
+              <span className="chip chip-primary">{L.categories[s.category] || s.category}</span>
+              <span className={`chip ${diffChip[s.difficulty] || "chip-slate"}`}>{L.difficulty[s.difficulty] || s.difficulty}</span>
               <span className="chip chip-slate flex items-center gap-1"><Clock className="w-3 h-3" />{s.duration}{t.scenarios.min}</span>
               <span className="chip chip-slate flex items-center gap-1"><Users className="w-3 h-3" />{s.max_participants}</span>
             </div>
@@ -73,7 +74,7 @@ export default function Scenarios() {
             <p className="text-sm text-slate-500 flex-1 mb-4 leading-relaxed">{s.description}</p>
             <div className="flex flex-wrap gap-1 mb-4">
               {(s.skills || []).slice(0, 3).map(sk => (
-                <span key={sk} className="text-[10px] font-mono px-2 py-0.5 rounded-full neo-raised-sm text-slate-500">{sk}</span>
+                <span key={sk} className="text-[10px] font-mono px-2 py-0.5 rounded-full neo-raised-sm text-slate-500">{L.skills[sk] || sk}</span>
               ))}
             </div>
             <button onClick={() => nav(`/simulate?scenario=${s.slug}`)} data-testid={`start-${s.slug}`}

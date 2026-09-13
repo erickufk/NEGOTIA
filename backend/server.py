@@ -24,8 +24,12 @@ from pydantic import BaseModel, Field, EmailStr
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from emergentintegrations.llm.openai import OpenAISpeechToText, OpenAITextToSpeech
 
-from scenarios_seed import SCENARIOS
+from scenarios_seed import SCENARIOS, GENDERS, ROLE_RU, SCENARIO_RU
 from frameworks import FRAMEWORKS, classify_spin
+
+LANG_NAMES = {"ru": "РУССКОМ (Russian)", "en": "English", "es": "Spanish", "de": "German"}
+# OpenAI TTS voices mapped by gender
+VOICE_BY_GENDER = {"male": "onyx", "female": "shimmer"}
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / ".env")
@@ -84,11 +88,13 @@ class CreateNegotiationIn(BaseModel):
     participants_count: Optional[int] = None
     preparation: Optional[Dict[str, Any]] = None
     training_framework: str = "combined"  # harvard | spin | batna | combined
+    language: str = "en"
 
 
 class AnalyzePrepIn(BaseModel):
     scenario_slug: str
     training_framework: str = "combined"
+    language: str = "en"
 
 
 class EndNegotiationIn(BaseModel):
@@ -205,36 +211,47 @@ async def me(user=Depends(get_current_user)):
 
 
 # ---------- Scenarios ----------
-def _scrub_scenario(sc: dict, hide_hidden: bool = True) -> dict:
-    """Remove hidden AI information before sending to client."""
+def _scrub_scenario(sc: dict, hide_hidden: bool = True, lang: str = "en") -> dict:
+    """Remove hidden AI information before sending to client; localize for RU."""
     out = {k: v for k, v in sc.items() if k != "_id"}
-    if hide_hidden:
-        safe_parts = []
-        for p in out.get("participants", []):
+    ru = SCENARIO_RU.get(out.get("slug"), {}) if lang == "ru" else {}
+    if ru:
+        out["title"] = ru.get("title", out.get("title"))
+        out["description"] = ru.get("description", out.get("description"))
+        out["objective"] = ru.get("objective", out.get("objective"))
+    safe_parts = []
+    for p in out.get("participants", []):
+        if hide_hidden:
             sp = {k: v for k, v in p.items() if k not in ("hidden_interests", "reservation_point", "batna")}
-            safe_parts.append(sp)
-        out["participants"] = safe_parts
+        else:
+            sp = dict(p)
+        sp["gender"] = GENDERS.get(p.get("name"), "female")
+        if lang == "ru":
+            sp["role"] = ROLE_RU.get(p.get("role"), p.get("role"))
+        safe_parts.append(sp)
+    out["participants"] = safe_parts
     return out
 
 
 @api.get("/scenarios")
-async def list_scenarios(user=Depends(get_current_user)):
+async def list_scenarios(lang: str = "en", user=Depends(get_current_user)):
     docs = await db.scenarios.find({"active": True}, {"_id": 0}).to_list(500)
-    return {"scenarios": [_scrub_scenario(d) for d in docs]}
+    return {"scenarios": [_scrub_scenario(d, lang=lang) for d in docs]}
 
 
 @api.get("/scenarios/{slug}")
-async def get_scenario(slug: str, user=Depends(get_current_user)):
+async def get_scenario(slug: str, lang: str = "en", user=Depends(get_current_user)):
     doc = await db.scenarios.find_one({"slug": slug}, {"_id": 0})
     if not doc:
         raise HTTPException(404, "Scenario not found")
-    return {"scenario": _scrub_scenario(doc)}
+    return {"scenario": _scrub_scenario(doc, lang=lang)}
 
 
 # ---------- AI helpers ----------
-def _build_system_prompt(scenario: dict, participant: dict, state: dict, all_participants: List[dict], framework_id: str = "combined") -> str:
+def _build_system_prompt(scenario: dict, participant: dict, state: dict, all_participants: List[dict], framework_id: str = "combined", language: str = "en") -> str:
     others = ", ".join([f"{p['name']} ({p['role']})" for p in all_participants if p['name'] != participant['name']])
     fw = FRAMEWORKS.get(framework_id, FRAMEWORKS["combined"])
+    lang_name = LANG_NAMES.get(language, "English")
     return f"""You are {participant['name']}, {participant['role']} in a business negotiation.
 
 {fw['ai_instructions']}
@@ -264,7 +281,7 @@ RULES:
 4. Push back, ask counter-questions, use silence as leverage — behave like a real negotiator.
 5. React to user's tone: if they anchor aggressively, defend; if they show empathy, warm slightly.
 6. If user asks smart open-ended questions, gradually reveal ONE interest at a time.
-7. Speak in the same language the user writes in (English, Russian, Spanish, or German)."""
+7. CRITICAL LANGUAGE RULE: You MUST write EVERY reply ONLY in {lang_name}. The scenario notes above are in English, but your spoken replies must ALWAYS be natural, fluent {lang_name}. Never mix languages (industry terms like BATNA, SLA, SPIN may stay as-is)."""
 
 
 async def _ai_respond(system_prompt: str, history: List[dict], user_text: str, session_id: str) -> str:
@@ -312,11 +329,15 @@ async def create_negotiation(body: CreateNegotiationIn, user=Depends(get_current
     parts = _pick_participants(scenario, body.participants_count)
     neg_id = str(uuid.uuid4())
     fw = FRAMEWORKS.get(body.training_framework, FRAMEWORKS["combined"])
+    title = scenario["title"]
+    if body.language == "ru":
+        title = SCENARIO_RU.get(body.scenario_slug, {}).get("title", title)
     doc = {
         "id": neg_id,
         "user_id": user["id"],
         "scenario_slug": body.scenario_slug,
-        "scenario_title": scenario["title"],
+        "scenario_title": title,
+        "language": body.language,
         "mode": body.mode,
         "training_framework": fw["id"],
         "framework_name": fw["name"],
@@ -347,6 +368,7 @@ def _neg_out(doc: dict) -> dict:
         "mode": doc["mode"], "participants": doc["participants"], "state": doc["state"],
         "training_framework": doc.get("training_framework", "combined"),
         "framework_name": doc.get("framework_name", "Combined"),
+        "language": doc.get("language", "en"),
         "framework_scores": doc.get("framework_scores"),
         "messages": doc.get("messages", []), "status": doc["status"], "outcome": doc.get("outcome"),
         "score": doc.get("score"), "created_at": doc["created_at"], "preparation": doc.get("preparation", {}),
@@ -406,8 +428,9 @@ async def post_message(neg_id: str, body: MessageIn, user=Depends(get_current_us
     # generate AI responses from each participant (or just first if multi-party gets too long)
     ai_replies = []
     fw_id = doc.get("training_framework", "combined")
+    lang = doc.get("language", "en")
     for p in parts[:2]:  # cap at 2 concurrent to keep responses tight
-        sys_prompt = _build_system_prompt(scenario, p, doc["state"], parts, fw_id)
+        sys_prompt = _build_system_prompt(scenario, p, doc["state"], parts, fw_id, lang)
         try:
             ai_text = await _ai_respond(sys_prompt, doc["messages"][:-1], body.content, f"{neg_id}-{p['name']}")
         except Exception as e:
@@ -438,8 +461,10 @@ async def post_message(neg_id: str, body: MessageIn, user=Depends(get_current_us
 
 
 async def _generate_choices(scenario: dict, doc: dict) -> Optional[List[dict]]:
+    lang_name = LANG_NAMES.get(doc.get("language", "en"), "English")
     sys = f"""You generate 4 possible next responses for a user in a negotiation practice app.
 Scenario: {scenario['title']}. User objective: {scenario['objective']}
+Write every "text" and "hint" value ONLY in {lang_name}.
 Return ONLY JSON array of 4 objects, each: {{"text": "...", "quality": "strong|acceptable|weak|risky", "hint": "short reason"}}"""
     history_txt = "\n".join([f"{m['role'].upper()}: {m['content']}" for m in doc["messages"][-8:]])
     chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"choices-{doc['id']}", system_message=sys).with_model(AI_PROVIDER, AI_MODEL)
@@ -506,11 +531,14 @@ async def _compute_debrief(scenario: dict, doc: dict, action: str) -> Dict[str, 
         outcome = "Excellent"
 
     # AI feedback
+    lang = doc.get("language", "en")
+    lang_name = LANG_NAMES.get(lang, "English")
     transcript = "\n".join([f"{m.get('participant') or m['role'].upper()}: {m['content']}" for m in doc["messages"]])
     feedback_prompt = f"""Analyze this negotiation transcript. User was practicing: {scenario['title']}.
 User objective: {scenario['objective']}
 Final action: {action}. Score: {score}.
 
+Write ALL string values ONLY in {lang_name} (natural, fluent).
 Return ONLY JSON with keys:
 - "did_well": array of 3 short specific observations quoting behavior
 - "improve": array of 3 short specific improvement observations
@@ -520,17 +548,30 @@ Return ONLY JSON with keys:
 
 Transcript:
 {transcript[:3000]}"""
-    feedback = {
-        "did_well": ["You engaged consistently throughout the negotiation.",
-                     "You maintained a professional tone.",
-                     "You made your position clear."],
-        "improve": ["Ask more open-ended discovery questions.",
-                    "Reference your BATNA explicitly.",
-                    "Trade concessions instead of giving unilaterally."],
-        "critical_moment": "The turn where the counterparty pushed on price was a key moment to explore their interests.",
-        "better_alternative": "Try: 'Help me understand what's driving that number for you.'",
-        "final_agreement": "Negotiation ended.",
-    }
+    if lang == "ru":
+        feedback = {
+            "did_well": ["Вы последовательно вели диалог на протяжении всех переговоров.",
+                         "Вы сохраняли профессиональный тон.",
+                         "Вы чётко обозначили свою позицию."],
+            "improve": ["Задавайте больше открытых исследующих вопросов.",
+                        "Явно ссылайтесь на свою BATNA.",
+                        "Обменивайте уступки, а не отдавайте их в одностороннем порядке."],
+            "critical_moment": "Момент, когда оппонент надавил на цену, был ключевым для изучения его интересов.",
+            "better_alternative": "Попробуйте: «Помогите мне понять, что стоит за этой цифрой для вас».",
+            "final_agreement": "Переговоры завершены.",
+        }
+    else:
+        feedback = {
+            "did_well": ["You engaged consistently throughout the negotiation.",
+                         "You maintained a professional tone.",
+                         "You made your position clear."],
+            "improve": ["Ask more open-ended discovery questions.",
+                        "Reference your BATNA explicitly.",
+                        "Trade concessions instead of giving unilaterally."],
+            "critical_moment": "The turn where the counterparty pushed on price was a key moment to explore their interests.",
+            "better_alternative": "Try: 'Help me understand what's driving that number for you.'",
+            "final_agreement": "Negotiation ended.",
+        }
     try:
         chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"debrief-{doc['id']}", system_message="You are a Harvard-trained negotiation coach.").with_model(AI_PROVIDER, AI_MODEL)
         resp = await chat.send_message(UserMessage(text=feedback_prompt))
@@ -583,10 +624,12 @@ async def analyze_prep(body: AnalyzePrepIn, user=Depends(get_current_user)):
     if not scenario:
         raise HTTPException(404, "Scenario not found")
     fw = FRAMEWORKS.get(body.training_framework, FRAMEWORKS["combined"])
+    lang_name = LANG_NAMES.get(body.language, "English")
     # scrub scenario for AI (still has objective/context, but no hidden fields exposed to user response)
     prompt = f"""You are a negotiation coach. Draft a preparation sheet for the user practicing the {fw['name']} framework.
 Scenario: {scenario['title']}. Objective: {scenario['objective']}. Context: {scenario['context']}.
 
+Write ALL values ONLY in {lang_name} (natural, fluent; industry terms like BATNA/ZOPA/SLA may stay as-is).
 Return ONLY JSON with these fields (short bullet-style, one sentence each):
 {{"batna": "...", "priorities": "...", "theirs": "...", "offer": "...", "ideal": "...", "minimum": "..."}}"""
     try:
@@ -649,7 +692,7 @@ async def user_stats(user=Depends(get_current_user)):
 
 
 @api.get("/users/me/recommended")
-async def recommended(user=Depends(get_current_user)):
+async def recommended(lang: str = "en", user=Depends(get_current_user)):
     skills_doc = await db.user_skills.find_one({"user_id": user["id"]}, {"_id": 0})
     weakest = "Questioning"
     if skills_doc:
@@ -657,7 +700,7 @@ async def recommended(user=Depends(get_current_user)):
     scenarios = await db.scenarios.find({"active": True, "skills": {"$in": [weakest]}}, {"_id": 0}).limit(3).to_list(3)
     if not scenarios:
         scenarios = await db.scenarios.find({"active": True}, {"_id": 0}).limit(3).to_list(3)
-    return {"weakest_skill": weakest, "scenarios": [_scrub_scenario(s) for s in scenarios]}
+    return {"weakest_skill": weakest, "scenarios": [_scrub_scenario(s, lang=lang) for s in scenarios]}
 
 
 @api.get("/users/me/framework-stats")
@@ -764,8 +807,9 @@ async def post_message_stream(neg_id: str, body: MessageIn, user=Depends(get_cur
 
             ai_replies = []
             fw_id = doc.get("training_framework", "combined")
+            lang = doc.get("language", "en")
             for p in parts[:2]:
-                sys_prompt = _build_system_prompt(scenario, p, doc["state"], parts, fw_id)
+                sys_prompt = _build_system_prompt(scenario, p, doc["state"], parts, fw_id, lang)
                 try:
                     ai_text = await _ai_respond(sys_prompt, doc["messages"][:-1], body.content, f"{neg_id}-{p['name']}")
                 except Exception:
@@ -850,7 +894,8 @@ async def transcribe(file: UploadFile = File(...), language: str = Form("en"), u
 class TtsIn(BaseModel):
     text: str
     language: str = "en"
-    voice: str = "nova"
+    voice: Optional[str] = None
+    gender: Optional[str] = None
 
 
 @api.post("/voice/tts")
@@ -859,7 +904,8 @@ async def tts_endpoint(body: TtsIn, user=Depends(get_current_user)):
         clean = _clean_for_tts(body.text)
         if not clean:
             raise HTTPException(400, "Empty text")
-        audio_bytes = await _tts.generate_speech(text=clean, model="tts-1", voice=body.voice, response_format="mp3")
+        voice = body.voice or VOICE_BY_GENDER.get((body.gender or "").lower(), "nova")
+        audio_bytes = await _tts.generate_speech(text=clean, model="tts-1", voice=voice, response_format="mp3")
         return Response(content=audio_bytes, media_type="audio/mpeg", headers={"Cache-Control": "public, max-age=3600"})
     except HTTPException:
         raise

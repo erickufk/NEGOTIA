@@ -8,7 +8,8 @@ import { Plus, TrendingUp, Sparkles, Trophy, Flame, ArrowRight, Target, Activity
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from "recharts";
 
 export default function Dashboard() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const L = t.labels;
   const { user } = useAuth();
   const nav = useNavigate();
   const [stats, setStats] = useState(null);
@@ -18,8 +19,8 @@ export default function Dashboard() {
   useEffect(() => {
     api.stats().then(setStats).catch(() => {});
     api.listNeg().then(list => setRecent(list.slice(0, 5))).catch(() => {});
-    api.recommended().then(setRec).catch(() => {});
-  }, []);
+    api.recommended(lang).then(setRec).catch(() => {});
+  }, [lang]);
 
   const kpi = [
     { label: t.dashboard.total, value: stats?.total ?? 0, icon: Activity, suffix: "" },
@@ -27,7 +28,7 @@ export default function Dashboard() {
     { label: t.dashboard.best, value: stats?.best_score ?? 0, icon: Trophy, suffix: " / 100" },
     { label: t.dashboard.streak, value: stats?.streak ?? 0, icon: Flame, suffix: "" },
   ];
-  const radarData = stats?.skills ? Object.entries(stats.skills).map(([k, v]) => ({ skill: k, value: v })) : [];
+  const radarData = stats?.skills ? Object.entries(stats.skills).map(([k, v]) => ({ skill: L.skills[k] || k, value: v })) : [];
 
   return (
     <AppShell>
@@ -66,10 +67,10 @@ export default function Dashboard() {
                 <p className="text-sm md:text-base text-slate-500 mt-2 leading-relaxed">{rec.scenarios[0].description}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2 pt-1">
-                <span className="chip chip-slate">{rec.scenarios[0].category}</span>
-                <span className="chip chip-slate">{rec.scenarios[0].difficulty}</span>
+                <span className="chip chip-slate">{L.categories[rec.scenarios[0].category] || rec.scenarios[0].category}</span>
+                <span className="chip chip-slate">{L.difficulty[rec.scenarios[0].difficulty] || rec.scenarios[0].difficulty}</span>
                 <span className="chip chip-primary flex items-center gap-1">
-                  {t.dashboard.weakestNote} <span className="font-bold">{rec.weakest_skill}</span>
+                  {t.dashboard.weakestNote} <span className="font-bold">{L.skills[rec.weakest_skill] || rec.weakest_skill}</span>
                 </span>
               </div>
             </div>
@@ -137,7 +138,7 @@ export default function Dashboard() {
                         <span>{new Date(r.created_at).toLocaleDateString()}</span>
                       </div>
                       <h3 className="font-display font-semibold text-base">{r.scenario_title}</h3>
-                      {r.outcome && <div className="text-xs text-slate-500">{r.outcome}</div>}
+                      {r.outcome && <div className="text-xs text-slate-500">{L.outcome[r.outcome] || r.outcome}</div>}
                     </div>
                     <div className="text-right shrink-0">
                       <div className={`text-lg font-mono font-bold ${r.score >= 70 ? "text-emerald-600" : r.score >= 50 ? "text-[#1E293B]" : "text-rose-600"}`}>
