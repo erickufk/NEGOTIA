@@ -31,6 +31,7 @@ export default function NegotiationRoom() {
   const chunksRef = useRef([]);
   const audioRef = useRef(null);
   const genderRef = useRef({});
+  const coachingRef = useRef(false);
   const L = t.labels;
 
   useEffect(() => {
@@ -124,7 +125,7 @@ export default function NegotiationRoom() {
           }
         }
       }
-      if (coaching) {
+      if (coachingRef.current) {
         try { const h = await api.coachHint(id); setHint(h.hint); } catch {}
       }
     } catch (e) {
@@ -132,14 +133,10 @@ export default function NegotiationRoom() {
     } finally { setSending(false); }
   };
 
-  const toggleMic = async () => {
-    if (listening) {
-      mediaRecRef.current?.stop();
-      setListening(false);
-      return;
-    }
+  const startRecording = async () => {
+    if (listening || transcribing) return;
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      toast.error(t.room.emptyRecording ? "Микрофон не поддерживается" : "Mic not supported");
+      toast.error("Микрофон не поддерживается");
       return;
     }
     try {
@@ -173,6 +170,14 @@ export default function NegotiationRoom() {
     } catch {
       toast.error("Нет доступа к микрофону");
     }
+  };
+
+  const stopRecording = () => {
+    if (!listening) return;
+    try {
+      if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") mediaRecRef.current.stop();
+    } catch {}
+    setListening(false);
   };
 
   const finish = async (action) => {
@@ -258,7 +263,12 @@ export default function NegotiationRoom() {
             </div>
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer neo-raised-sm px-3 py-1.5 rounded-full" data-testid="coach-toggle">
-                <input type="checkbox" checked={coaching} onChange={e => setCoaching(e.target.checked)} className="accent-[#4F46E5]" />
+                <input type="checkbox" checked={coaching} onChange={e => {
+                  const on = e.target.checked;
+                  setCoaching(on); coachingRef.current = on;
+                  if (on) { api.coachHint(id).then(h => setHint(h.hint)).catch(() => {}); }
+                  else { setHint(null); }
+                }} className="accent-[#4F46E5]" />
                 <Lightbulb className="w-3 h-3" />{t.room.coaching}
               </label>
               <button onClick={() => { setVoiceOn(v => !v); if (audioRef.current) audioRef.current.pause(); }}
@@ -333,13 +343,19 @@ export default function NegotiationRoom() {
                 <div className="flex-1">
                   <Textarea data-testid="msg-input" value={input} onChange={e => setInput(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
-                    placeholder={transcribing ? t.room.transcribing : t.room.typeReply} rows={2}
+                    placeholder={listening ? t.room.listening : transcribing ? t.room.transcribing : t.room.typeReply} rows={2}
                     className="neo-inset border-0 text-sm text-[#1E293B] resize-none focus:ring-2 focus:ring-[#4F46E5]" />
                 </div>
                 <div className="flex flex-col gap-2">
                   {neg.mode !== "challenge" && (
-                    <button data-testid="btn-mic" onClick={toggleMic}
-                      className={`w-11 h-11 rounded-xl neo-raised-sm flex items-center justify-center transition-all ${
+                    <button data-testid="btn-mic"
+                      onPointerDown={e => { e.preventDefault(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch {} startRecording(); }}
+                      onPointerUp={e => { e.preventDefault(); stopRecording(); }}
+                      onPointerCancel={() => { if (listening) stopRecording(); }}
+                      onContextMenu={e => e.preventDefault()}
+                      title={t.room.pushToTalk}
+                      style={{ touchAction: "none", userSelect: "none" }}
+                      className={`w-11 h-11 rounded-xl neo-raised-sm flex items-center justify-center transition-all select-none ${
                         listening ? "text-rose-600 ring-2 ring-rose-500 animate-pulse" : transcribing ? "text-amber-600" : "text-slate-500 hover:text-[#4F46E5]"
                       }`}>
                       {transcribing ? <Loader2 className="w-4 h-4 animate-spin" /> : listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}

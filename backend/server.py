@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field, EmailStr
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from emergentintegrations.llm.openai import OpenAISpeechToText, OpenAITextToSpeech
 
-from scenarios_seed import SCENARIOS, GENDERS, ROLE_RU, SCENARIO_RU
+from scenarios_seed import SCENARIOS, GENDERS, ROLE_RU, SCENARIO_RU, NAME_RU
 from frameworks import FRAMEWORKS, classify_spin
 
 LANG_NAMES = {"ru": "РУССКОМ (Russian)", "en": "English", "es": "Spanish", "de": "German"}
@@ -228,9 +228,26 @@ def _scrub_scenario(sc: dict, hide_hidden: bool = True, lang: str = "en") -> dic
         sp["gender"] = GENDERS.get(p.get("name"), "female")
         if lang == "ru":
             sp["role"] = ROLE_RU.get(p.get("role"), p.get("role"))
+            sp["name"] = NAME_RU.get(p.get("name"), p.get("name"))
         safe_parts.append(sp)
     out["participants"] = safe_parts
     return out
+
+
+def _resolve_parts(scenario: dict, doc: dict) -> List[dict]:
+    """Map a negotiation's stored participants back to full scenario participants,
+    overriding name/role with the stored (possibly localized) display values."""
+    disp_name, disp_role, src_names = {}, {}, set()
+    for pp in doc.get("participants", []):
+        src = pp.get("src_name", pp["name"])
+        src_names.add(src)
+        disp_name[src] = pp["name"]
+        disp_role[src] = pp["role"]
+    merged = []
+    for p in scenario["participants"]:
+        if p["name"] in src_names:
+            merged.append({**p, "name": disp_name.get(p["name"], p["name"]), "role": disp_role.get(p["name"], p["role"])})
+    return merged
 
 
 @api.get("/scenarios")
@@ -332,6 +349,14 @@ async def create_negotiation(body: CreateNegotiationIn, user=Depends(get_current
     title = scenario["title"]
     if body.language == "ru":
         title = SCENARIO_RU.get(body.scenario_slug, {}).get("title", title)
+    # localized participant snapshot (keeps src_name to map back to scenario)
+    snap = []
+    for p in parts:
+        if body.language == "ru":
+            dn, dr = NAME_RU.get(p["name"], p["name"]), ROLE_RU.get(p["role"], p["role"])
+        else:
+            dn, dr = p["name"], p["role"]
+        snap.append({"name": dn, "role": dr, "src_name": p["name"], "gender": GENDERS.get(p["name"], "female")})
     doc = {
         "id": neg_id,
         "user_id": user["id"],
@@ -341,12 +366,12 @@ async def create_negotiation(body: CreateNegotiationIn, user=Depends(get_current
         "mode": body.mode,
         "training_framework": fw["id"],
         "framework_name": fw["name"],
-        "participants": [{"name": p["name"], "role": p["role"]} for p in parts],
+        "participants": snap,
         "preparation": body.preparation or {},
         "state": {
             "round": 0,
-            "trust": {p["name"]: 50 for p in parts},
-            "pressure": {p["name"]: 30 for p in parts},
+            "trust": {s["name"]: 50 for s in snap},
+            "pressure": {s["name"]: 30 for s in snap},
             "signals": {"question": 0, "open_question": 0, "concession": 0, "anchoring": 0, "empathy": 0, "pressure": 0, "batna_ref": 0, "objective_criteria": 0, "trades": 0, "personal_attack": 0},
             "spin_counts": {"situation": 0, "problem": 0, "implication": 0, "need_payoff": 0, "other": 0},
             "started_at": now_iso(),
@@ -400,7 +425,7 @@ async def post_message(neg_id: str, body: MessageIn, user=Depends(get_current_us
         raise HTTPException(400, "Negotiation ended")
 
     scenario = await db.scenarios.find_one({"slug": doc["scenario_slug"]}, {"_id": 0})
-    parts = [p for p in scenario["participants"] if any(pp["name"] == p["name"] for pp in doc["participants"])]
+    parts = _resolve_parts(scenario, doc)
 
     # analyze user turn
     signals = await _analyze_turn(body.content)
@@ -727,29 +752,62 @@ class CoachIn(BaseModel):
     negotiation_id: str
 
 
+def _rule_hint(doc: dict, lang: str = "en") -> str:
+    sig = doc["state"].get("signals", {})
+    spin = doc["state"].get("spin_counts", {})
+    fw = doc.get("training_framework", "combined")
+    ru = lang == "ru"
+    hint = ("Сохраняйте любопытство — выявляйте реальные интересы до того, как делать предложения."
+            if ru else "Stay curious — probe their real interests before making offers.")
+    if fw == "spin":
+        if spin.get("implication", 0) == 0:
+            hint = ("Спросите о последствиях их проблемы — что будет, если её не решить?" if ru
+                    else "Ask about the consequences of their current problem — what happens if it isn't solved?")
+        elif spin.get("need_payoff", 0) == 0 and spin.get("problem", 0) > 0:
+            hint = ("Вы нашли проблему — теперь помогите увидеть ценность её решения." if ru
+                    else "You've uncovered a problem — now help them see the value of solving it.")
+    elif fw == "harvard":
+        if sig.get("trades", 0) == 0:
+            hint = ("Введите ещё одну переменную (срок, оплата, SLA), чтобы обменять её на нужное вам." if ru
+                    else "Introduce another variable (term length, payment, SLA) to trade for what you want.")
+        elif sig.get("objective_criteria", 0) == 0:
+            hint = ("Сошлитесь на объективный критерий — рыночную ставку или отраслевой стандарт." if ru
+                    else "Try referencing an objective benchmark — market rate, industry standard, or comparable.")
+    elif fw == "batna":
+        if sig.get("batna_ref", 0) == 0:
+            hint = ("Обозначьте свою альтернативу — напомните, что у вас есть варианты." if ru
+                    else "Signal your alternative — remind them you have options if this deal doesn't work.")
+    return hint
+
+
 @api.post("/coach/hint")
 async def coach_hint(body: CoachIn, user=Depends(get_current_user)):
     doc = await db.negotiations.find_one({"id": body.negotiation_id, "user_id": user["id"]}, {"_id": 0})
     if not doc:
         raise HTTPException(404, "Not found")
     fw = FRAMEWORKS.get(doc.get("training_framework", "combined"), FRAMEWORKS["combined"])
-    sig = doc["state"].get("signals", {})
-    spin = doc["state"].get("spin_counts", {})
-    hint = "Stay curious — probe their real interests before making offers."
-    if doc["training_framework"] == "spin":
-        if spin.get("implication", 0) == 0:
-            hint = "Ask about the consequences of their current problem — what happens if it isn't solved?"
-        elif spin.get("need_payoff", 0) == 0 and spin.get("problem", 0) > 0:
-            hint = "You've uncovered a problem — now help them see the value of solving it."
-    elif doc["training_framework"] == "harvard":
-        if sig.get("trades", 0) == 0:
-            hint = "Introduce another variable (term length, payment, SLA) to trade for what you want."
-        elif sig.get("objective_criteria", 0) == 0:
-            hint = "Try referencing an objective benchmark — market rate, industry standard, or comparable."
-    elif doc["training_framework"] == "batna":
-        if sig.get("batna_ref", 0) == 0:
-            hint = "Signal your alternative — remind them you have options if this deal doesn't work."
-    return {"hint": hint, "framework": fw["name"]}
+    lang = doc.get("language", "en")
+    lang_name = LANG_NAMES.get(lang, "English")
+    fallback = _rule_hint(doc, lang)
+    try:
+        history_txt = "\n".join([f"{m.get('participant') or m['role'].upper()}: {m['content']}" for m in doc["messages"][-8:]])
+        scenario = await db.scenarios.find_one({"slug": doc["scenario_slug"]}, {"_id": 0})
+        objective = (scenario or {}).get("objective", "")
+        if lang == "ru":
+            objective = SCENARIO_RU.get(doc["scenario_slug"], {}).get("objective", objective)
+        sys = f"""You are an elite negotiation coach watching a live practice session.
+Training framework: {fw['name']} — {fw['tagline']}
+User's objective: {objective}
+Framework focus: {', '.join(fw.get('objectives', []))}
+Give exactly ONE short, specific, actionable coaching tip (max 22 words) for the user's NEXT move, grounded in what just happened in the transcript. No greetings, no preamble, no quotes. Write ONLY in {lang_name}."""
+        chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"coach-{doc['id']}-{doc['state'].get('round', 0)}", system_message=sys).with_model(AI_PROVIDER, AI_MODEL)
+        resp = await chat.send_message(UserMessage(text=f"Transcript so far:\n{history_txt or '(no messages yet — user is about to open)'}\n\nGive the single next-move tip now."))
+        tip = (resp if isinstance(resp, str) else str(resp)).strip().strip('"').strip()
+        if tip:
+            return {"hint": tip[:300], "framework": fw["name"], "dynamic": True}
+    except Exception:
+        logger.exception("coach hint AI failed, using rule-based fallback")
+    return {"hint": fallback, "framework": fw["name"], "dynamic": False}
 
 
 # ---------- Streaming message endpoint (SSE) ----------
@@ -779,7 +837,7 @@ async def post_message_stream(neg_id: str, body: MessageIn, user=Depends(get_cur
         raise HTTPException(400, "Negotiation ended")
 
     scenario = await db.scenarios.find_one({"slug": doc["scenario_slug"]}, {"_id": 0})
-    parts = [p for p in scenario["participants"] if any(pp["name"] == p["name"] for pp in doc["participants"])]
+    parts = _resolve_parts(scenario, doc)
 
     async def event_gen():
         try:

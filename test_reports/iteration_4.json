@@ -1,0 +1,34 @@
+{
+  "summary": "Iteration-4 frontend verification of NEGOTIA's 3 new features - all PASS. (1) Russian opponent names: left ОППОНЕНТЫ panel shows 'Елена Ростова' (Вице-президент по закупкам) + 'Марк Соколов' (Юрисконсульт) for enterprise-discount / Запрос корпоративной скидки. AI reply author labels also use Russian names ['Елена Ростова', 'Марк Соколов', ...]. Trust/Доверие moved from initial 50 -> 55 for BOTH participants after 3 Russian messages (Раунд 0 -> 2), proving neg.state.trust is keyed by the localized names (state key match confirmed). Pressure stayed at 30 in this run (empathy-heavy content), but it is keyed correctly. (2) Push-to-talk voice: in a fresh voice-mode negotiation (Режим VOICE confirmed in UI), pressing pointer down on btn-mic switches the button to rose-ring + animate-pulse class and the msg-input placeholder becomes 'Слушаю... отпустите, чтобы отправить'; on pointerup after 2.8s a single POST /api/voice/transcribe multipart fires and the transcribed text is auto-sent as a NEW user bubble (bubbles 0 -> 1, input cleared to ''), triggering AI replies from Елена Ростова + Марк Соколов in Russian. No 'Нет доступа к микрофону' toast (Chromium fake-media + grant_permissions(['microphone'])). (3) Dynamic coaching: with coach-toggle enabled, POST /api/coach/hint fired after messages and returned {hint, framework:'Combined', dynamic:true}. Two consecutive hints were CONTEXTUAL Russian tips referencing the actual conversation: hint1='Задайте SPIN-вопрос: уточните, что конкретно входит в предложение конкурента и какие риски они уже оценили при переходе.' hint2='Задайте SPIN-вопрос: спросите, какие конкретные потери в SLA-инцидентах у них уже случались, переведите риск в цифры.' — different text, references SLA/конкурент from transcript, proving dynamic Claude-grounded generation (not static). The coach-hint banner renders inside NegotiationRoom with data-testid='coach-hint'.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verified_flows": {
+    "russian_names_in_sidebar_and_ai_labels": "PASS - Елена Ростова / Марк Соколов render with Russian roles (Вице-президент по закупкам, Юрисконсульт); AI message author labels show the same Russian names.",
+    "trust_pressure_bars_update": "PASS - Trust 50 -> 55 for BOTH participants after Russian empathy/anchor messages, confirming state.trust keys match the localized name strings used for display. Раунд counter also went 0 -> 2.",
+    "push_to_talk_hold_recording": "PASS - onPointerDown starts recording (rose ring + animate-pulse + placeholder 'Слушаю... отпустите, чтобы отправить'); onPointerUp fires exactly one POST /api/voice/transcribe (multipart); startRecording/stopRecording split works.",
+    "voice_mode_auto_send": "PASS - In voice mode (neg.mode === 'voice'), transcribed text is auto-sent as a new user message bubble (input cleared, bubble count +1) and AI reply streams back from the Russian-named participants.",
+    "dynamic_coach_hint": "PASS - /api/coach/hint returns dynamic:true with contextual Russian tips; two consecutive hints differ and reference the ongoing negotiation (SLA, conkurent 30% discount, SPIN). data-testid 'coach-hint' banner updates on every message."
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_negotia_api.py",
+    "/app/backend/tests/test_ru_voice_features.py"
+  ],
+  "critical_code_review_comments": [
+    "NegotiationRoom.jsx: When user toggles the 'Coaching' checkbox and immediately clicks send, the first send's closure may still see coaching=false (observed: first hint call skipped in test). Minor UX gap - hint appears from the 2nd message. Consider reading coaching from a ref, or calling coachHint on toggle-on as well.",
+    "coachHint failures are silently swallowed (try/catch {}). Consider surfacing a subtle toast on error so users know coaching is intermittently unavailable.",
+    "onPointerLeave stops recording even for accidental micro-movements while holding the button on hover. Could cause unintended cut-offs on desktop; consider a small dead-zone or use pointercancel only.",
+    "backend/server.py remains >900 lines - recommend splitting into routers (auth, scenarios, negotiations, voice, coach).",
+    "TTS body still sends voice: null when only gender is chosen (harmless but noisy)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (per request)", "frontend": "100% (3/3 features)"},
+  "test_credentials": "demo@negotia.app / Demo1234!",
+  "seed_data_creation": "Test created 2 negotiations under demo user (1 chat, 1 voice). No cleanup performed.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Wizard is step-based (step 1 scenario, 2 framework, 3 mode, 4 participants, 5 prep). When automating, DO NOT try to click w-mode-voice / w-parts-N on the first page after start-<slug>; you must first click wizard-next until w-mode-* testids are visible, then select, then click wizard-next again to reach parts step. Otherwise mode silently stays default 'chat' and voice auto-send won't trigger. Push-to-talk: use page.mouse.down()/up() over btn-mic bounding box (page.hover then mouse.down/up) - onPointerDown/onPointerUp handlers work as expected with Chromium fake-media. Login route /auth, Negotiation route /negotiation/:id, Russian is default UI language."
+}

@@ -291,6 +291,16 @@ ROLE_RU = {
     "Customer General Counsel": "Главный юрист клиента",
 }
 
+# ---------- Russian participant names (English name -> Russian name) ----------
+NAME_RU = {
+    "Sarah Kim": "Светлана Ковалёва",
+    "Michael Chen": "Михаил Чернов",
+    "Elena Rostova": "Елена Ростова",
+    "Marcus Chen": "Марк Соколов",
+    "David Sterling": "Дмитрий Стрельцов",
+    "Alexander Vance": "Александр Ванин",
+}
+
 # ---------- Russian scenario translations (user-visible fields) ----------
 SCENARIO_RU = {
     "salary-negotiation": {

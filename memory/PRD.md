@@ -31,10 +31,19 @@ OpenAI Whisper STT + OpenAI TTS via Emergent Universal Key. SSE streaming. Conte
   - Live signals now sort by value (surface active ones) with localized labels.
   - Verified via curl (RU gen, gender TTS distinct audio, STT round-trip) and testing_agent
     (26/26 backend tests, all frontend flows PASS). Tests: /app/backend/tests/.
+- **2026-06 — Russian names + push-to-talk + dynamic coaching (verified, iteration_4):**
+  - Russian opponent NAMES (NAME_RU in scenarios_seed.py). Negotiation snapshot stores
+    localized name/role + `src_name` (maps back to scenario via `_resolve_parts`) + `gender`;
+    state trust/pressure keyed by localized name -> bars update correctly, AI labels & prompt
+    use the Russian name. Backward-compatible with old English negotiations.
+  - Push-to-talk voice: mic button is HOLD-to-record (pointerdown start / pointerup stop, with
+    setPointerCapture); voice mode auto-sends transcription. Placeholder shows 'Слушаю...'.
+  - Dynamic coaching: `POST /api/coach/hint` now calls Claude with the live transcript +
+    framework and returns a contextual tip in the negotiation's language (rule-based
+    `_rule_hint` fallback). Coaching toggle fires an immediate hint (ref-based, no first-msg gap).
+  - Verified by testing_agent iteration_4 (3/3 frontend features PASS).
 
 ## Backlog
-- P1: Dynamic coaching hints — pass negotiation history to Claude for context-aware tips
-  (`POST /api/coach/hint` currently rule-based).
 - P2: Custom user-created scenarios saved to DB (would also need RU/EN authoring).
 - P3: Split server.py (~950 lines) into modular routers (auth/scenarios/negotiations/voice/coach).
 - Nit: TTS request sends `voice: null` when only gender chosen (harmless).

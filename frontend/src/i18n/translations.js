@@ -85,8 +85,8 @@ export const en = {
     firstMove: "Make your opening move.", prepEmpty: "Preparation not filled.",
     transcribing: "Transcribing...",
     mode: "Mode", coaching: "Coaching", you: "YOU", negotiation: "NEGOTIATION",
-    listening: "Listening... tap to stop", micHint: "Hold a thought, then tap the mic to stop",
-    emptyRecording: "Nothing captured — speak a bit longer.",
+    listening: "Listening... release to send", micHint: "Hold the mic button and speak, release to send",
+    pushToTalk: "Hold to talk", emptyRecording: "Nothing captured — speak a bit longer.",
   },
   debrief: {
     title: "Negotiation Complete", overall: "Overall Score", outcome: "Outcome",
@@ -200,8 +200,8 @@ export const ru = {
     firstMove: "Сделайте первый ход.", prepEmpty: "Подготовка не заполнена.",
     transcribing: "Распознаю...",
     mode: "Режим", coaching: "Коучинг", you: "ВЫ", negotiation: "ПЕРЕГОВОРЫ",
-    listening: "Слушаю... нажмите, чтобы остановить", micHint: "Сформулируйте мысль, затем нажмите микрофон, чтобы остановить",
-    emptyRecording: "Ничего не записалось — говорите чуть дольше.",
+    listening: "Слушаю... отпустите, чтобы отправить", micHint: "Удерживайте кнопку и говорите, отпустите — отправится",
+    pushToTalk: "Удерживайте, чтобы говорить", emptyRecording: "Ничего не записалось — говорите чуть дольше.",
   },
   debrief: {
     title: "Переговоры завершены", overall: "Общий счёт", outcome: "Исход",
