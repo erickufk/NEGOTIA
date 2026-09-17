@@ -1,0 +1,25 @@
+{
+  "summary": "Iteration-7 smoke regression after two dev-log-only additions in NegotiationRoom.jsx (console.warn on coach-hint catch; console.error before send() toast). Executed full E2E on 1440x900 desktop, RU locale: (1) Login demo@negotia.app/Demo1234! via [data-testid=submit-auth] -> /dashboard OK. (2) /simulate?scenario=salary-negotiation wizard traversed 5 'Далее' clicks then 'Начать переговоры' -> /negotiation/374dcb4c-... OK. (3) [data-testid=coach-toggle] clicked -> [data-testid=coach-hint] rendered with 110 chars of Russian hint text (api.coachHint succeeded, no console warn emitted). (4) Filled textarea, clicked [data-testid=btn-send], waited 10s. (5) [data-testid=btn-make-deal] clicked and redirected to /debrief/374dcb4c-... OK. Console: 0 errors, 0 warnings (neither the new console.warn nor console.error fired = happy path clean, confirming the two added log lines only trigger on actual failure and do not spam clean flows). No functional regression detected.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "verified_flows": {
+    "login_demo_user": "PASS",
+    "wizard_to_negotiation": "PASS - /negotiation/:id reached",
+    "coach_toggle_and_hint": "PASS - hint visible, 110 chars, no console.warn (coach-hint call succeeded)",
+    "send_message_via_btn_send": "PASS - no console.error emitted",
+    "make_deal_redirect_to_debrief": "PASS - /debrief/:id reached"
+  },
+  "test_report_links": [],
+  "critical_code_review_comments": [
+    "The two added dev-log lines are appropriate and non-invasive; console.warn for coach hint failure and console.error before toast in send() catch are correct patterns and improve debuggability without user-facing impact.",
+    "Prior iteration_6 comments still stand (server.py length, inline Card in Scenarios.jsx, RU asterisk misleading in CustomScenarioBuilder) but are out of scope for this iteration."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only)", "frontend": "100% (5/5)"},
+  "test_credentials": "demo@negotia.app / Demo1234!",
+  "seed_data_creation": "One negotiation created and finished via make_deal; standard demo user data.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "The two console log additions only fire on API/network failure; happy-path smoke will show 0 warnings/errors. Wizard traversal for salary-negotiation requires 5 'Далее' clicks before 'Начать переговоры' final button. Message list testids are msg-input for the composer; assistant reply message testids may use different pattern - verifying via successful debrief redirect is a reliable proxy since make_deal requires an established negotiation state.",
+  "rca_of_the_issue": "n/a"
+}
