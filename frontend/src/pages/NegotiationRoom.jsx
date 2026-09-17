@@ -126,9 +126,11 @@ export default function NegotiationRoom() {
         }
       }
       if (coachingRef.current) {
-        try { const h = await api.coachHint(id); setHint(h.hint); } catch {}
+        try { const h = await api.coachHint(id); setHint(h.hint); }
+        catch (err) { console.warn("coach hint failed", err); }
       }
     } catch (e) {
+      console.error("send message failed", e);
       toast.error("Something went wrong. Try again.");
     } finally { setSending(false); }
   };
