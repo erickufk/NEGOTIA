@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Scenarios from "./pages/Scenarios";
 import Learn from "./pages/Learn";
 import SimulationWizard from "./pages/SimulationWizard";
+import CustomScenarioBuilder from "./pages/CustomScenarioBuilder";
 import NegotiationRoom from "./pages/NegotiationRoom";
 import Debrief from "./pages/Debrief";
 import History from "./pages/History";
@@ -35,6 +36,7 @@ function App() {
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
               <Route path="/scenarios" element={<Protected><Scenarios /></Protected>} />
+              <Route path="/scenarios/new" element={<Protected><CustomScenarioBuilder /></Protected>} />
               <Route path="/learn" element={<Protected><Learn /></Protected>} />
               <Route path="/simulate" element={<Protected><SimulationWizard /></Protected>} />
               <Route path="/negotiation/:id" element={<Protected><NegotiationRoom /></Protected>} />

@@ -122,6 +122,40 @@ class MagicLoginIn(BaseModel):
     token: str
 
 
+class CustomOpponent(BaseModel):
+    name_en: str = Field(min_length=1, max_length=80)
+    name_ru: str = Field(default="", max_length=80)
+    role_en: str = Field(min_length=1, max_length=120)
+    role_ru: str = Field(default="", max_length=120)
+    gender: str = "female"  # male | female
+    description: str = Field(default="", max_length=600)
+    goals: str = Field(default="", max_length=400)
+    interests: str = Field(default="", max_length=400)
+    hidden_interests: str = Field(default="", max_length=400)
+    constraints: str = Field(default="", max_length=400)
+    batna: str = Field(default="", max_length=300)
+    personality: str = Field(default="", max_length=300)
+    priorities: List[str] = []
+
+
+class CustomScenarioIn(BaseModel):
+    title_en: str = Field(min_length=2, max_length=120)
+    title_ru: str = Field(default="", max_length=120)
+    description_en: str = Field(min_length=2, max_length=400)
+    description_ru: str = Field(default="", max_length=400)
+    category: str = Field(min_length=1, max_length=40)
+    difficulty: str = "Medium"
+    duration: int = 12
+    objective_en: str = Field(min_length=2, max_length=400)
+    objective_ru: str = Field(default="", max_length=400)
+    context_en: str = Field(min_length=2, max_length=1200)
+    context_ru: str = Field(default="", max_length=1200)
+    success_en: List[str] = []
+    success_ru: List[str] = []
+    skills: List[str] = []
+    opponent: CustomOpponent
+
+
 class EndNegotiationIn(BaseModel):
     action: str = "end"  # end | walk_away | make_deal
 
@@ -310,27 +344,44 @@ async def magic_login(body: MagicLoginIn):
 def _scrub_scenario(sc: dict, hide_hidden: bool = True, lang: str = "en") -> dict:
     """Remove hidden AI information before sending to client; localize for RU."""
     out = {k: v for k, v in sc.items() if k != "_id"}
-    ru = SCENARIO_RU.get(out.get("slug"), {}) if lang == "ru" else {}
-    if ru:
-        out["title"] = ru.get("title", out.get("title"))
-        out["description"] = ru.get("description", out.get("description"))
-        out["objective"] = ru.get("objective", out.get("objective"))
+    is_custom = bool(out.get("custom"))
+    p_trans = {}
     if lang == "ru":
-        ctx = SCENARIO_RU_CTX.get(out.get("slug"), {})
-        if ctx.get("context"):
-            out["context"] = ctx["context"]
-        if ctx.get("success_conditions"):
-            out["success_conditions"] = ctx["success_conditions"]
+        if is_custom:
+            tr = (out.get("translations") or {}).get("ru", {}) or {}
+            for k in ("title", "description", "objective", "context"):
+                if tr.get(k):
+                    out[k] = tr[k]
+            if tr.get("success_conditions"):
+                out["success_conditions"] = tr["success_conditions"]
+            for i, pt in enumerate(tr.get("participants") or []):
+                p_trans[i] = pt
+        else:
+            ru = SCENARIO_RU.get(out.get("slug"), {})
+            if ru:
+                out["title"] = ru.get("title", out.get("title"))
+                out["description"] = ru.get("description", out.get("description"))
+                out["objective"] = ru.get("objective", out.get("objective"))
+            ctx = SCENARIO_RU_CTX.get(out.get("slug"), {})
+            if ctx.get("context"):
+                out["context"] = ctx["context"]
+            if ctx.get("success_conditions"):
+                out["success_conditions"] = ctx["success_conditions"]
     safe_parts = []
-    for p in out.get("participants", []):
+    for i, p in enumerate(out.get("participants", [])):
         if hide_hidden:
             sp = {k: v for k, v in p.items() if k not in ("hidden_interests", "reservation_point", "batna")}
         else:
             sp = dict(p)
-        sp["gender"] = GENDERS.get(p.get("name"), "female")
+        sp["gender"] = p.get("gender") or GENDERS.get(p.get("name"), "female")
         if lang == "ru":
-            sp["role"] = ROLE_RU.get(p.get("role"), p.get("role"))
-            sp["name"] = NAME_RU.get(p.get("name"), p.get("name"))
+            if is_custom:
+                pt = p_trans.get(i, {})
+                sp["role"] = pt.get("role") or p.get("role")
+                sp["name"] = pt.get("name") or p.get("name")
+            else:
+                sp["role"] = ROLE_RU.get(p.get("role"), p.get("role"))
+                sp["name"] = NAME_RU.get(p.get("name"), p.get("name"))
         safe_parts.append(sp)
     out["participants"] = safe_parts
     return out
@@ -354,7 +405,10 @@ def _resolve_parts(scenario: dict, doc: dict) -> List[dict]:
 
 @api.get("/scenarios")
 async def list_scenarios(lang: str = "en", user=Depends(get_current_user)):
-    docs = await db.scenarios.find({"active": True}, {"_id": 0}).to_list(500)
+    docs = await db.scenarios.find({
+        "active": True,
+        "$or": [{"owner_id": None}, {"owner_id": {"$exists": False}}, {"owner_id": user["id"]}],
+    }, {"_id": 0}).to_list(500)
     return {"scenarios": [_scrub_scenario(d, lang=lang) for d in docs]}
 
 
@@ -363,7 +417,75 @@ async def get_scenario(slug: str, lang: str = "en", user=Depends(get_current_use
     doc = await db.scenarios.find_one({"slug": slug}, {"_id": 0})
     if not doc:
         raise HTTPException(404, "Scenario not found")
+    # If custom, ensure it belongs to this user
+    if doc.get("custom") and doc.get("owner_id") not in (None, user["id"]):
+        raise HTTPException(404, "Scenario not found")
     return {"scenario": _scrub_scenario(doc, lang=lang)}
+
+
+@api.post("/scenarios/custom")
+async def create_custom_scenario(body: CustomScenarioIn, user=Depends(get_current_user)):
+    slug = f"custom-{uuid.uuid4().hex[:10]}"
+    op = body.opponent
+    doc = {
+        "id": str(uuid.uuid4()),
+        "slug": slug,
+        "owner_id": user["id"],
+        "custom": True,
+        "title": body.title_en,
+        "description": body.description_en,
+        "category": body.category,
+        "difficulty": body.difficulty,
+        "duration": max(3, min(60, body.duration)),
+        "default_mode": "chat",
+        "max_participants": 1,
+        "objective": body.objective_en,
+        "context": body.context_en,
+        "success_conditions": [s for s in body.success_en if s.strip()],
+        "failure_conditions": [],
+        "skills": body.skills,
+        "participants": [{
+            "name": op.name_en,
+            "role": op.role_en,
+            "description": op.description,
+            "goals": op.goals,
+            "interests": op.interests,
+            "hidden_interests": op.hidden_interests,
+            "constraints": op.constraints,
+            "batna": op.batna,
+            "personality": op.personality,
+            "priorities": op.priorities,
+            "gender": (op.gender or "female").lower(),
+        }],
+        "translations": {
+            "ru": {
+                "title": body.title_ru or body.title_en,
+                "description": body.description_ru or body.description_en,
+                "objective": body.objective_ru or body.objective_en,
+                "context": body.context_ru or body.context_en,
+                "success_conditions": [s for s in (body.success_ru or []) if s.strip()] or [s for s in body.success_en if s.strip()],
+                "participants": [{
+                    "name": op.name_ru or op.name_en,
+                    "role": op.role_ru or op.role_en,
+                }],
+            }
+        },
+        "active": True,
+        "created_at": now_iso(),
+    }
+    await db.scenarios.insert_one(doc)
+    return {"scenario": _scrub_scenario({k: v for k, v in doc.items() if k != "_id"}, lang="en")}
+
+
+@api.delete("/scenarios/custom/{slug}")
+async def delete_custom_scenario(slug: str, user=Depends(get_current_user)):
+    doc = await db.scenarios.find_one({"slug": slug}, {"_id": 0})
+    if not doc:
+        raise HTTPException(404, "Not found")
+    if not doc.get("custom") or doc.get("owner_id") != user["id"]:
+        raise HTTPException(403, "Only your custom scenarios can be deleted")
+    await db.scenarios.delete_one({"slug": slug})
+    return {"ok": True}
 
 
 # ---------- AI helpers ----------
@@ -450,16 +572,28 @@ async def create_negotiation(body: CreateNegotiationIn, user=Depends(get_current
     neg_id = str(uuid.uuid4())
     fw = FRAMEWORKS.get(body.training_framework, FRAMEWORKS["combined"])
     title = scenario["title"]
+    is_custom = bool(scenario.get("custom"))
+    ru_tr = (scenario.get("translations") or {}).get("ru", {}) if is_custom else {}
     if body.language == "ru":
-        title = SCENARIO_RU.get(body.scenario_slug, {}).get("title", title)
+        if is_custom:
+            title = ru_tr.get("title") or title
+        else:
+            title = SCENARIO_RU.get(body.scenario_slug, {}).get("title", title)
     # localized participant snapshot (keeps src_name to map back to scenario)
     snap = []
-    for p in parts:
+    for idx, p in enumerate(parts):
         if body.language == "ru":
-            dn, dr = NAME_RU.get(p["name"], p["name"]), ROLE_RU.get(p["role"], p["role"])
+            if is_custom:
+                pt = (ru_tr.get("participants") or [])
+                pt_i = pt[idx] if idx < len(pt) else {}
+                dn = pt_i.get("name") or p["name"]
+                dr = pt_i.get("role") or p["role"]
+            else:
+                dn, dr = NAME_RU.get(p["name"], p["name"]), ROLE_RU.get(p["role"], p["role"])
         else:
             dn, dr = p["name"], p["role"]
-        snap.append({"name": dn, "role": dr, "src_name": p["name"], "gender": GENDERS.get(p["name"], "female")})
+        gender = p.get("gender") or GENDERS.get(p["name"], "female")
+        snap.append({"name": dn, "role": dr, "src_name": p["name"], "gender": gender})
     doc = {
         "id": neg_id,
         "user_id": user["id"],
@@ -903,7 +1037,10 @@ async def coach_hint(body: CoachIn, user=Depends(get_current_user)):
         scenario = await db.scenarios.find_one({"slug": doc["scenario_slug"]}, {"_id": 0})
         objective = (scenario or {}).get("objective", "")
         if lang == "ru":
-            objective = SCENARIO_RU.get(doc["scenario_slug"], {}).get("objective", objective)
+            if (scenario or {}).get("custom"):
+                objective = ((scenario.get("translations") or {}).get("ru", {}).get("objective")) or objective
+            else:
+                objective = SCENARIO_RU.get(doc["scenario_slug"], {}).get("objective", objective)
         sys = f"""You are an elite negotiation coach watching a live practice session.
 Training framework: {fw['name']} — {fw['tagline']}
 User's objective: {objective}

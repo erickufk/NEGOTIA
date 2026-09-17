@@ -25,6 +25,10 @@ export const api = {
   resetPassword: (token, password) => axios.post(`${API}/auth/reset-password`, { token, password }).then(r => r.data),
   magicLogin: (token) => axios.post(`${API}/auth/magic-login`, { token }).then(r => r.data),
 
+  // Custom scenarios
+  createCustomScenario: (payload) => axios.post(`${API}/scenarios/custom`, payload).then(r => r.data.scenario),
+  deleteCustomScenario: (slug) => axios.delete(`${API}/scenarios/custom/${slug}`).then(r => r.data),
+
   // Voice
   transcribe: async (blob, lang = "en") => {
     const fd = new FormData();
