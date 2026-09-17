@@ -3,7 +3,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { useI18n } from "../i18n/I18nProvider";
 import { Button } from "../components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "../components/ui/dropdown-menu";
-import { LayoutDashboard, Library, History as HistoryIcon, User, LogOut, Languages, Menu, X, Brain, ChevronDown } from "lucide-react";
+import { LayoutDashboard, Library, GraduationCap, History as HistoryIcon, User, LogOut, Languages, Menu, X, Brain, ChevronDown } from "lucide-react";
 import { useState } from "react";
 
 export default function AppShell({ children }) {
@@ -16,6 +16,7 @@ export default function AppShell({ children }) {
   const items = [
     { to: "/dashboard", label: t.nav.dashboard, icon: LayoutDashboard, tid: "nav-dashboard" },
     { to: "/scenarios", label: t.nav.scenarios, icon: Library, tid: "nav-scenarios" },
+    { to: "/learn", label: t.nav.learn, icon: GraduationCap, tid: "nav-learn" },
     { to: "/history", label: t.nav.history, icon: HistoryIcon, tid: "nav-history" },
     { to: "/profile", label: t.nav.profile, icon: User, tid: "nav-profile" },
   ];

@@ -1,6 +1,6 @@
 export const en = {
   brand: "NEGOTIA",
-  nav: { dashboard: "Dashboard", scenarios: "Scenarios", history: "History", profile: "Profile", signOut: "Sign out" },
+  nav: { dashboard: "Dashboard", scenarios: "Scenarios", learn: "Learn", history: "History", profile: "Profile", signOut: "Sign out" },
   landing: {
     heroTag: "AI-POWERED NEGOTIATION TRAINING",
     heroTitle: "Practice Negotiations.",
@@ -129,7 +129,7 @@ export const en = {
 
 export const ru = {
   brand: "NEGOTIA",
-  nav: { dashboard: "Панель", scenarios: "Сценарии", history: "История", profile: "Профиль", signOut: "Выйти" },
+  nav: { dashboard: "Панель", scenarios: "Сценарии", learn: "Обучение", history: "История", profile: "Профиль", signOut: "Выйти" },
   landing: {
     heroTag: "AI-ТРЕНАЖЁР ПЕРЕГОВОРОВ",
     heroTitle: "Тренируйте переговоры.",

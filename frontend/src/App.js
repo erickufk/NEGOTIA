@@ -8,6 +8,7 @@ import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Scenarios from "./pages/Scenarios";
+import Learn from "./pages/Learn";
 import SimulationWizard from "./pages/SimulationWizard";
 import NegotiationRoom from "./pages/NegotiationRoom";
 import Debrief from "./pages/Debrief";
@@ -32,6 +33,7 @@ function App() {
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
               <Route path="/scenarios" element={<Protected><Scenarios /></Protected>} />
+              <Route path="/learn" element={<Protected><Learn /></Protected>} />
               <Route path="/simulate" element={<Protected><SimulationWizard /></Protected>} />
               <Route path="/negotiation/:id" element={<Protected><NegotiationRoom /></Protected>} />
               <Route path="/debrief/:id" element={<Protected><Debrief /></Protected>} />

@@ -51,6 +51,11 @@ OpenAI Whisper STT + OpenAI TTS via Emergent Universal Key. SSE streaming. Conte
 
 ## Backlog
 - P2: Custom user-created scenarios saved to DB (would also need RU/EN authoring).
+
+## Learning Materials (2026-06)
+- Static bilingual `/learn` page (nav "Обучение"/"Learn"): Harvard, SPIN, BATNA —
+  essence, key concepts, scoring rules, tip. Content in `frontend/src/i18n/learnContent.js`,
+  page `frontend/src/pages/Learn.jsx`. Zero LLM cost (fully static). Verified via screenshot (RU).
 - P3: Split server.py (~950 lines) into modular routers (auth/scenarios/negotiations/voice/coach).
 - Nit: TTS request sends `voice: null` when only gender chosen (harmless).
 
