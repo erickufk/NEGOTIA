@@ -109,21 +109,25 @@ export default function SimulationWizard() {
 
           {step === 2 && (
             <div className="grid sm:grid-cols-2 gap-3">
-              {frameworks.map(f => (
+              {frameworks.map(f => {
+                const FL = (L.frameworks && L.frameworks[f.id]) || {};
+                const fName = FL.name || f.name, fTag = FL.tagline || f.tagline, fChips = FL.chips || f.chips;
+                return (
                 <button key={f.id} data-testid={`w-framework-${f.id}`} onClick={() => setFramework(f.id)}
                   className={`text-left p-5 rounded-xl transition-all ${
                     framework === f.id ? "neo-inset ring-2 ring-[#4F46E5]" : "neo-raised-sm neo-raised-hover"
                   }`}>
                   <div className="flex items-center justify-between mb-2">
-                    <div className="font-display font-semibold text-base">{f.name}</div>
+                    <div className="font-display font-semibold text-base">{fName}</div>
                     {f.id === "combined" && <span className="chip chip-emerald">{t.wizard.recommended}</span>}
                   </div>
-                  <div className="text-sm text-slate-500 mb-3">{f.tagline}</div>
+                  <div className="text-sm text-slate-500 mb-3">{fTag}</div>
                   <div className="flex flex-wrap gap-1">
-                    {f.chips.map(c => <span key={c} className="text-[10px] font-mono px-2 py-0.5 rounded-full neo-raised-sm text-slate-500">{c}</span>)}
+                    {fChips.map(c => <span key={c} className="text-[10px] font-mono px-2 py-0.5 rounded-full neo-raised-sm text-slate-500">{c}</span>)}
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -227,8 +231,8 @@ export default function SimulationWizard() {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 {[
                   { l: t.wizard.scenario, v: scenario.title },
-                  { l: t.wizard.frameworkLabel, v: framework },
-                  { l: t.wizard.mode, v: mode },
+                  { l: t.wizard.frameworkLabel, v: (L.frameworks && L.frameworks[framework] && L.frameworks[framework].name) || framework },
+                  { l: t.wizard.mode, v: t.wizard[mode] || mode },
                   { l: t.scenarios.participants, v: participantsCount },
                 ].map((row, i) => (
                   <div key={i} className="p-4 rounded-xl neo-inset">

@@ -92,7 +92,7 @@ export const en = {
     title: "Negotiation Complete", overall: "Overall Score", outcome: "Outcome",
     agreement: "Final Agreement", skills: "Skill Breakdown", didWell: "What you did well",
     improve: "What you could improve", critical: "Critical Moment", better: "Better alternative",
-    tryAgain: "Try Again", backHome: "Back to Dashboard",
+    tryAgain: "Try Again", backHome: "Back to Dashboard", frameworkBreakdown: "Framework Breakdown",
   },
   history: {
     title: "My Negotiations", empty: "No negotiations yet.", open: "Open",
@@ -110,12 +110,19 @@ export const en = {
     skills: { Questioning: "Questioning", "Active Listening": "Active Listening", Argumentation: "Argumentation", Concessions: "Concessions", BATNA: "BATNA", "Conflict Management": "Conflict Management", Strategy: "Strategy", Relationship: "Relationship", Anchoring: "Anchoring", Empathy: "Empathy" },
     categories: { Career: "Career", Sales: "Sales", Procurement: "Procurement", Management: "Management", Partnership: "Partnership", Conflict: "Conflict" },
     difficulty: { Easy: "Easy", Medium: "Medium", Hard: "Hard", Expert: "Expert" },
+    modes: { chat: "Chat", voice: "Voice", challenge: "Challenge" },
     outcome: { Excellent: "Excellent", Successful: "Successful", Compromise: "Compromise", "Weak outcome": "Weak outcome", Failed: "Failed", "Walk Away": "Walk Away" },
     signals: { question: "Questions", open_question: "Open questions", concession: "Concessions", anchoring: "Anchoring", empathy: "Empathy", pressure: "Pressure", batna_ref: "BATNA refs", objective_criteria: "Objective criteria", trades: "Trades", personal_attack: "Personal attacks" },
     frameworkSub: {
       harvard: { "People vs Problem": "People vs Problem", "Interests vs Positions": "Interests vs Positions", "Options for Mutual Gain": "Options for Mutual Gain", "Objective Criteria": "Objective Criteria" },
       spin: { "Situation": "Situation", "Problem": "Problem", "Implication": "Implication", "Need-Payoff": "Need-Payoff" },
       batna: { "BATNA Clarity": "BATNA Clarity", "Leverage": "Leverage", "Reservation Discipline": "Reservation Discipline", "Concession Management": "Concession Management" },
+    },
+    frameworks: {
+      harvard: { name: "Harvard Negotiation", tagline: "Focus on interests, options and mutual value.", chips: ["Interests", "Options", "Criteria"] },
+      spin: { name: "SPIN", tagline: "Learn to uncover needs through better questions.", chips: ["Situation", "Problem", "Implication", "Need-Payoff"] },
+      batna: { name: "BATNA", tagline: "Strengthen your alternatives and negotiation boundaries.", chips: ["Alternatives", "Leverage", "Reservation Point"] },
+      combined: { name: "Combined", tagline: "Practice all three frameworks in one negotiation.", chips: ["Harvard", "SPIN", "BATNA"] },
     },
   },
 };
@@ -207,7 +214,7 @@ export const ru = {
     title: "Переговоры завершены", overall: "Общий счёт", outcome: "Исход",
     agreement: "Итог сделки", skills: "Разбор навыков", didWell: "Что вышло хорошо",
     improve: "Что улучшить", critical: "Ключевой момент", better: "Лучшая альтернатива",
-    tryAgain: "Ещё раз", backHome: "На панель",
+    tryAgain: "Ещё раз", backHome: "На панель", frameworkBreakdown: "Разбор по методологиям",
   },
   history: {
     title: "Мои переговоры", empty: "Пока ничего нет.", open: "Открыть",
@@ -225,12 +232,19 @@ export const ru = {
     skills: { Questioning: "Вопросы", "Active Listening": "Активное слушание", Argumentation: "Аргументация", Concessions: "Уступки", BATNA: "BATNA", "Conflict Management": "Управление конфликтом", Strategy: "Стратегия", Relationship: "Отношения", Anchoring: "Якорение", Empathy: "Эмпатия" },
     categories: { Career: "Карьера", Sales: "Продажи", Procurement: "Закупки", Management: "Управление", Partnership: "Партнёрство", Conflict: "Кризис" },
     difficulty: { Easy: "Лёгкая", Medium: "Средняя", Hard: "Высокая", Expert: "Экспертная" },
+    modes: { chat: "Чат", voice: "Голос", challenge: "Выбор ходов" },
     outcome: { Excellent: "Отлично", Successful: "Успешно", Compromise: "Компромисс", "Weak outcome": "Слабый результат", Failed: "Провал", "Walk Away": "Уход" },
     signals: { question: "Вопросы", open_question: "Открытые вопросы", concession: "Уступки", anchoring: "Якорение", empathy: "Эмпатия", pressure: "Давление", batna_ref: "Упоминания BATNA", objective_criteria: "Объективные критерии", trades: "Обмены", personal_attack: "Личные выпады" },
     frameworkSub: {
       harvard: { "People vs Problem": "Люди vs Проблема", "Interests vs Positions": "Интересы vs Позиции", "Options for Mutual Gain": "Варианты взаимной выгоды", "Objective Criteria": "Объективные критерии" },
       spin: { "Situation": "Ситуация", "Problem": "Проблема", "Implication": "Последствия", "Need-Payoff": "Выгода решения" },
       batna: { "BATNA Clarity": "Ясность BATNA", "Leverage": "Рычаг", "Reservation Discipline": "Дисциплина резервной точки", "Concession Management": "Управление уступками" },
+    },
+    frameworks: {
+      harvard: { name: "Гарвардская модель", tagline: "Фокус на интересах, вариантах и взаимной ценности.", chips: ["Интересы", "Варианты", "Критерии"] },
+      spin: { name: "SPIN", tagline: "Учитесь выявлять потребности через правильные вопросы.", chips: ["Ситуация", "Проблема", "Последствия", "Выгода"] },
+      batna: { name: "BATNA", tagline: "Укрепляйте альтернативы и границы переговоров.", chips: ["Альтернативы", "Рычаг", "Резервная точка"] },
+      combined: { name: "Комбинированная", tagline: "Практикуйте все три методологии в одних переговорах.", chips: ["Harvard", "SPIN", "BATNA"] },
     },
   },
 };

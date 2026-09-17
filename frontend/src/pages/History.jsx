@@ -41,8 +41,8 @@ export default function History() {
                   <div className="flex flex-wrap items-center gap-1.5 text-xs mb-1">
                     {n.status === "active" && <span className="chip chip-emerald pulse-dot">{t.dashboard.inProgress}</span>}
                     {n.outcome && <span className={`chip ${outcomeChip[n.outcome] || "chip-slate"}`}>{L.outcome[n.outcome] || n.outcome}</span>}
-                    <span className="chip chip-slate !text-[10px]">{n.mode?.toUpperCase()}</span>
-                    <span className="chip chip-slate !text-[10px]">{(n.framework_name || "Combined").toUpperCase()}</span>
+                    <span className="chip chip-slate !text-[10px]">{(L.modes[n.mode] || n.mode || "").toUpperCase()}</span>
+                    <span className="chip chip-slate !text-[10px]">{((L.frameworks[n.training_framework] && L.frameworks[n.training_framework].name) || n.framework_name || "Combined").toUpperCase()}</span>
                     <span className="chip chip-slate !text-[10px]">{n.participants.length}p</span>
                   </div>
                   <div className="font-display font-semibold text-base truncate">{n.scenario_title}</div>

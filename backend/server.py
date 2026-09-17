@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field, EmailStr
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from emergentintegrations.llm.openai import OpenAISpeechToText, OpenAITextToSpeech
 
-from scenarios_seed import SCENARIOS, GENDERS, ROLE_RU, SCENARIO_RU, NAME_RU
+from scenarios_seed import SCENARIOS, GENDERS, ROLE_RU, SCENARIO_RU, NAME_RU, SCENARIO_RU_CTX
 from frameworks import FRAMEWORKS, classify_spin
 
 LANG_NAMES = {"ru": "РУССКОМ (Russian)", "en": "English", "es": "Spanish", "de": "German"}
@@ -219,6 +219,12 @@ def _scrub_scenario(sc: dict, hide_hidden: bool = True, lang: str = "en") -> dic
         out["title"] = ru.get("title", out.get("title"))
         out["description"] = ru.get("description", out.get("description"))
         out["objective"] = ru.get("objective", out.get("objective"))
+    if lang == "ru":
+        ctx = SCENARIO_RU_CTX.get(out.get("slug"), {})
+        if ctx.get("context"):
+            out["context"] = ctx["context"]
+        if ctx.get("success_conditions"):
+            out["success_conditions"] = ctx["success_conditions"]
     safe_parts = []
     for p in out.get("participants", []):
         if hide_hidden:

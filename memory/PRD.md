@@ -42,6 +42,12 @@ OpenAI Whisper STT + OpenAI TTS via Emergent Universal Key. SSE streaming. Conte
     framework and returns a contextual tip in the negotiation's language (rule-based
     `_rule_hint` fallback). Coaching toggle fires an immediate hint (ref-based, no first-msg gap).
   - Verified by testing_agent iteration_4 (3/3 frontend features PASS).
+- **2026-06 — Full RU localization completion:** framework name/tagline/chips localized on
+  frontend (labels.frameworks); scenario `context` + `success_conditions` localized on backend
+  (SCENARIO_RU_CTX, applied in _scrub_scenario for lang=ru); wizard summary + dashboard/history
+  badges use localized framework name + short mode labels (labels.modes); Debrief framework
+  titles localized; UI default lang = Russian. Verified via screenshots (Методология & Ваша цель
+  steps clean) + curl. Remaining intentional English: BATNA/SPIN/SLA terms + brand tagline.
 
 ## Backlog
 - P2: Custom user-created scenarios saved to DB (would also need RU/EN authoring).

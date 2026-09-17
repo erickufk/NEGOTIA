@@ -91,7 +91,7 @@ export default function Debrief() {
             <div className="text-sm text-[#1E293B] leading-relaxed mb-4">{fb.final_agreement || "—"}</div>
             <div className="neo-inset p-3 rounded-xl">
               <div className="text-[10px] uppercase text-slate-500 font-mono tracking-wider mb-1">Framework</div>
-              <div className="font-display font-semibold text-sm">{(neg.framework_name || "Combined")}</div>
+              <div className="font-display font-semibold text-sm">{(L.frameworks[neg.training_framework] && L.frameworks[neg.training_framework].name) || neg.framework_name || "Combined"}</div>
             </div>
           </div>
         </section>
@@ -126,13 +126,13 @@ export default function Debrief() {
         {neg.framework_scores && (
           <section className="neo-raised p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-display font-bold text-lg flex items-center gap-2"><Target className="w-4 h-4 text-[#4F46E5]" />Разбор по методологиям</h3>
-              <span className="chip chip-primary">{(neg.framework_name || "Combined").toUpperCase()}</span>
+              <h3 className="font-display font-bold text-lg flex items-center gap-2"><Target className="w-4 h-4 text-[#4F46E5]" />{t.debrief.frameworkBreakdown}</h3>
+              <span className="chip chip-primary">{((L.frameworks[neg.training_framework] && L.frameworks[neg.training_framework].name) || neg.framework_name || "Combined").toUpperCase()}</span>
             </div>
             <div className="grid md:grid-cols-3 gap-4">
               {["harvard", "spin", "batna"].map(fw => (
                 <div key={fw} className="neo-inset p-4 rounded-xl">
-                  <div className="text-[10px] uppercase text-slate-500 font-mono tracking-wider mb-2">{fw}</div>
+                  <div className="text-[10px] uppercase text-slate-500 font-mono tracking-wider mb-2">{(L.frameworks[fw] && L.frameworks[fw].name) || fw}</div>
                   {Object.entries(neg.framework_scores[fw] || {}).map(([k, v]) => (
                     <div key={k} className="mb-2">
                       <div className="flex justify-between text-[11px] mb-1">

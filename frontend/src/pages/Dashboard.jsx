@@ -133,8 +133,8 @@ export default function Dashboard() {
                         {r.status === "active" ? (
                           <span className="chip chip-emerald pulse-dot">{t.dashboard.inProgress}</span>
                         ) : null}
-                        <span className="chip chip-slate !text-[10px]">{r.mode?.toUpperCase()}</span>
-                        <span className="chip chip-slate !text-[10px]">{(r.framework_name || "Combined").toUpperCase()}</span>
+                        <span className="chip chip-slate !text-[10px]">{(L.modes[r.mode] || r.mode || "").toUpperCase()}</span>
+                        <span className="chip chip-slate !text-[10px]">{((L.frameworks[r.training_framework] && L.frameworks[r.training_framework].name) || r.framework_name || "Combined").toUpperCase()}</span>
                         <span>{new Date(r.created_at).toLocaleDateString()}</span>
                       </div>
                       <h3 className="font-display font-semibold text-base">{r.scenario_title}</h3>

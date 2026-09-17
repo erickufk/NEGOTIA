@@ -258,7 +258,7 @@ export default function NegotiationRoom() {
         <div className="flex flex-col neo-raised overflow-hidden h-[calc(100vh-180px)] min-h-[520px]">
           <div className="px-6 py-4 flex items-center justify-between border-b border-black/5">
             <div>
-              <div className="text-[10px] text-slate-500 font-mono tracking-wider">{t.room.negotiation} · {(neg.framework_name || "Combined").toUpperCase()}</div>
+              <div className="text-[10px] text-slate-500 font-mono tracking-wider">{t.room.negotiation} · {((L.frameworks && L.frameworks[neg.training_framework] && L.frameworks[neg.training_framework].name) || neg.framework_name || "Combined").toUpperCase()}</div>
               <div className="font-display font-semibold text-base">{neg.scenario_title}</div>
             </div>
             <div className="flex items-center gap-2">
