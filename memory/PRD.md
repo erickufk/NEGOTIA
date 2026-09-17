@@ -59,5 +59,27 @@ OpenAI Whisper STT + OpenAI TTS via Emergent Universal Key. SSE streaming. Conte
 - P3: Split server.py (~950 lines) into modular routers (auth/scenarios/negotiations/voice/coach).
 - Nit: TTS request sends `voice: null` when only gender chosen (harmless).
 
+## 2026-07 — GPT-5.6 Luna + Magic Link + UX polish (verified, iteration_5)
+- **ChatGPT (GPT-5.6 Luna)** as alternative AI provider via Universal Key. `MODEL_MAP` +
+  `resolve_model()` route `ai_model` field ("claude" | "gpt") into `LlmChat.with_model()`.
+  Selector on Wizard Ready step (`w-ai-claude` / `w-ai-gpt`) + Profile AI-настройки card
+  (persists to localStorage `negotia_ai_model`). Stored per-negotiation → propagates through
+  streaming replies, choices, coach hint, prep autofill, debrief feedback.
+- **Magic Link password reset**: `POST /api/auth/forgot-password` generates one-time token
+  (secrets.token_urlsafe, 1h TTL via MongoDB `password_reset_tokens` expireAfterSeconds index),
+  returns `magic_link` URL (demo mode — no SMTP). `POST /api/auth/reset-password` verifies
+  token + updates bcrypt hash + issues JWT. `POST /api/auth/magic-login` for sign-in-only.
+  Auth page has "Забыли пароль?" mode with in-app link display; new `/reset-password` page.
+- **UX polish**: prep textareas rows=5 (min-h-[120px]), msg-input rows=4 (min-h-[100px]),
+  NegotiationRoom right aside no longer `hidden lg:block` → mobile users see preparation +
+  live-signals stacked below conversation. Favicon SVG (gradient N monogram) + updated
+  document title.
+- **Token optimization**: history replay 10→6 turns in `_ai_respond`, transcript slice
+  3000→2000 chars in debrief. Coach transcript 8→6 msgs.
+- Files: `server.py` (auth+magic, MODEL_MAP), `Auth.jsx`, `ResetPassword.jsx` (new),
+  `SimulationWizard.jsx`, `NegotiationRoom.jsx`, `Profile.jsx`, `translations.js`,
+  `lib/api.js`, `AuthProvider.jsx` (setSession), `App.js` (route), `favicon.svg` (new),
+  `public/index.html`. Verified iteration_5: 9/9 PASS.
+
 ## Credentials
 Demo: demo@negotia.app / Demo1234!

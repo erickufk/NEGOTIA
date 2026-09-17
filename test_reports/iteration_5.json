@@ -1,0 +1,39 @@
+{
+  "summary": "Iteration-5 E2E verification of 6 recent features - ALL PASS. (1) Login demo@negotia.app / Demo1234! via /auth in Russian UI works. (2) 'Забыли пароль?' (data-testid=link-forgot) toggles forgot mode; forgot-email input renders; submitting demo email triggers POST /api/auth/forgot-password which returns magic_link, and the 'Открыть magic link' button (data-testid=magic-link-open) navigates to /reset-password?token=... where user sets new password (Demo1234!) and is logged in -> /dashboard with toast 'Пароль обновлён'. Demo password RESET BACK to 'Demo1234!' (re-verified via subsequent login). (3) Wizard step 7: Both data-testid='w-ai-claude' and 'w-ai-gpt' render (labels 'Claude Sonnet 5' and 'ChatGPT (GPT-5.6 Luna)'). Selecting w-ai-gpt persists 'gpt' to localStorage 'negotia_ai_model'. Clicking wizard-start fires POST /api/negotiations with body containing ai_model:'gpt' (verified in request interception). (4) Wizard step 6: data-testid='w-prep-batna' has rows='5' and rendered height=120px (min-h-[120px] applied). (5) NegotiationRoom data-testid='msg-input' has rows='4' and rendered height=100px (min-h-[100px] applied). (6) Mobile viewport 375x800: BOTH asides visible - left aside (participants, class 'space-y-4', 343x449 display:block) AND right aside (Ваша подготовка + Live-сигналы, class 'space-y-4 block', 343x321 display:block). (7) Favicon: page title = 'NEGOTIA — AI Negotiation Simulator' and <link rel=icon> href = /favicon.svg confirmed. (8) Profile /profile shows AI-настройки section with data-testid='profile-ai-claude' and 'profile-ai-gpt'; clicking each updates localStorage 'negotia_ai_model' accordingly (verified toggling gpt->claude). (9) Backend E2E re-verified: with ai_model='gpt' the /api/negotiations/{id}/message call returned an AI reply in Russian from 'Светлана Ковалёва' ('Здравствуйте, давайте обсудим...').",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verified_flows": {
+    "login_ru": "PASS",
+    "forgot_password_magic_link": "PASS - magic_link returned, reset-password page loads, new password sets session, dashboard reached",
+    "wizard_step7_ai_selector": "PASS - w-ai-claude & w-ai-gpt render, selection persists to localStorage and POST body ai_model='gpt'",
+    "wizard_step6_prep_textarea_size": "PASS - rows=5, height=120px",
+    "negotiation_room_msg_input_size": "PASS - rows=4, height=100px",
+    "mobile_right_aside_visible": "PASS - both left and right asides visible at 375x800 (display:block, 343x321 for right)",
+    "profile_ai_settings": "PASS - profile-ai-claude/gpt cards toggle localStorage negotia_ai_model",
+    "favicon_and_title": "PASS - title 'NEGOTIA — AI Negotiation Simulator', /favicon.svg linked",
+    "gpt_backend_reply_ru": "PASS - AI reply in Russian returned via /api/negotiations/{id}/message with ai_model=gpt scenario"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_negotia_api.py",
+    "/app/backend/tests/test_ru_voice_features.py"
+  ],
+  "critical_code_review_comments": [
+    "Auth.jsx sendMagicLink catches ALL errors silently as 'Failed' toast - would be helpful to log err.response for debugging.",
+    "ResetPassword.jsx: no explicit token-expired UI - a stale token likely returns 400 and shows toast 'Failed', but user has no clear next action (button to request new link).",
+    "SimulationWizard step7: aiModel is written to localStorage on submit (start). If user changes selection but abandons, localStorage doesn't update. This is fine but comment in code would help.",
+    "Server.py continues to be >900 lines - suggest splitting into routers.",
+    "NegotiationRoom right aside 'space-y-4 block' - the 'block' class is redundant with default aside display but harmless."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (spot re-verified)", "frontend": "100% (9/9 checks)"},
+  "test_credentials": "demo@negotia.app / Demo1234! (password reset back to Demo1234! after magic-link flow test)",
+  "seed_data_creation": "Created 1 test negotiation (id 81e75b7b-3a02-4ec8-b692-1a1217437773, salary-negotiation, ai_model=gpt). No cleanup performed.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Wizard has 7 steps; from /scenarios click start-<slug> -> arrives at step 2; need 4 wizard-next clicks to reach step 6 (prep) and 5 to reach step 7 (ready with AI selector). Start button testid is 'wizard-start' (button text 'Начать переговоры'). All new data-testids from this iteration verified working: link-forgot, forgot-email, send-magic-link, magic-link-open, reset-pw, reset-pw2, reset-submit, w-ai-claude, w-ai-gpt, profile-ai-claude, profile-ai-gpt. Mobile aside now always visible (class 'space-y-4 block').",
+  "rca_of_the_issue": "n/a - no issues found"
+}
