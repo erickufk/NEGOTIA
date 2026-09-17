@@ -5,7 +5,7 @@ import { useI18n } from "../i18n/I18nProvider";
 import { useAuth } from "../auth/AuthProvider";
 import { api } from "../lib/api";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from "recharts";
-import { Play, ShieldCheck, AlertTriangle, User as UserIcon, Sparkles, Radar as RadarIcon, ArrowRight } from "lucide-react";
+import { Play, ShieldCheck, AlertTriangle, User as UserIcon, Sparkles, Radar as RadarIcon, ArrowRight, Cpu } from "lucide-react";
 
 const skillColor = v => v >= 70 ? "bg-emerald-500" : v >= 50 ? "bg-[#4F46E5]" : "bg-amber-500";
 
@@ -17,6 +17,9 @@ export default function Profile() {
   const [stats, setStats] = useState(null);
   const [rec, setRec] = useState(null);
   const [fwStats, setFwStats] = useState(null);
+  const [aiModel, setAiModel] = useState(() => localStorage.getItem("negotia_ai_model") || "claude");
+
+  const changeAiModel = (m) => { setAiModel(m); localStorage.setItem("negotia_ai_model", m); };
 
   useEffect(() => {
     api.stats().then(setStats).catch(() => {});
@@ -137,6 +140,25 @@ export default function Profile() {
           </div>
         </section>
       )}
+
+      {/* AI Preferences */}
+      <section className="neo-raised p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-display font-bold text-lg flex items-center gap-2"><Cpu className="w-4 h-4 text-[#4F46E5]" />{t.aiModel.prefTitle}</h2>
+            <div className="text-xs text-slate-500 mt-1">{t.aiModel.prefSub}</div>
+          </div>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          {["claude", "gpt"].map(m => (
+            <button key={m} onClick={() => changeAiModel(m)} data-testid={`profile-ai-${m}`}
+              className={`p-4 rounded-xl text-left transition-all ${aiModel === m ? "neo-inset ring-2 ring-[#4F46E5]" : "neo-raised-sm neo-raised-hover"}`}>
+              <div className="text-xs uppercase font-mono tracking-wider text-slate-500 mb-1">{t.aiModel.label}</div>
+              <div className="text-sm font-semibold text-[#1E293B]">{t.aiModel[m]}</div>
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Recommended */}
       {rec?.scenarios?.length > 0 && (

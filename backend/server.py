@@ -10,6 +10,7 @@ from typing import List, Optional, Dict, Any
 import asyncio
 import io
 import re
+import secrets
 
 import bcrypt
 import jwt
@@ -43,6 +44,15 @@ JWT_ALGORITHM = os.environ.get("JWT_ALGORITHM", "HS256")
 JWT_EXPIRE_MINUTES = int(os.environ.get("JWT_EXPIRE_MINUTES", "10080"))
 AI_PROVIDER = os.environ.get("AI_MODEL_PROVIDER", "anthropic")
 AI_MODEL = os.environ.get("AI_MODEL_NAME", "claude-sonnet-5")
+
+# Alternative AI model choices exposed to the user.
+MODEL_MAP = {
+    "claude": ("anthropic", "claude-sonnet-5"),
+    "gpt": ("openai", "gpt-5.6-luna"),
+}
+
+def resolve_model(ai_model: Optional[str]) -> tuple:
+    return MODEL_MAP.get((ai_model or "claude").lower(), MODEL_MAP["claude"])
 
 client = AsyncIOMotorClient(MONGO_URL)
 db = client[DB_NAME]
@@ -89,12 +99,27 @@ class CreateNegotiationIn(BaseModel):
     preparation: Optional[Dict[str, Any]] = None
     training_framework: str = "combined"  # harvard | spin | batna | combined
     language: str = "en"
+    ai_model: str = "claude"  # claude | gpt
 
 
 class AnalyzePrepIn(BaseModel):
     scenario_slug: str
     training_framework: str = "combined"
     language: str = "en"
+    ai_model: str = "claude"
+
+
+class ForgotPasswordIn(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordIn(BaseModel):
+    token: str
+    password: str = Field(min_length=6)
+
+
+class MagicLoginIn(BaseModel):
+    token: str
 
 
 class EndNegotiationIn(BaseModel):
@@ -173,6 +198,11 @@ async def startup():
             "created_at": now_iso(), "updated_at": now_iso(),
         })
     logger.info("NEGOTIA startup complete: scenarios seeded")
+    # TTL cleanup on expired reset tokens
+    try:
+        await db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
+    except Exception:
+        pass
 
 
 @app.on_event("shutdown")
@@ -208,6 +238,72 @@ async def login(body: LoginIn):
 @api.get("/auth/me")
 async def me(user=Depends(get_current_user)):
     return {"user": user}
+
+
+# ---------- Password reset / Magic Link ----------
+@api.post("/auth/forgot-password")
+async def forgot_password(body: ForgotPasswordIn):
+    """Generate a one-time magic link token. Returns the link so it can be shown in-app
+    (dev/demo mode — no SMTP configured). In production this URL would be emailed."""
+    email = body.email.lower()
+    user = await db.users.find_one({"email": email})
+    # Always respond success (avoid email enumeration), but only create token if user exists.
+    magic_link = None
+    if user:
+        token = secrets.token_urlsafe(32)
+        expires = datetime.now(timezone.utc) + timedelta(hours=1)
+        await db.password_reset_tokens.insert_one({
+            "token": token,
+            "user_id": user["id"],
+            "email": email,
+            "expires_at": expires,
+            "used": False,
+            "created_at": now_iso(),
+        })
+        frontend = os.environ.get("FRONTEND_URL", "").rstrip("/")
+        magic_link = f"{frontend}/reset-password?token={token}" if frontend else f"/reset-password?token={token}"
+        logger.info("Password reset link for %s: %s", email, magic_link)
+    return {"ok": True, "magic_link": magic_link}
+
+
+@api.post("/auth/reset-password")
+async def reset_password(body: ResetPasswordIn):
+    doc = await db.password_reset_tokens.find_one({"token": body.token})
+    if not doc or doc.get("used"):
+        raise HTTPException(400, "Ссылка недействительна или уже использована")
+    exp = doc.get("expires_at")
+    if isinstance(exp, datetime):
+        if exp.tzinfo is None:
+            exp = exp.replace(tzinfo=timezone.utc)
+        if exp < datetime.now(timezone.utc):
+            raise HTTPException(400, "Срок действия ссылки истёк")
+    user = await db.users.find_one({"id": doc["user_id"]})
+    if not user:
+        raise HTTPException(404, "Пользователь не найден")
+    await db.users.update_one({"id": user["id"]}, {"$set": {"password_hash": hash_password(body.password), "updated_at": now_iso()}})
+    await db.password_reset_tokens.update_one({"token": body.token}, {"$set": {"used": True, "used_at": now_iso()}})
+    token = create_token(user["id"])
+    return {"token": token, "user": {"id": user["id"], "email": user["email"], "name": user["name"], "created_at": user["created_at"]}}
+
+
+@api.post("/auth/magic-login")
+async def magic_login(body: MagicLoginIn):
+    """Sign in via one-time magic link token (does NOT change password)."""
+    doc = await db.password_reset_tokens.find_one({"token": body.token})
+    if not doc or doc.get("used"):
+        raise HTTPException(400, "Ссылка недействительна или уже использована")
+    exp = doc.get("expires_at")
+    if isinstance(exp, datetime):
+        if exp.tzinfo is None:
+            exp = exp.replace(tzinfo=timezone.utc)
+        if exp < datetime.now(timezone.utc):
+            raise HTTPException(400, "Срок действия ссылки истёк")
+    user = await db.users.find_one({"id": doc["user_id"]})
+    if not user:
+        raise HTTPException(404, "Пользователь не найден")
+    await db.password_reset_tokens.update_one({"token": body.token}, {"$set": {"used": True, "used_at": now_iso()}})
+    token = create_token(user["id"])
+    return {"token": token, "user": {"id": user["id"], "email": user["email"], "name": user["name"], "created_at": user["created_at"]}}
 
 
 # ---------- Scenarios ----------
@@ -307,14 +403,15 @@ RULES:
 7. CRITICAL LANGUAGE RULE: You MUST write EVERY reply ONLY in {lang_name}. The scenario notes above are in English, but your spoken replies must ALWAYS be natural, fluent {lang_name}. Never mix languages (industry terms like BATNA, SLA, SPIN may stay as-is)."""
 
 
-async def _ai_respond(system_prompt: str, history: List[dict], user_text: str, session_id: str) -> str:
+async def _ai_respond(system_prompt: str, history: List[dict], user_text: str, session_id: str, ai_model: str = "claude") -> str:
+    provider, model = resolve_model(ai_model)
     chat = LlmChat(
         api_key=EMERGENT_LLM_KEY,
         session_id=session_id,
         system_message=system_prompt,
-    ).with_model(AI_PROVIDER, AI_MODEL)
-    # replay history
-    for msg in history[-10:]:
+    ).with_model(provider, model)
+    # replay short history to preserve context (token-efficient)
+    for msg in history[-6:]:
         if msg["role"] == "user":
             await chat.send_message(UserMessage(text=msg["content"]))
     resp = await chat.send_message(UserMessage(text=user_text))
@@ -372,6 +469,7 @@ async def create_negotiation(body: CreateNegotiationIn, user=Depends(get_current
         "mode": body.mode,
         "training_framework": fw["id"],
         "framework_name": fw["name"],
+        "ai_model": (body.ai_model or "claude").lower(),
         "participants": snap,
         "preparation": body.preparation or {},
         "state": {
@@ -400,6 +498,7 @@ def _neg_out(doc: dict) -> dict:
         "training_framework": doc.get("training_framework", "combined"),
         "framework_name": doc.get("framework_name", "Combined"),
         "language": doc.get("language", "en"),
+        "ai_model": doc.get("ai_model", "claude"),
         "framework_scores": doc.get("framework_scores"),
         "messages": doc.get("messages", []), "status": doc["status"], "outcome": doc.get("outcome"),
         "score": doc.get("score"), "created_at": doc["created_at"], "preparation": doc.get("preparation", {}),
@@ -460,10 +559,11 @@ async def post_message(neg_id: str, body: MessageIn, user=Depends(get_current_us
     ai_replies = []
     fw_id = doc.get("training_framework", "combined")
     lang = doc.get("language", "en")
+    ai_m = doc.get("ai_model", "claude")
     for p in parts[:2]:  # cap at 2 concurrent to keep responses tight
         sys_prompt = _build_system_prompt(scenario, p, doc["state"], parts, fw_id, lang)
         try:
-            ai_text = await _ai_respond(sys_prompt, doc["messages"][:-1], body.content, f"{neg_id}-{p['name']}")
+            ai_text = await _ai_respond(sys_prompt, doc["messages"][:-1], body.content, f"{neg_id}-{p['name']}", ai_m)
         except Exception as e:
             logger.exception("AI error")
             ai_text = f"[{p['name']} pauses] Let me think about your offer."
@@ -497,8 +597,9 @@ async def _generate_choices(scenario: dict, doc: dict) -> Optional[List[dict]]:
 Scenario: {scenario['title']}. User objective: {scenario['objective']}
 Write every "text" and "hint" value ONLY in {lang_name}.
 Return ONLY JSON array of 4 objects, each: {{"text": "...", "quality": "strong|acceptable|weak|risky", "hint": "short reason"}}"""
-    history_txt = "\n".join([f"{m['role'].upper()}: {m['content']}" for m in doc["messages"][-8:]])
-    chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"choices-{doc['id']}", system_message=sys).with_model(AI_PROVIDER, AI_MODEL)
+    history_txt = "\n".join([f"{m['role'].upper()}: {m['content']}" for m in doc["messages"][-6:]])
+    provider, model = resolve_model(doc.get("ai_model", "claude"))
+    chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"choices-{doc['id']}", system_message=sys).with_model(provider, model)
     resp = await chat.send_message(UserMessage(text=f"Latest conversation:\n{history_txt}\n\nGenerate 4 possible user responses now."))
     try:
         text = resp if isinstance(resp, str) else str(resp)
@@ -578,7 +679,7 @@ Return ONLY JSON with keys:
 - "final_agreement": one sentence summarizing outcome
 
 Transcript:
-{transcript[:3000]}"""
+{transcript[:2000]}"""
     if lang == "ru":
         feedback = {
             "did_well": ["Вы последовательно вели диалог на протяжении всех переговоров.",
@@ -604,7 +705,8 @@ Transcript:
             "final_agreement": "Negotiation ended.",
         }
     try:
-        chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"debrief-{doc['id']}", system_message="You are a Harvard-trained negotiation coach.").with_model(AI_PROVIDER, AI_MODEL)
+        provider, model = resolve_model(doc.get("ai_model", "claude"))
+        chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"debrief-{doc['id']}", system_message="You are a Harvard-trained negotiation coach.").with_model(provider, model)
         resp = await chat.send_message(UserMessage(text=feedback_prompt))
         text = resp if isinstance(resp, str) else str(resp)
         s = text.find("{"); e = text.rfind("}")
@@ -664,8 +766,9 @@ Write ALL values ONLY in {lang_name} (natural, fluent; industry terms like BATNA
 Return ONLY JSON with these fields (short bullet-style, one sentence each):
 {{"batna": "...", "priorities": "...", "theirs": "...", "offer": "...", "ideal": "...", "minimum": "..."}}"""
     try:
+        provider, model = resolve_model(body.ai_model)
         chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"prep-{user['id']}-{body.scenario_slug}",
-                       system_message="You are a Harvard-trained negotiation coach who writes concise preparation sheets.").with_model(AI_PROVIDER, AI_MODEL)
+                       system_message="You are a Harvard-trained negotiation coach who writes concise preparation sheets.").with_model(provider, model)
         resp = await chat.send_message(UserMessage(text=prompt))
         text = resp if isinstance(resp, str) else str(resp)
         s = text.find("{"); e = text.rfind("}")
@@ -796,7 +899,7 @@ async def coach_hint(body: CoachIn, user=Depends(get_current_user)):
     lang_name = LANG_NAMES.get(lang, "English")
     fallback = _rule_hint(doc, lang)
     try:
-        history_txt = "\n".join([f"{m.get('participant') or m['role'].upper()}: {m['content']}" for m in doc["messages"][-8:]])
+        history_txt = "\n".join([f"{m.get('participant') or m['role'].upper()}: {m['content']}" for m in doc["messages"][-6:]])
         scenario = await db.scenarios.find_one({"slug": doc["scenario_slug"]}, {"_id": 0})
         objective = (scenario or {}).get("objective", "")
         if lang == "ru":
@@ -806,7 +909,8 @@ Training framework: {fw['name']} — {fw['tagline']}
 User's objective: {objective}
 Framework focus: {', '.join(fw.get('objectives', []))}
 Give exactly ONE short, specific, actionable coaching tip (max 22 words) for the user's NEXT move, grounded in what just happened in the transcript. No greetings, no preamble, no quotes. Write ONLY in {lang_name}."""
-        chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"coach-{doc['id']}-{doc['state'].get('round', 0)}", system_message=sys).with_model(AI_PROVIDER, AI_MODEL)
+        provider, model = resolve_model(doc.get("ai_model", "claude"))
+        chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"coach-{doc['id']}-{doc['state'].get('round', 0)}", system_message=sys).with_model(provider, model)
         resp = await chat.send_message(UserMessage(text=f"Transcript so far:\n{history_txt or '(no messages yet — user is about to open)'}\n\nGive the single next-move tip now."))
         tip = (resp if isinstance(resp, str) else str(resp)).strip().strip('"').strip()
         if tip:
@@ -872,10 +976,11 @@ async def post_message_stream(neg_id: str, body: MessageIn, user=Depends(get_cur
             ai_replies = []
             fw_id = doc.get("training_framework", "combined")
             lang = doc.get("language", "en")
+            ai_m = doc.get("ai_model", "claude")
             for p in parts[:2]:
                 sys_prompt = _build_system_prompt(scenario, p, doc["state"], parts, fw_id, lang)
                 try:
-                    ai_text = await _ai_respond(sys_prompt, doc["messages"][:-1], body.content, f"{neg_id}-{p['name']}")
+                    ai_text = await _ai_respond(sys_prompt, doc["messages"][:-1], body.content, f"{neg_id}-{p['name']}", ai_m)
                 except Exception:
                     logger.exception("AI error")
                     ai_text = f"[{p['name']} pauses] Let me think about your offer."

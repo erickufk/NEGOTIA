@@ -50,9 +50,10 @@ export function AuthProvider({ children }) {
     } finally { setLoading(false); }
   };
   const logout = () => { setToken(null); setUser(null); };
+  const setSession = (tk, u) => { setToken(tk); setUser(u); };
 
   return (
-    <AuthCtx.Provider value={{ token, user, loading, login, register, logout, API }}>
+    <AuthCtx.Provider value={{ token, user, loading, login, register, logout, setSession, API }}>
       {children}
     </AuthCtx.Provider>
   );

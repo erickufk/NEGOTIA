@@ -343,8 +343,8 @@ export default function NegotiationRoom() {
                 <div className="flex-1">
                   <Textarea data-testid="msg-input" value={input} onChange={e => setInput(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
-                    placeholder={listening ? t.room.listening : transcribing ? t.room.transcribing : t.room.typeReply} rows={2}
-                    className="neo-inset border-0 text-sm text-[#1E293B] resize-none focus:ring-2 focus:ring-[#4F46E5]" />
+                    placeholder={listening ? t.room.listening : transcribing ? t.room.transcribing : t.room.typeReply} rows={4}
+                    className="neo-inset border-0 text-sm text-[#1E293B] resize-none focus:ring-2 focus:ring-[#4F46E5] min-h-[100px]" />
                 </div>
                 <div className="flex flex-col gap-2">
                   {neg.mode !== "challenge" && (
@@ -372,7 +372,7 @@ export default function NegotiationRoom() {
         </div>
 
         {/* RIGHT: Preparation + Live insights */}
-        <aside className="space-y-4 hidden lg:block">
+        <aside className="space-y-4 block">
           <div className="neo-raised p-4">
             <div className="text-xs uppercase tracking-wider text-slate-500 font-mono mb-3 flex items-center gap-1.5"><TrendingUp className="w-3 h-3" />{t.room.preparation}</div>
             {["batna", "priorities", "ideal", "minimum"].filter(k => neg.preparation?.[k]).map(k => (

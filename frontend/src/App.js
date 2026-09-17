@@ -14,6 +14,7 @@ import NegotiationRoom from "./pages/NegotiationRoom";
 import Debrief from "./pages/Debrief";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
+import ResetPassword from "./pages/ResetPassword";
 
 function Protected({ children }) {
   const { token } = useAuth();
@@ -31,6 +32,7 @@ function App() {
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
               <Route path="/scenarios" element={<Protected><Scenarios /></Protected>} />
               <Route path="/learn" element={<Protected><Learn /></Protected>} />

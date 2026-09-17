@@ -20,6 +20,11 @@ export const api = {
   frameworkStats: () => axios.get(`${API}/users/me/framework-stats`).then(r => r.data),
   coachHint: (negId) => axios.post(`${API}/coach/hint`, { negotiation_id: negId }).then(r => r.data),
 
+  // Password reset / magic link
+  forgotPassword: (email) => axios.post(`${API}/auth/forgot-password`, { email }).then(r => r.data),
+  resetPassword: (token, password) => axios.post(`${API}/auth/reset-password`, { token, password }).then(r => r.data),
+  magicLogin: (token) => axios.post(`${API}/auth/magic-login`, { token }).then(r => r.data),
+
   // Voice
   transcribe: async (blob, lang = "en") => {
     const fd = new FormData();

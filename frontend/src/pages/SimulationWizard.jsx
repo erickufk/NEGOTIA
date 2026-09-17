@@ -29,6 +29,7 @@ export default function SimulationWizard() {
   const [mode, setMode] = useState("chat");
   const [participantsCount, setParticipantsCount] = useState(1);
   const [prep, setPrep] = useState({ batna: "", priorities: "", theirs: "", offer: "", ideal: "", minimum: "" });
+  const [aiModel, setAiModel] = useState(() => localStorage.getItem("negotia_ai_model") || "claude");
   const [creating, setCreating] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
 
@@ -43,7 +44,8 @@ export default function SimulationWizard() {
   const start = async () => {
     setCreating(true);
     try {
-      const neg = await api.createNeg({ scenario_slug: slug, mode, participants_count: participantsCount, preparation: prep, training_framework: framework, language: lang });
+      localStorage.setItem("negotia_ai_model", aiModel);
+      const neg = await api.createNeg({ scenario_slug: slug, mode, participants_count: participantsCount, preparation: prep, training_framework: framework, language: lang, ai_model: aiModel });
       nav(`/negotiation/${neg.id}`);
     } catch (e) {
       toast.error("Failed to create negotiation");
@@ -53,7 +55,7 @@ export default function SimulationWizard() {
   const autofillPrep = async () => {
     setAnalyzing(true);
     try {
-      const data = await api.analyzePrep({ scenario_slug: slug, training_framework: framework, language: lang });
+      const data = await api.analyzePrep({ scenario_slug: slug, training_framework: framework, language: lang, ai_model: aiModel });
       setPrep(p => ({ ...p, ...data }));
       toast.success(t.wizard.autofillDone);
     } catch { toast.error("Autofill failed"); }
@@ -217,9 +219,9 @@ export default function SimulationWizard() {
                 ].map(f => (
                   <div key={f.k}>
                     <label className="text-[10px] uppercase text-slate-500 font-mono mb-1 tracking-wider block">{f.label}</label>
-                    <Textarea data-testid={`w-prep-${f.k}`} placeholder={f.ph} rows={2}
+                    <Textarea data-testid={`w-prep-${f.k}`} placeholder={f.ph} rows={5}
                       value={prep[f.k]} onChange={e => setPrep({ ...prep, [f.k]: e.target.value })}
-                      className="neo-inset border-0 text-sm text-[#1E293B] resize-none focus:ring-2 focus:ring-[#4F46E5]" />
+                      className="neo-inset border-0 text-sm text-[#1E293B] resize-none focus:ring-2 focus:ring-[#4F46E5] min-h-[120px]" />
                   </div>
                 ))}
               </div>
@@ -244,6 +246,18 @@ export default function SimulationWizard() {
               <div className="p-4 rounded-xl bg-[#4F46E5]/5 border border-[#4F46E5]/10 text-sm">
                 <div className="font-semibold text-[#4F46E5] mb-1 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" />{t.wizard.primaryGoal}</div>
                 <div className="text-[#1E293B]">{scenario.objective}</div>
+              </div>
+              <div className="p-4 rounded-xl neo-inset">
+                <div className="text-[10px] uppercase text-slate-500 font-mono tracking-wider mb-2">{t.aiModel.label}</div>
+                <div className="text-[11px] text-slate-500 mb-3">{t.aiModel.hint}</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {["claude", "gpt"].map(m => (
+                    <button key={m} type="button" data-testid={`w-ai-${m}`} onClick={() => setAiModel(m)}
+                      className={`p-3 rounded-xl text-left transition-all ${aiModel === m ? "neo-raised-sm ring-2 ring-[#4F46E5]" : "neo-raised-sm text-slate-500"}`}>
+                      <div className="text-xs font-semibold text-[#1E293B]">{t.aiModel[m]}</div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           )}
