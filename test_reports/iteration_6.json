@@ -1,0 +1,46 @@
+{
+  "summary": "Iteration-6 E2E verification of Custom Scenario Builder feature - ALL PASS. Backend: 7/7 pytest tests passed in /app/backend/tests/test_custom_scenarios.py covering POST /api/scenarios/custom (returns {scenario:{slug:'custom-...',custom:true,title:'TEST UI Contract'}}), GET /api/scenarios?lang=ru returns the created scenario mixed with 12 built-in and localized to Russian title (title_ru), POST /api/negotiations with custom slug + language=ru succeeds and POST /api/negotiations/{id}/message returns a Russian AI reply from the correct opponent (participant='Иван Мельников' - matches op_name_ru), DELETE /api/scenarios/custom/{slug} succeeds and item disappears from list, DELETE non-existent returns 403/404, empty title_en is accepted server-side (Pydantic doesn't enforce min_length so validation is enforced only on frontend via canSave). Frontend E2E (1440x900 desktop): (1) Login demo@negotia.app/Demo1234! via [data-testid=submit-auth] -> /dashboard. (2) /scenarios shows [data-testid=btn-create-scenario] top-right (RU 'Создать сценарий'). (3) Clicking navigates to /scenarios/new with all three sections 'Основное', 'Детали сценария', 'Оппонент' and all data-testids present: cs-title-ru/en, cs-description-ru/en, cs-category(select), cs-difficulty(select), cs-duration(number), cs-objective-ru/en, cs-context-ru/en, cs-success-ru/en, cs-op_name-ru/en (underscore convention confirmed), cs-op_role-ru/en, cs-gender-male, cs-gender-female, cs-op-description, cs-op-personality, cs-op-goals, cs-op-interests, cs-op-hidden, cs-op-constraints, cs-op-batna. (4) Validation: [data-testid=cs-save] is native-disabled (button disabled attribute) when required fields blank (canSave=false); note: on click while disabled the toast 'Заполните все обязательные (*) поля' path is unreachable via UI because the button is HTML-disabled - the toast code exists in submit() as safety net but user sees a greyed-out button instead. (5) After filling all fields + selecting Partnership/Medium/male gender, cs-save enables, click redirects to /simulate?scenario=custom-522cca83a9 and shows toast 'Сценарий создан'; wizard opens at Step 2 'Методология' with Step 01 'Сценарий' already checked (green tick). (6) Back on /scenarios: 'Ваши сценарии' section renders ABOVE 'Встроенная библиотека', custom card has 'Ваш' chip badge (Sparkles), and [data-testid=delete-custom-522cca83a9] button visible. (7) Clicking delete triggers window.confirm dialog; accepting fires DELETE /api/scenarios/custom/custom-522cca83a9, shows toast 'Удалено', card disappears (0 delete buttons remain). Test scenario cleaned up. No console errors during flows.",
+  "backend_issues": {"critical": [], "minor": [
+    {"endpoint": "POST /api/scenarios/custom", "issue": "Server-side validation permits empty string for required fields (title_en, description_en, etc.); enforcement is frontend-only via canSave. Consider Pydantic min_length=1 or Field constraints to prevent API abuse via direct calls."}
+  ]},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verified_flows": {
+    "custom_scenario_create_via_api": "PASS - POST /api/scenarios/custom returns full localized scenario",
+    "custom_scenario_listed_ru": "PASS - visible in GET /api/scenarios?lang=ru with title_ru applied",
+    "start_negotiation_with_custom_slug": "PASS - creates neg, scenario_slug persists",
+    "ai_reply_russian_for_custom_opponent": "PASS - participant='Иван Мельников' (name_ru), content in Cyrillic",
+    "delete_custom_scenario": "PASS - 200 OK, subsequent list omits slug",
+    "delete_forbidden_for_others": "PASS - 403/404 for unknown slug",
+    "ui_create_scenario_button": "PASS - btn-create-scenario visible top-right, navigates to /scenarios/new",
+    "ui_builder_all_testids": "PASS - all cs-* selectors present including cs-op_name-ru/en underscore convention",
+    "ui_validation_save_disabled": "PASS - cs-save has disabled attribute when required blank",
+    "ui_save_redirects_to_wizard_step2": "PASS - toast 'Сценарий создан', wizard at Step 2 with Step 1 pre-checked",
+    "ui_your_scenarios_section": "PASS - 'Ваши сценарии' above 'Встроенная библиотека', 'Ваш' badge with Sparkles",
+    "ui_delete_flow": "PASS - confirm dialog + toast 'Удалено' + card removed"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_custom_scenarios.py",
+    "/app/test_reports/pytest/iter6_custom.xml"
+  ],
+  "critical_code_review_comments": [
+    "server.py CustomScenarioIn / CustomOpponent lack Pydantic Field constraints (min_length); empty strings pass validation - rely on frontend canSave only. Add min_length=1 to required *_en fields for defense-in-depth.",
+    "CustomScenarioBuilder.jsx submit() dead code: canSave gate prevents the fillRequired toast from ever showing because the button is also HTML-disabled. Either remove the pre-check toast or drop the disabled attribute so users get a clear error message when clicking with empty required fields.",
+    "Scenarios.jsx `Card` component defined inline inside render - unmounts/remounts on every render; consider hoisting for performance (minor).",
+    "server.py continues to grow (>1000 lines) - custom scenario endpoints could live in a routers/scenarios.py module for maintainability.",
+    "CustomScenarioBuilder RU-required indication is language-conditional (`required && lang==='ru'` for RU asterisk) but backend / canSave only check *_en fields - the RU asterisk is misleading; consider clarifying that only EN fields are mandatory or make both required."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_custom_scenarios.py (new)"
+  ],
+  "success_rate": {"backend": "100% (7/7)", "frontend": "100% (12/12 checks)"},
+  "test_credentials": "demo@negotia.app / Demo1234! (unchanged)",
+  "seed_data_creation": "Created + deleted one custom scenario (custom-522cca83a9). DB clean at end.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Custom scenario testids use underscore for compound keys: cs-op_name-ru/en and cs-op_role-ru/en (NOT cs-op-name-ru). Delete button testid pattern is delete-<slug> where slug is 'custom-<10hex>'. The cs-save button uses native disabled attribute (not aria-disabled), so validation-fail toast is unreachable via UI. Wizard opens at Step 2 after successful save because Step 1 'Сценарий' is auto-completed from the URL query param. Auth uses [data-testid=submit-auth] for the login button; using get_by_role('button', name='Войти') is ambiguous (tab-signin conflict).",
+  "rca_of_the_issue": "n/a - no issues found in feature"
+}

@@ -76,6 +76,32 @@ OpenAI Whisper STT + OpenAI TTS via Emergent Universal Key. SSE streaming. Conte
   document title.
 - **Token optimization**: history replay 10→6 turns in `_ai_respond`, transcript slice
   3000→2000 chars in debrief. Coach transcript 8→6 msgs.
+
+## 2026-07 — Custom Scenario Builder (verified, iteration_6)
+- New endpoints `POST /api/scenarios/custom` and `DELETE /api/scenarios/custom/{slug}`.
+  Custom scenarios stored in `scenarios` collection with `custom:true`, `owner_id=user.id`
+  and a `translations.ru` block containing title/description/objective/context/success + per-
+  participant name/role. `list_scenarios` filters `owner_id ∈ {null, user.id}`. `_scrub_scenario`
+  picks translations.ru for custom docs (built-ins keep SCENARIO_RU/SCENARIO_RU_CTX path).
+  Participant `gender` stored on the participant (falls back to `GENDERS` lookup for built-ins).
+- New page `/scenarios/new` (CustomScenarioBuilder.jsx): 3 sections (Основное, Детали, Оппонент),
+  bilingual RU/EN inputs for title/description/objective/context/success_conditions and
+  opponent name/role, single-lang inputs for opponent internals (description/goals/interests/
+  hidden/constraints/BATNA/personality), and gender toggle (female/male) that drives TTS voice.
+  Save → `/simulate?scenario=<slug>` with the scenario pre-selected in wizard Step 2.
+- `/scenarios` page: `+ Создать сценарий` button, dedicated "Ваши сценарии" section above the
+  built-in library with per-card delete button (confirm-dialog protected).
+- Files: `server.py` (models CustomOpponent/CustomScenarioIn + endpoints + _scrub_scenario/
+  create_negotiation updates), `CustomScenarioBuilder.jsx` (new), rewritten `Scenarios.jsx`,
+  `App.js` (route), `lib/api.js`, `translations.js` (t.custom.*).
+- Verified iteration_6: 12/12 PASS (7/7 backend + 12/12 frontend E2E). Test file added at
+  `/app/backend/tests/test_custom_scenarios.py`.
+
+## Backlog
+- P2: Multi-opponent custom scenarios (currently single opponent).
+- P2: Server-side Pydantic min_length constraints on required *_en fields (frontend-only now).
+- P3: Split server.py (>1000 lines) into modular routers (auth/scenarios/negotiations/voice/coach).
+- P4: Session share-card (view+download debrief summary).
 - Files: `server.py` (auth+magic, MODEL_MAP), `Auth.jsx`, `ResetPassword.jsx` (new),
   `SimulationWizard.jsx`, `NegotiationRoom.jsx`, `Profile.jsx`, `translations.js`,
   `lib/api.js`, `AuthProvider.jsx` (setSession), `App.js` (route), `favicon.svg` (new),
