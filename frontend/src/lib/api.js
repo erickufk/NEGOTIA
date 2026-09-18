@@ -24,6 +24,7 @@ export const api = {
   forgotPassword: (email) => axios.post(`${API}/auth/forgot-password`, { email }).then(r => r.data),
   resetPassword: (token, password) => axios.post(`${API}/auth/reset-password`, { token, password }).then(r => r.data),
   magicLogin: (token) => axios.post(`${API}/auth/magic-login`, { token }).then(r => r.data),
+  deleteNeg: (id) => axios.delete(`${API}/negotiations/${id}`).then(r => r.data),
 
   // Custom scenarios
   createCustomScenario: (payload) => axios.post(`${API}/scenarios/custom`, payload).then(r => r.data.scenario),

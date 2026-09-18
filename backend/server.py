@@ -11,6 +11,7 @@ import asyncio
 import io
 import re
 import secrets
+import random
 
 import bcrypt
 import jwt
@@ -729,8 +730,11 @@ async def _generate_choices(scenario: dict, doc: dict) -> Optional[List[dict]]:
     lang_name = LANG_NAMES.get(doc.get("language", "en"), "English")
     sys = f"""You generate 4 possible next responses for a user in a negotiation practice app.
 Scenario: {scenario['title']}. User objective: {scenario['objective']}
-Write every "text" and "hint" value ONLY in {lang_name}.
-Return ONLY JSON array of 4 objects, each: {{"text": "...", "quality": "strong|acceptable|weak|risky", "hint": "short reason"}}"""
+Rules:
+- Write every "text" and "hint" value ONLY in {lang_name}.
+- Keep all four "text" values balanced in length (25-45 words each). Do NOT make weak/risky ones shorter — they should feel just as complete as strong ones.
+- Cover distinct tactical directions (e.g., probing question, direct anchor, empathy move, ultimatum) so quality is judged on substance, not verbosity.
+Return ONLY JSON array of 4 objects, each: {{"text": "...", "quality": "strong|acceptable|weak|risky", "hint": "short reason"}}. Include exactly one of each quality."""
     history_txt = "\n".join([f"{m['role'].upper()}: {m['content']}" for m in doc["messages"][-6:]])
     provider, model = resolve_model(doc.get("ai_model", "claude"))
     chat = LlmChat(api_key=EMERGENT_LLM_KEY, session_id=f"choices-{doc['id']}", system_message=sys).with_model(provider, model)
@@ -740,10 +744,23 @@ Return ONLY JSON array of 4 objects, each: {{"text": "...", "quality": "strong|a
         start = text.find("[")
         end = text.rfind("]")
         if start >= 0 and end > start:
-            return json.loads(text[start:end+1])
+            choices = json.loads(text[start:end+1])
+            if isinstance(choices, list) and choices:
+                random.shuffle(choices)
+                return choices
     except Exception:
         pass
     return None
+
+
+@api.delete("/negotiations/{neg_id}")
+async def delete_negotiation(neg_id: str, user=Depends(get_current_user)):
+    doc = await db.negotiations.find_one({"id": neg_id, "user_id": user["id"]}, {"_id": 0})
+    if not doc:
+        raise HTTPException(404, "Not found")
+    await db.negotiations.delete_one({"id": neg_id, "user_id": user["id"]})
+    return {"ok": True}
+
 
 
 @api.post("/negotiations/{neg_id}/end")

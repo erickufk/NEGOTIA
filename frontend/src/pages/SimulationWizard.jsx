@@ -247,18 +247,6 @@ export default function SimulationWizard() {
                 <div className="font-semibold text-[#4F46E5] mb-1 flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5" />{t.wizard.primaryGoal}</div>
                 <div className="text-[#1E293B]">{scenario.objective}</div>
               </div>
-              <div className="p-4 rounded-xl neo-inset">
-                <div className="text-[10px] uppercase text-slate-500 font-mono tracking-wider mb-2">{t.aiModel.label}</div>
-                <div className="text-[11px] text-slate-500 mb-3">{t.aiModel.hint}</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {["claude", "gpt"].map(m => (
-                    <button key={m} type="button" data-testid={`w-ai-${m}`} onClick={() => setAiModel(m)}
-                      className={`p-3 rounded-xl text-left transition-all ${aiModel === m ? "neo-raised-sm ring-2 ring-[#4F46E5]" : "neo-raised-sm text-slate-500"}`}>
-                      <div className="text-xs font-semibold text-[#1E293B]">{t.aiModel[m]}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
           )}
         </div>

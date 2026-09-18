@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { useI18n } from "../i18n/I18nProvider";
 import { api } from "../lib/api";
-import { ArrowRight, MessagesSquare } from "lucide-react";
+import { ArrowRight, MessagesSquare, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 const outcomeChip = {
   Excellent: "chip-emerald", Successful: "chip-emerald",
@@ -17,7 +18,18 @@ export default function History() {
   const nav = useNavigate();
   const [list, setList] = useState([]);
 
-  useEffect(() => { api.listNeg().then(setList).catch(() => {}); }, []);
+  const refresh = () => api.listNeg().then(setList).catch(() => {});
+  useEffect(() => { refresh(); }, []);
+
+  const remove = async (e, id) => {
+    e.stopPropagation();
+    if (!window.confirm(t.room.deleteConfirm)) return;
+    try {
+      await api.deleteNeg(id);
+      toast.success(t.room.deleted);
+      refresh();
+    } catch { toast.error(t.room.deleteFailed); }
+  };
 
   return (
     <AppShell>
@@ -55,6 +67,11 @@ export default function History() {
                     </div>
                     <div className="text-[10px] uppercase text-slate-500 tracking-wider">/ 100</div>
                   </div>
+                  <button onClick={(e) => remove(e, n.id)} data-testid={`history-delete-${i}`}
+                    title={t.room.delete}
+                    className="neo-raised-sm w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-rose-600 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                   <ArrowRight className="w-4 h-4 text-slate-400" />
                 </div>
               </div>

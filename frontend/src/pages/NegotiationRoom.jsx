@@ -26,6 +26,7 @@ export default function NegotiationRoom() {
   const [hint, setHint] = useState(null);
   const [streamingMap, setStreamingMap] = useState({}); // id -> partial text while streaming
   const [voiceOn, setVoiceOn] = useState(true);
+  const [pickedQuality, setPickedQuality] = useState({}); // {msgId: 'strong'|'weak'|...}
   const scrollRef = useRef(null);
   const mediaRecRef = useRef(null);
   const chunksRef = useRef([]);
@@ -63,7 +64,7 @@ export default function NegotiationRoom() {
     } catch { /* silent */ }
   };
 
-  const send = async (text) => {
+  const send = async (text, quality = null) => {
     if (!text.trim() || sending) return;
     setSending(true); setInput(""); setChoices(null);
 
@@ -100,6 +101,7 @@ export default function NegotiationRoom() {
           if (evt.type === "user") {
             setNeg(p => p ? { ...p, messages: [...p.messages, evt.message] } : p);
             userAdded = true;
+            if (quality) setPickedQuality(m => ({ ...m, [evt.message.id]: quality }));
           } else if (evt.type === "ai_start") {
             partial[evt.message.id] = "";
             participantMap[evt.message.id] = evt.message.participant;
@@ -115,7 +117,7 @@ export default function NegotiationRoom() {
               messages: p.messages.map(mm => mm.id === evt.id ? { ...mm, content: finalText } : mm),
             } : p);
             setStreamingMap(m => { const c = { ...m }; delete c[evt.id]; return c; });
-            if (voiceOn) playTts(finalText, genderRef.current[participantMap[evt.id]] || null);
+            if (voiceOn && neg?.mode === "voice") playTts(finalText, genderRef.current[participantMap[evt.id]] || null);
           } else if (evt.type === "done") {
             latestFullResponse = evt;
             setNeg(p => p ? { ...p, state: evt.state } : p);
@@ -125,7 +127,7 @@ export default function NegotiationRoom() {
           }
         }
       }
-      if (coachingRef.current) {
+      if (coachingRef.current && neg?.mode !== "challenge") {
         try { const h = await api.coachHint(id); setHint(h.hint); }
         catch (err) { console.warn("coach hint failed", err); }
       }
@@ -268,16 +270,18 @@ export default function NegotiationRoom() {
                 <input type="checkbox" checked={coaching} onChange={e => {
                   const on = e.target.checked;
                   setCoaching(on); coachingRef.current = on;
-                  if (on) { api.coachHint(id).then(h => setHint(h.hint)).catch(() => {}); }
+                  if (on && neg.mode !== "challenge") { api.coachHint(id).then(h => setHint(h.hint)).catch(() => {}); }
                   else { setHint(null); }
                 }} className="accent-[#4F46E5]" />
-                <Lightbulb className="w-3 h-3" />{t.room.coaching}
+                <Lightbulb className="w-3 h-3" />{neg.mode === "challenge" ? t.room.showQuality : t.room.coaching}
               </label>
-              <button onClick={() => { setVoiceOn(v => !v); if (audioRef.current) audioRef.current.pause(); }}
-                data-testid="btn-voice-toggle"
-                className={`neo-raised-sm w-8 h-8 rounded-full flex items-center justify-center ${voiceOn ? "text-[#4F46E5]" : "text-slate-400"}`}>
-                {voiceOn ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-              </button>
+              {neg.mode === "voice" && (
+                <button onClick={() => { setVoiceOn(v => !v); if (audioRef.current) audioRef.current.pause(); }}
+                  data-testid="btn-voice-toggle"
+                  className={`neo-raised-sm w-8 h-8 rounded-full flex items-center justify-center ${voiceOn ? "text-[#4F46E5]" : "text-slate-400"}`}>
+                  {voiceOn ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                </button>
+              )}
             </div>
           </div>
 
@@ -310,6 +314,14 @@ export default function NegotiationRoom() {
                       {content}
                       {isStreaming && <TypingCaret />}
                     </div>
+                    {isUser && pickedQuality[m.id] && (
+                      <div className="mt-2 flex items-center gap-1.5" data-testid={`msg-quality-${m.id}`}>
+                        <span className="text-[10px] text-slate-500 font-mono">{t.room.yourAnswerWas}</span>
+                        <span className={`chip !text-[10px] ${
+                          pickedQuality[m.id] === "strong" ? "chip-emerald" : pickedQuality[m.id] === "acceptable" ? "chip-primary" : pickedQuality[m.id] === "weak" ? "chip-amber" : "chip-rose"
+                        }`}>{t.room.quality[pickedQuality[m.id]] || pickedQuality[m.id]}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -322,20 +334,22 @@ export default function NegotiationRoom() {
           </div>
 
           {/* INPUT */}
-          <div className="border-t border-black/5 p-4">
+          <div className="border-t border-black/5 p-4 shrink-0">
             {neg.mode === "challenge" && choices ? (
-              <div className="space-y-2">
-                <div className="text-xs uppercase text-slate-500 font-mono mb-2 tracking-wider">{t.room.pickChoice}</div>
+              <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
+                <div className="text-xs uppercase text-slate-500 font-mono mb-2 tracking-wider sticky top-0 bg-white/95 backdrop-blur">{t.room.pickChoice}</div>
                 {choices.map((c, i) => (
-                  <button key={i} data-testid={`choice-${i}`} onClick={() => send(c.text)}
-                    className="w-full text-left p-3 rounded-xl neo-raised-sm neo-raised-hover transition-all">
+                  <button key={i} data-testid={`choice-${i}`} onClick={() => send(c.text, c.quality)}
+                    className="w-full text-left p-2.5 rounded-xl neo-raised-sm neo-raised-hover transition-all">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm text-[#1E293B]">{c.text}</span>
-                      <span className={`chip shrink-0 ${
-                        c.quality === "strong" ? "chip-emerald" : c.quality === "acceptable" ? "chip-primary" : c.quality === "weak" ? "chip-amber" : "chip-rose"
-                      }`}>
-                        {t.room.quality[c.quality] || c.quality}
-                      </span>
+                      {coaching && (
+                        <span className={`chip shrink-0 ${
+                          c.quality === "strong" ? "chip-emerald" : c.quality === "acceptable" ? "chip-primary" : c.quality === "weak" ? "chip-amber" : "chip-rose"
+                        }`}>
+                          {t.room.quality[c.quality] || c.quality}
+                        </span>
+                      )}
                     </div>
                   </button>
                 ))}
@@ -349,7 +363,7 @@ export default function NegotiationRoom() {
                     className="neo-inset border-0 text-sm text-[#1E293B] resize-none focus:ring-2 focus:ring-[#4F46E5] min-h-[100px]" />
                 </div>
                 <div className="flex flex-col gap-2">
-                  {neg.mode !== "challenge" && (
+                  {neg.mode === "voice" && (
                     <button data-testid="btn-mic"
                       onPointerDown={e => { e.preventDefault(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch {} startRecording(); }}
                       onPointerUp={e => { e.preventDefault(); stopRecording(); }}
