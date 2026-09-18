@@ -1,0 +1,37 @@
+{
+  "summary": "Iteration-8 full E2E validation of 5 NEGOTIA UX/backend improvements. Backend: pytest 5/5 PASS (DELETE /api/negotiations/{id} owner OK+404 for missing+401 for anon; challenge choices return 4 with one-of-each quality strong/acceptable/weak/risky, word counts 8-80, random.shuffle path). Frontend: 20/20 PASS on 1440x900 desktop (RU): (1) Wizard step 7 has NO w-ai-claude/w-ai-gpt cards — screenshot confirms only Scenario/Framework/Mode/Participants + primary goal cards visible + wizard-start button. (2) Profile page keeps profile-ai-claude/profile-ai-gpt; clicking profile-ai-gpt sets localStorage negotia_ai_model='gpt'. (3) Chat mode: no btn-mic, no btn-voice-toggle, coach-toggle label='Коучинг'. (4) Voice mode: btn-mic + btn-voice-toggle both present. (5) Challenge mode: no mic, no TTS, coach-toggle label='Показывать качество'. (6) Challenge choices panel shows 4 choices; with coaching OFF NO quality chips on choices; toggling coach ON reveals chips inline and DOES NOT fire /api/coach/hint (0 hint calls captured). Clicking a choice appends msg-quality-<id> below user message with label 'Ваш ответ:' + colored chip 'Сильный'. (7) History page: history-delete-<i> button on every row; click triggers window.confirm+accept+DELETE /api/negotiations/{id} (1 network call captured) + 'Удалено' toast + row disappears without navigation (before=41→after=40, URL stays /history).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "verified_flows": {
+    "wizard_step7_no_ai_picker": "PASS (visual + count)",
+    "profile_ai_model_localstorage": "PASS (gpt persisted)",
+    "chat_mode_hides_mic_and_tts": "PASS",
+    "voice_mode_shows_mic_and_tts": "PASS",
+    "challenge_mode_hides_mic_and_tts": "PASS",
+    "challenge_coach_label_switches": "PASS (Коучинг in chat/voice; Показывать качество in challenge)",
+    "challenge_choices_4_qualities_balanced_shuffled": "PASS (backend pytest + UI 4 choices)",
+    "challenge_chips_gated_by_coach_toggle": "PASS (0 chips off, 1 chip on)",
+    "challenge_no_hint_call_in_challenge_mode": "PASS (0 /api/coach/hint requests)",
+    "challenge_user_message_quality_chip_after_pick": "PASS (msg-quality-<id> with 'Ваш ответ:Сильный')",
+    "history_delete_flow": "PASS (confirm → DELETE api → toast Удалено → row removed → no navigation)",
+    "backend_delete_endpoint": "PASS (owner 200 + not-found 404 + anon 401)"
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_delete_and_challenge.py",
+    "/app/test_reports/pytest/iter8.xml"
+  ],
+  "critical_code_review_comments": [
+    "server.py is now ~1250 lines — still monolithic; recommend splitting into routers (auth, negotiations, voice, scenarios) in a future refactor.",
+    "In NegotiationRoom.jsx send() catch prints 'network error' when the SSE reader fails after connection drop (seen once during test) but doesn't affect user-visible flow; consider swallowing benign AbortError-style disconnects.",
+    "_generate_choices randomizes order but does not validate the LLM actually returned all 4 unique qualities — if the model returns duplicates the array still shuffles and passes through; consider a post-parse validation (already loosely covered by prompt but not enforced).",
+    "History.jsx delete uses window.confirm — for consistency with rest of app (which uses shadcn dialogs), consider migrating to a proper AlertDialog in future polish."
+  ],
+  "updated_files": ["/app/backend/tests/test_delete_and_challenge.py"],
+  "success_rate": {"backend": "100% (5/5)", "frontend": "100% (20/20)"},
+  "test_credentials": "demo@negotia.app / Demo1234!",
+  "seed_data_creation": "Created 3 test negotiations (chat/voice/challenge modes for salary-negotiation) via API and cleaned up via DELETE after test. Also deleted 1 existing demo history row as part of the history-delete flow test (row was one of the newly created test negs so no production data lost).",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All 5 iteration-8 changes verified end-to-end. Mode-specific UI gating uses these testids: btn-mic (voice only), btn-voice-toggle (voice only), coach-toggle text switches to 'Показывать качество' in challenge (no /api/coach/hint fired), msg-quality-<msgId> appears under user msg after choice pick. History rows have data-testid=history-delete-<i>. Backend DELETE /api/negotiations/{id} enforces owner via user_id filter and returns 404/401 correctly.",
+  "rca_of_the_issue": "n/a"
+}

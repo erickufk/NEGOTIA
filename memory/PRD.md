@@ -100,8 +100,34 @@ OpenAI Whisper STT + OpenAI TTS via Emergent Universal Key. SSE streaming. Conte
 ## Backlog
 - P2: Multi-opponent custom scenarios (currently single opponent).
 - P2: Server-side Pydantic min_length constraints on required *_en fields (frontend-only now).
-- P3: Split server.py (>1000 lines) into modular routers (auth/scenarios/negotiations/voice/coach).
+- P3: Split server.py (>1250 lines) into modular routers (auth/scenarios/negotiations/voice/coach).
 - P4: Session share-card (view+download debrief summary).
+- P4: Replace window.confirm in History with shadcn AlertDialog for consistency.
+
+## 2026-07 — UX polish: challenge balance + mode-specific input + history delete (verified, iteration_8)
+- **Wizard**: removed per-negotiation AI Engine picker from step 7. Model choice now lives ONLY in
+  Profile → AI-настройки (persisted via localStorage `negotia_ai_model`).
+- **Challenge mode**:
+  - `_generate_choices` prompt tightened to enforce 4 balanced texts (25-45 words each) covering
+    distinct tactical directions with one of each quality (strong/acceptable/weak/risky).
+  - Server-side `random.shuffle()` on returned choices to decorrelate quality from position.
+  - Quality chips render on choices ONLY when Coaching toggle is ON. When OFF, the chip attaches to
+    the user message AFTER selection (label "Ваш ответ:" + colored chip, testid `msg-quality-<id>`).
+  - Coaching toggle in Challenge mode is labeled "Показывать качество" and does NOT call
+    `/api/coach/hint` (verified 0 requests). In chat/voice modes it stays "Коучинг" and fires hint.
+  - Fixed UI bug: choices panel now `max-h-[240px] overflow-y-auto` + parent `shrink-0` so
+    prior AI messages stay visible above.
+- **Mode-specific input**:
+  - `chat` mode: NO mic button, NO TTS toggle (voice-only affordances).
+  - `voice` mode: mic + TTS toggle preserved with push-to-talk.
+  - `challenge` mode: neither, only choices panel.
+- **History delete**: `DELETE /api/negotiations/{id}` (owner-only, 404 for missing). Frontend
+  Trash2 button on each row with `window.confirm` + toast "Удалено" + refresh without navigation.
+- Files: `server.py` (+random, +DELETE endpoint, _generate_choices prompt+shuffle),
+  `SimulationWizard.jsx` (removed AI block), `NegotiationRoom.jsx` (pickedQuality state,
+  mode-gated mic/TTS, choice max-h, coach label switch), `History.jsx` (rewritten w/ delete),
+  `lib/api.js` (deleteNeg), `translations.js` (showQuality, yourAnswerWas, delete strings).
+- Verified iteration_8: 25/25 PASS (5/5 backend pytest + 20/20 frontend E2E).
 - Files: `server.py` (auth+magic, MODEL_MAP), `Auth.jsx`, `ResetPassword.jsx` (new),
   `SimulationWizard.jsx`, `NegotiationRoom.jsx`, `Profile.jsx`, `translations.js`,
   `lib/api.js`, `AuthProvider.jsx` (setSession), `App.js` (route), `favicon.svg` (new),
