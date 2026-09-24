@@ -4,7 +4,7 @@
 
 ![NEGOTIA](frontend/public/og-image.png)
 
-**Live demo:** [arena.cvscore.pro](https://arena.cvscore.pro) · **Preview:** [stitch-demo-1.preview.emergentagent.com](https://stitch-demo-1.preview.emergentagent.com)
+**Live demo:** [arena.cvscore.pro](https://arena.cvscore.pro) ·
 
 ---
 
@@ -133,7 +133,7 @@ AI_MODEL_NAME=claude-sonnet-5
 FRONTEND_URL=http://localhost:3000
 ```
 
-> **Emergent LLM Key** — универсальный ключ, покрывающий Claude, OpenAI (текст + TTS + Whisper + image) и Gemini. Получите его в личном кабинете Emergent (Profile → Manage plan → Universal Key).
+> **Emergent LLM Key** — универсальный ключ, покрывающий Claude, OpenAI (текст + TTS + Whisper + image) и Gemini.
 
 Запуск:
 
@@ -165,7 +165,7 @@ yarn start
 
 ### 4. Demo-аккаунт
 
-Приложение автосидит `demo@negotia.app / Demo1234!` при первом старте бэкенда. Также сидятся 12 сценариев.
+Автодеплой приложения с автоматическим созданием демо аккаунта `demo@negotia.app / Demo1234!` и 12 базовых сценариев.
 
 ---
 
@@ -252,5 +252,3 @@ pytest tests/ -v
 - **shadcn/ui** и **Lucide** — за UI-строительные блоки
 
 ---
-
-*Made with ❤️ using Emergent · Tested via testing_agent · 100% RU-first*
