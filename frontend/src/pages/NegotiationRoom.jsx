@@ -1,4 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
+
+const devLog = (...args) => { if (process.env.NODE_ENV === "development") console.warn(...args); };
 import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../components/AppShell";
 import { useI18n } from "../i18n/I18nProvider";
@@ -50,7 +52,7 @@ export default function NegotiationRoom() {
 
   useEffect(() => () => {
     if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
-    try { if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") mediaRecRef.current.stop(); } catch {}
+    try { if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") mediaRecRef.current.stop(); } catch { /* recorder already stopped */ }
   }, []);
 
   const playTts = async (text, gender = null) => {
@@ -60,8 +62,8 @@ export default function NegotiationRoom() {
       if (audioRef.current) { audioRef.current.pause(); audioRef.current = null; }
       const a = new Audio(audioUrl);
       audioRef.current = a;
-      a.play().catch(() => {});
-    } catch { /* silent */ }
+      a.play().catch(err => devLog("audio autoplay blocked", err));
+    } catch (err) { devLog("tts failed", err); }
   };
 
   const send = async (text, quality = null) => {
@@ -129,10 +131,10 @@ export default function NegotiationRoom() {
       }
       if (coachingRef.current && neg?.mode !== "challenge") {
         try { const h = await api.coachHint(id); setHint(h.hint); }
-        catch (err) { console.warn("coach hint failed", err); }
+        catch (err) { devLog("coach hint failed", err); }
       }
     } catch (e) {
-      console.error("send message failed", e);
+      devLog("send message failed", e);
       toast.error("Something went wrong. Try again.");
     } finally { setSending(false); }
   };
@@ -180,7 +182,7 @@ export default function NegotiationRoom() {
     if (!listening) return;
     try {
       if (mediaRecRef.current && mediaRecRef.current.state !== "inactive") mediaRecRef.current.stop();
-    } catch {}
+    } catch (err) { devLog("stop recording failed", err); }
     setListening(false);
   };
 
@@ -191,6 +193,9 @@ export default function NegotiationRoom() {
       nav(`/debrief/${res.negotiation.id}`, { state: { reward: res.gamification } });
     } finally { setSending(false); }
   };
+
+  const topSignals = useMemo(() => Object.entries(neg?.state?.signals || {}).sort((a, b) => b[1] - a[1]).slice(0, 6), [neg?.state?.signals]);
+  const prepKeys = useMemo(() => ["batna", "priorities", "ideal", "minimum"].filter(k => neg?.preparation?.[k]), [neg?.preparation]);
 
   if (!neg || !scenario) return <AppShell><div className="text-slate-500 py-20 text-center">{t.common.loading}</div></AppShell>;
 
@@ -339,7 +344,7 @@ export default function NegotiationRoom() {
               <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
                 <div className="text-xs uppercase text-slate-500 font-mono mb-2 tracking-wider sticky top-0 bg-white/95 backdrop-blur">{t.room.pickChoice}</div>
                 {choices.map((c, i) => (
-                  <button key={i} data-testid={`choice-${i}`} onClick={() => send(c.text, c.quality)}
+                  <button key={c.text} data-testid={`choice-${i}`} onClick={() => send(c.text, c.quality)}
                     className="w-full text-left p-2.5 rounded-xl neo-raised-sm neo-raised-hover transition-all">
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm text-[#1E293B]">{c.text}</span>
@@ -365,7 +370,7 @@ export default function NegotiationRoom() {
                 <div className="flex flex-col gap-2">
                   {neg.mode === "voice" && (
                     <button data-testid="btn-mic"
-                      onPointerDown={e => { e.preventDefault(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch {} startRecording(); }}
+                      onPointerDown={e => { e.preventDefault(); try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* pointer capture unsupported */ } startRecording(); }}
                       onPointerUp={e => { e.preventDefault(); stopRecording(); }}
                       onPointerCancel={() => { if (listening) stopRecording(); }}
                       onContextMenu={e => e.preventDefault()}
@@ -391,7 +396,7 @@ export default function NegotiationRoom() {
         <aside className="space-y-4 block">
           <div className="neo-raised p-4">
             <div className="text-xs uppercase tracking-wider text-slate-500 font-mono mb-3 flex items-center gap-1.5"><TrendingUp className="w-3 h-3" />{t.room.preparation}</div>
-            {["batna", "priorities", "ideal", "minimum"].filter(k => neg.preparation?.[k]).map(k => (
+            {prepKeys.map(k => (
               <div key={k} className="mb-3">
                 <div className="text-[10px] uppercase text-slate-500 font-mono tracking-wider mb-1">{t.wizard[k]}</div>
                 <div className="text-xs text-[#1E293B] p-2.5 rounded-lg neo-inset">{neg.preparation[k]}</div>
@@ -405,7 +410,7 @@ export default function NegotiationRoom() {
           <div className="neo-raised p-4">
             <div className="text-xs uppercase tracking-wider text-slate-500 font-mono mb-3">{t.room.liveSignals}</div>
             <div className="grid grid-cols-2 gap-2">
-              {Object.entries(neg.state.signals || {}).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => (
+              {topSignals.map(([k, v]) => (
                 <div key={k} className="p-2 rounded-lg neo-inset">
                   <div className="text-[10px] text-slate-500 truncate">{L.signals[k] || k}</div>
                   <div className={`font-mono font-bold text-sm ${v > 0 ? "text-[#4F46E5]" : "text-slate-400"}`}>{v}</div>

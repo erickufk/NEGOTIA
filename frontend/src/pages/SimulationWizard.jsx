@@ -79,7 +79,7 @@ export default function SimulationWizard() {
         {/* Progress pills */}
         <div className="neo-inset p-1.5 mb-6 flex items-center gap-1 overflow-x-auto no-scrollbar">
           {stepLabels.map((s, i) => (
-            <div key={i} className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 whitespace-nowrap ${
+            <div key={s} className={`px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 whitespace-nowrap ${
               i + 1 === step ? "neo-raised-sm text-[#4F46E5] font-semibold" : i + 1 < step ? "text-emerald-600" : "text-slate-400"
             }`}>
               <span className="font-mono">0{i + 1}</span>
@@ -165,7 +165,7 @@ export default function SimulationWizard() {
               </div>
               <div className="mt-4 space-y-2">
                 {scenario.participants.slice(0, participantsCount).map((p, i) => (
-                  <div key={i} className="flex items-center gap-3 p-3 rounded-xl neo-inset">
+                  <div key={p.name} className="flex items-center gap-3 p-3 rounded-xl neo-inset">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#4F46E5] to-[#7C3AED] text-white flex items-center justify-center text-xs font-bold">
                       {p.name.split(" ").map(x => x[0]).join("")}
                     </div>
@@ -193,7 +193,7 @@ export default function SimulationWizard() {
                 <div className="text-[10px] uppercase text-slate-500 font-mono mb-1 tracking-wider">{t.wizard.success}</div>
                 <ul className="space-y-1.5 p-4 rounded-xl neo-inset">
                   {scenario.success_conditions.map((c, i) => (
-                    <li key={i} className="flex items-start gap-2 text-[#1E293B]"><Check className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" /><span>{c}</span></li>
+                    <li key={c} className="flex items-start gap-2 text-[#1E293B]"><Check className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" /><span>{c}</span></li>
                   ))}
                 </ul>
               </div>
@@ -237,7 +237,7 @@ export default function SimulationWizard() {
                   { l: t.wizard.mode, v: t.wizard[mode] || mode },
                   { l: t.scenarios.participants, v: participantsCount },
                 ].map((row, i) => (
-                  <div key={i} className="p-4 rounded-xl neo-inset">
+                  <div key={row.l} className="p-4 rounded-xl neo-inset">
                     <div className="text-[10px] uppercase text-slate-500 font-mono tracking-wider mb-1">{row.l}</div>
                     <div className="font-semibold capitalize">{row.v}</div>
                   </div>

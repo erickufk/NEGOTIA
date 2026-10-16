@@ -65,7 +65,7 @@ export default function Profile() {
           { l: t.dashboard.best, v: stats?.best_score ?? 0, suffix: " / 100" },
           { l: t.profile.successRate, v: (stats?.success_rate ?? 0) + "%", suffix: "" },
         ].map((k, i) => (
-          <div key={i} className="neo-raised p-5 neo-raised-hover">
+          <div key={k.l} className="neo-raised p-5 neo-raised-hover">
             <div className="text-[11px] uppercase text-slate-500 tracking-wider mb-2">{k.l}</div>
             <div className="font-mono font-bold text-2xl md:text-3xl">{k.v}{k.suffix && <span className="text-sm text-slate-400 font-normal">{k.suffix}</span>}</div>
           </div>

@@ -47,7 +47,7 @@ export default function Learn() {
                     </div>
                     <ul className="space-y-2">
                       {f.concepts.map((c, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-[#1E293B]">
+                        <li key={c} className="flex items-start gap-2 text-sm text-[#1E293B]">
                           <span className="font-mono text-xs text-[#4F46E5] mt-0.5 shrink-0">{String(i + 1).padStart(2, "0")}</span>
                           <span>{c}</span>
                         </li>
@@ -60,7 +60,7 @@ export default function Learn() {
                     </div>
                     <ul className="space-y-2">
                       {f.rules.map((r, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                        <li key={r} className="flex items-start gap-2 text-sm text-slate-600">
                           <Check className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" /><span>{r}</span>
                         </li>
                       ))}

@@ -110,7 +110,7 @@ export default function Debrief() {
             </div>
             <ul className="space-y-2 text-sm text-[#1E293B]">
               {(fb.did_well || []).map((s, i) => (
-                <li key={i} className="flex gap-2"><span className="text-emerald-600 mt-0.5">✓</span><span>{s}</span></li>
+                <li key={s} className="flex gap-2"><span className="text-emerald-600 mt-0.5">✓</span><span>{s}</span></li>
               ))}
             </ul>
           </div>
@@ -121,7 +121,7 @@ export default function Debrief() {
             </div>
             <ul className="space-y-2 text-sm text-[#1E293B]">
               {(fb.improve || []).map((s, i) => (
-                <li key={i} className="flex gap-2"><span className="text-amber-600 mt-0.5">→</span><span>{s}</span></li>
+                <li key={s} className="flex gap-2"><span className="text-amber-600 mt-0.5">→</span><span>{s}</span></li>
               ))}
             </ul>
           </div>

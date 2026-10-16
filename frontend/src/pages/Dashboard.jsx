@@ -89,7 +89,7 @@ export default function Dashboard() {
       {/* KPI Grid */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {kpi.map((k, i) => (
-          <div key={i} className="neo-raised p-5 neo-raised-hover" data-testid={`kpi-${k.label}`}>
+          <div key={k.label} className="neo-raised p-5 neo-raised-hover" data-testid={`kpi-${k.label}`}>
             <div className="flex items-center justify-between text-slate-500">
               <span className="text-xs font-medium uppercase tracking-wider">{k.label}</span>
               <k.icon className="w-4 h-4 text-[#4F46E5]" />

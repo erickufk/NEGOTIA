@@ -100,7 +100,7 @@ export default function Landing() {
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-[#64748b]">
               {[["verified", "Harvard Method"], ["chat_bubble", t("SPIN-вопросы", "SPIN questions")], ["tune", t("BATNA и давление", "BATNA & pressure")], ["inventory_2", t("12+ реальных кейсов", "12+ real cases")]].map(([ic, label], i) => (
-                <div key={i} className="flex items-center gap-2">
+                <div key={label} className="flex items-center gap-2">
                   <span className="px-3 py-1 rounded-md bg-white border border-[#e5e3dc]/70 flex items-center gap-1.5 shadow-sm font-semibold">
                     <Icon name={ic} className="!text-xs text-[#4f46e5]" />{label}
                   </span>
@@ -137,7 +137,7 @@ export default function Landing() {
                 [t("ИНДЕКС ДОВЕРИЯ", "TRUST INDEX"), <span key="t" className="font-mono font-semibold text-[#4f46e5]">68%</span>],
                 [t("ТЕМП РЕЧИ", "SPEECH TEMPO"), <span key="s" className="text-[#1e293b] font-mono font-medium">{t("132 сл/мин", "132 wpm")}</span>],
                 [t("ВРЕМЯ СЕССИИ", "SESSION TIME"), <span key="tm" className="font-mono font-bold text-[#1e293b]">08:42</span>]].map(([l, v], i) => (
-                <div key={i} className="p-3 flex items-center justify-between">
+                <div key={l} className="p-3 flex items-center justify-between">
                   <span className="text-[#64748b] text-[11px]">{l}</span>{v}
                 </div>
               ))}
@@ -321,7 +321,7 @@ export default function Landing() {
                   {[["CFO " + t("(Финансы)", "(Finance)"), <span key="1" className="px-2 py-0.5 rounded bg-[#fee2e2] text-[#991b1b] text-[11px] font-medium">{t("Жесткая позиция", "Hard stance")}</span>, t("«Я не готов увеличивать общий годовой IT-бюджет ни на рубль.»", "\"I won't increase the annual IT budget by a single dollar.\""), t("Скрытый интерес: квартальный бонус за кост-оптимизацию", "Hidden interest: quarterly cost-optimization bonus")],
                     ["CTO " + t("(Технологии)", "(Technology)"), <span key="2" className="px-2 py-0.5 rounded bg-[#f1f0ea] text-[#475569] text-[11px] font-medium">{t("Умеренный риск", "Moderate risk")}</span>, t("«Смена текущего стека и поставщика остановит спринты минимум на 3 месяца.»", "\"Switching the current stack and vendor will halt sprints for at least 3 months.\""), t("Скрытый интерес: стабильность SLA и непрерывность релизов", "Hidden interest: SLA stability and release continuity")],
                     [t("Поставщик", "Vendor"), <span key="3" className="px-2 py-0.5 rounded bg-[#ebe9e1] text-[#4f46e5] text-[11px] font-medium">{t("Торг открыт", "Open to deal")}</span>, t("«Мы готовы дать гибкую ставку, если подпишемся на 24 месяца.»", "\"We can offer a flexible rate if we sign for 24 months.\""), t("Скрытый интерес: прогноз выручки (ARR) для раунда инвестиций", "Hidden interest: ARR forecast for the funding round")]].map(([title, badge, quote, interest], i) => (
-                    <div key={i} className="p-3 rounded-lg bg-[#faf9f6] border border-[#e5e3dc]/60 shadow-sm">
+                    <div key={title} className="p-3 rounded-lg bg-[#faf9f6] border border-[#e5e3dc]/60 shadow-sm">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[13px] text-[#1e293b] font-semibold">{title}</span>{badge}
                       </div>
@@ -362,7 +362,7 @@ export default function Landing() {
                   t("Нет скрытых мотивов, эмоций, внутренних сомнений и личной мотивации", "No hidden motives, emotions, inner doubts, or personal motivation"),
                   t("Уступки делаются мгновенно без встречных условий и фиксации цены", "Makes concessions instantly with no counter-conditions or price locks"),
                   t("Размытый абстрактный фидбек без методологических метрик и скоринга", "Vague, abstract feedback with no methodological metrics or scoring")].map((x, i) => (
-                  <li key={i} className="flex items-start gap-2.5"><Icon name="close" className="!text-base text-[#dc2626] mt-0.5" /><span>{x}</span></li>
+                  <li key={x} className="flex items-start gap-2.5"><Icon name="close" className="!text-base text-[#dc2626] mt-0.5" /><span>{x}</span></li>
                 ))}
               </ul>
             </div>
@@ -376,7 +376,7 @@ export default function Landing() {
                   [t("Динамическая модель стресса и доверия:", "Dynamic stress & trust model:"), t(" персонаж закрывается при давлении и открывается при взаимной выгоде", " the character closes under pressure and opens on mutual gain")],
                   [t("Скрытые мотивы и BATNA:", "Hidden motives & BATNA:"), t(" персонаж преследует внутренние цели компании и знает свою точку срыва", " the character pursues internal company goals and knows its walk-away point")],
                   [t("Строгий пост-анализ:", "Rigorous post-analysis:"), t(" аудит по Гарвардской модели принципиальных переговоров и фреймворку SPIN", " an audit against the Harvard principled-negotiation model and the SPIN framework")]].map(([b, x], i) => (
-                  <li key={i} className="flex items-start gap-2.5"><Icon name="check_circle" className="!text-base text-[#0d9488] mt-0.5" /><span><strong>{b}</strong>{x}</span></li>
+                  <li key={b} className="flex items-start gap-2.5"><Icon name="check_circle" className="!text-base text-[#0d9488] mt-0.5" /><span><strong>{b}</strong>{x}</span></li>
                 ))}
               </ul>
             </div>
@@ -396,7 +396,7 @@ export default function Landing() {
                 ["help", t("СПИН-ЗОНДИРОВАНИЕ", "SPIN PROBING"), "SPIN Technique", t("Последовательные ситуационные, проблемные, извлекающие и направляющие вопросы для выявления скрытых болей.", "Sequential situation, problem, implication, and need-payoff questions to surface hidden pains."), [t("Ситуация", "Situation"), t("Проблема", "Problem"), t("Последствия", "Implication")], false],
                 ["balance", t("ТОЧКА ВЫХОДА", "WALK-AWAY POINT"), "BATNA Control", t("Оценка наилучшей альтернативы обсуждаемому соглашению, определение точки срыва и удержание баланса сил.", "Assess the best alternative to a negotiated agreement, define the walk-away point, and hold the balance of power."), [t("Альтернатива", "Alternative"), t("Сила", "Power"), t("Граница", "Boundary")], false],
                 ["hub", t("ГИБРИДНЫЙ РЕЖИМ", "HYBRID MODE"), "Combined Strategic", t("Комплексный стресс-тест: гарвардский подход к взаимной ценности, глубинное зондирование SPIN и защита BATNA.", "A full stress test: the Harvard value approach, deep SPIN probing, and BATNA defense."), ["All-in-One Framework"], true]].map(([ic, cap, title, desc, tags, rec], i) => (
-                <div key={i} className={`p-4 rounded-xl flex flex-col justify-between shadow-sm relative ${rec ? "border-2 border-[#6366f1]/40 bg-[#f5f4ef]" : "border border-[#e5e3dc]/70 bg-[#f7f6f2]"}`}>
+                <div key={title} className={`p-4 rounded-xl flex flex-col justify-between shadow-sm relative ${rec ? "border-2 border-[#6366f1]/40 bg-[#f5f4ef]" : "border border-[#e5e3dc]/70 bg-[#f7f6f2]"}`}>
                   {rec && <span className="absolute top-3 right-3 px-2 py-0.5 rounded bg-[#6366f1] text-white text-[11px] font-semibold shadow-sm">{t("Рекомендуемый", "Recommended")}</span>}
                   <div>
                     <div className="flex items-center gap-1.5 mb-2">
@@ -407,7 +407,7 @@ export default function Landing() {
                   </div>
                   <div className="flex flex-wrap gap-1.5 pt-2 border-t border-[#e5e3dc]/40">
                     {tags.map((tg, j) => (
-                      <span key={j} className={rec ? "px-2.5 py-0.5 rounded bg-[#e0e7ff] text-[#1e1b4b] font-medium text-[11px]" : "px-2 py-0.5 rounded bg-[#f0eee7] text-[#57534e] text-[11px]"}>{tg}</span>
+                      <span key={tg} className={rec ? "px-2.5 py-0.5 rounded bg-[#e0e7ff] text-[#1e1b4b] font-medium text-[11px]" : "px-2 py-0.5 rounded bg-[#f0eee7] text-[#57534e] text-[11px]"}>{tg}</span>
                     ))}
                   </div>
                 </div>
@@ -472,7 +472,7 @@ export default function Landing() {
                 </div>
                 <div className="space-y-4">
                   {[[t("Качество вопросов", "Question quality"), 91, "#14b8a6"], [t("Активное слушание", "Active listening"), 84, "#6366f1"], [t("Стратегическая линия", "Strategic line"), 82, "#6366f1"], [t("Защита BATNA", "BATNA defense"), 88, "#14b8a6"], [t("Плотность аргументации", "Argument density"), 76, "#f59e0b"], [t("Контроль уступок", "Concession control"), 68, "#f59e0b"]].map(([k, v, c], i) => (
-                    <div key={i}>
+                    <div key={k}>
                       <div className="flex justify-between text-[11px] mb-1"><span className="text-[#64748b]">{k}</span><span className="font-mono font-bold text-[#1e293b]">{v}%</span></div>
                       <div className="w-full bg-[#f0eee7] h-1.5 rounded-full overflow-hidden"><div className="h-full rounded-full" style={{ width: `${v}%`, background: c }}></div></div>
                     </div>
@@ -537,7 +537,7 @@ export default function Landing() {
             </div>
             <div className="flex items-center gap-3 bg-[#f5f4ef] p-3 rounded-xl border border-[#e5e3dc]/50">
               {[[t("Попытка 1", "Attempt 1"), 71, "#64748b"], [t("Попытка 2", "Attempt 2"), 84, "#4f46e5"], [t("Попытка 3", "Attempt 3"), 91, "#0d9488"]].map(([l, v, c], i) => (
-                <div key={i} className="flex items-center gap-3">
+                <div key={l} className="flex items-center gap-3">
                   <div className="text-center px-3">
                     <span className="text-[11px] text-[#64748b] block">{l}</span>
                     <span className="font-mono text-[18px] font-bold" style={{ color: c }}>{v}</span>
@@ -563,7 +563,7 @@ export default function Landing() {
               [t("Управление", "Management"), t("Средняя сложность", "Medium difficulty"), "#64748b", t("Конфликт ресурсов в команде", "Team resource conflict"), t("Два лида претендуют на одного старшего инженера для параллельных критических релизов.", "Two leads claim the same senior engineer for parallel critical releases."), t("Оппонент: Team Lead", "Counterpart: Team Lead"), "10 " + t("мин", "min")],
               [t("Партнерство", "Partnership"), t("Высокая сложность", "High difficulty"), "#d97706", t("Стратегическое партнерство", "Strategic partnership"), t("Совместное предприятие (JV): согласование долей владения, интеллектуальной собственности и прав вето.", "A joint venture (JV): aligning ownership shares, IP, and veto rights."), t("Оппонент: Managing Director", "Counterpart: Managing Director"), "20 " + t("мин", "min")],
               [t("Кризис", "Crisis"), t("Экспертная сложность", "Expert difficulty"), "#dc2626", t("Спасение сорванного контракта", "Rescuing a broken contract"), t("Критический сбой в инфраструктуре привёл к убыткам клиента. Предотвратите судебный иск и расторжение.", "A critical infrastructure failure caused client losses. Prevent a lawsuit and termination."), t("Оппонент: Chief Legal Officer", "Counterpart: Chief Legal Officer"), "15-25 " + t("мин", "min")]].map(([cat, diff, dc, title, desc, opp, time], i) => (
-              <div key={i} onClick={go} className="p-4 rounded-xl border border-[#e5e3dc]/70 bg-white hover:border-[#6366f1] transition-all hover:shadow-sm flex flex-col justify-between cursor-pointer" data-testid={`scenario-card-${i}`}>
+              <div key={title} onClick={go} className="p-4 rounded-xl border border-[#e5e3dc]/70 bg-white hover:border-[#6366f1] transition-all hover:shadow-sm flex flex-col justify-between cursor-pointer" data-testid={`scenario-card-${i}`}>
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="px-2 py-0.5 rounded bg-[#f0eee7] text-[#57534e] text-[11px] font-medium">{cat}</span>
@@ -590,7 +590,7 @@ export default function Landing() {
                 <p className="text-[14px] text-[#64748b] mt-2 leading-relaxed">{t("Система отслеживает динамику уступок, скорость реакции на психологическое давление и типичные ошибки в десятках сессий.", "The system tracks concession dynamics, reaction speed under psychological pressure, and typical mistakes across dozens of sessions.")}</p>
                 <div className="flex items-center gap-6 mt-4">
                   {[[t("СИМУЛЯЦИЙ", "SIMULATIONS"), "12", "#1e293b"], [t("СРЕДНИЙ БАЛЛ", "AVG SCORE"), "78", "#4f46e5"], [t("ЛУЧШИЙ РЕЗУЛЬТАТ", "BEST SCORE"), "94", "#0d9488"]].map(([l, v, c], i) => (
-                    <div key={i} className="flex items-center gap-6">
+                    <div key={l} className="flex items-center gap-6">
                       <div>
                         <span className="text-[11px] text-[#64748b] block">{l}</span>
                         <span className="font-mono text-[22px] font-bold" style={{ color: c }}>{v}</span>
@@ -642,7 +642,7 @@ export default function Landing() {
           </div>
           <div className="flex flex-wrap items-center justify-center gap-4 text-[11px]">
             {[t("Конфиденциальность", "Privacy"), t("Условия использования", "Terms of use"), t("Методология", "Methodology"), t("Безопасность данных", "Data security"), t("Служба поддержки", "Support")].map((l, i) => (
-              <a key={i} href="#frameworks" className="text-[#64748b] hover:text-[#1e293b] transition-colors">{l}</a>
+              <a key={l} href="#frameworks" className="text-[#64748b] hover:text-[#1e293b] transition-colors">{l}</a>
             ))}
           </div>
         </div>
