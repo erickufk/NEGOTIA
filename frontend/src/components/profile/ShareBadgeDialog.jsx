@@ -49,7 +49,7 @@ export const ShareBadgeDialog = ({ badgeId, game, userName, t, lang, onClose }) 
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-xl bg-[#F8F7F4] border-0 rounded-3xl" data-testid="share-badge-dialog">
+      <DialogContent className="max-w-xl grid-cols-1 [&>*]:min-w-0 bg-[#F8F7F4] border-0 rounded-3xl" data-testid="share-badge-dialog">
         <DialogTitle className="font-display text-xl">{t.share.title}</DialogTitle>
         <DialogDescription className="text-sm text-slate-500">{t.share.sub}</DialogDescription>
         <div className="neo-inset rounded-2xl p-2 aspect-[1200/630] flex items-center justify-center">

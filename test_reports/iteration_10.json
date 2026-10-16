@@ -1,0 +1,37 @@
+{
+  "summary": "Tested Badge Sharing end to end. Backend: 13/13 pytest passed (create share, idempotency, 400/403/400/413/401/422 validation, public JSON, image.png, 404s, OG landing HTML with redirect). Frontend: Profile share icons appear only on the earned badges (first_step, practitioner). The dialog renders a 1200x630 PNG with no overlapping text in RU or EN. Download saves negotia-first_step.png. Copy puts the share URL on the clipboard and shows the toast 'Ссылка скопирована'. Telegram/VK/LinkedIn/X hrefs contain the encoded {FRONTEND}/api/share/b/{id}. The native share button is not shown in headless Chromium; the copy button takes its place as designed. When logged out, /api/share/b/{id} redirects to /badge/{id}, which shows the image, title and a CTA that goes to /auth. Unknown ids show the not-found message. Public page works on mobile with no horizontal scroll. Regression: gamification bar, achievements grid and count are fine. Weekly challenge and avatar testids are present (only checked that they exist). Found one real backend race condition (duplicate shares) and one small dialog layout overflow.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/share/badge", "issue": "Race condition: find_one then insert_one, with no unique index on (user_id, badge_id). Concurrent requests create duplicate share records. Confirmed in the DB: demo has two first_step shares (xWlogxIMbjU and OyCiQ4KNOSE) created 14ms apart. React.StrictMode in index.js runs the dialog's useEffect twice in dev, which fires 2 concurrent POSTs every time the dialog opens. After that, find_one returns an arbitrary duplicate, so 'same share_id' is not guaranteed. Fix: create a unique index on badge_shares(user_id, badge_id) and use find_one_and_update with upsert=True / $setOnInsert for id and created_at. Also guard the frontend effect, e.g. with a ref or AbortController."},
+      {"endpoint": "POST /api/share/badge", "issue": "Every call uploads a new object (random hex suffix), so old card images are left orphaned in storage. Also, the PNG check relies only on the client-supplied content_type, not magic bytes (b'\\x89PNG')."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "ShareBadgeDialog (desktop 1920)", "issues": ["Content overflows the right padding by about 14px. Dialog x=672, w=576 (content should end at 1224), but share-copy-btn and share-x-btn end at about 1238. Likely cause: the shadcn DialogContent grid track is sized by the image's intrinsic width. Add min-w-0 to the children or grid-cols-1 / w-full to the DialogContent."]},
+      {"screen": "PublicBadge", "issues": ["The page uses the viewer's UI language instead of the share's lang. A RU viewer of an EN share sees mixed text: 'Demo User получил(а) достижение «Practitioner»'. Consider defaulting to d.lang when the visitor has no saved language."]},
+      {"screen": "badgeCard.js", "issues": ["userName is drawn without a max width or ellipsis, so very long names could run past the card edge."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter10_badge_share.py", "/app/test_reports/pytest/pytest_iter10.xml"],
+  "action_items": [
+    "Make share creation atomic: unique index on badge_shares(user_id, badge_id) plus upsert. Dedupe the existing duplicate demo first_step records.",
+    "Prevent the double POST from the StrictMode double effect in ShareBadgeDialog.",
+    "Fix the dialog content overflowing the right padding (min-w-0 / grid-cols-1).",
+    "Optional: delete the old storage object on re-share, check PNG magic bytes, truncate long userName on the card, and use the share lang on the public page."
+  ],
+  "critical_code_review_comments": [
+    "share.py: check-then-insert race, no index (see above).",
+    "share.py: `location.replace({target!r})` uses a Python repr inside JS. It is safe for current URLs, but json.dumps would be more robust."
+  ],
+  "updated_files": ["/app/backend/tests/test_iter10_badge_share.py"],
+  "success_rate": {"backend": "100% (13/13), plus 1 race-condition defect found via DB inspection", "frontend": "100% of the requested flows work; 1 minor layout overflow"},
+  "seed_data_creation": "Created/updated demo badge shares: first_step (OyCiQ4KNOSE and the pre-existing xWlogxIMbjU; this duplicate pair is the race-condition evidence) and practitioner EN (1H6wwrULhmY).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Login demo@negotia.app / Demo1234!. Demo has first_step and practitioner earned; master is unearned (used for the 403 test). Run pytest with REACT_APP_BACKEND_URL exported. After the race fix, verify that the badge_shares count per (user_id, badge_id) is 1 after opening the dialog in the UI.",
+  "rca of the issue": "Duplicate shares: create_badge_share does find_one then insert_one without atomicity or a unique constraint. Two concurrent requests (React StrictMode double-invoked useEffect, or parallel pytest workers) both see no existing record and both insert. Repro: open the share dialog for a new badge in dev, or send 2 concurrent POSTs, then run db.badge_shares.find({user_id, badge_id}) and see 2 docs. Mitigation: unique compound index plus upsert."
+}

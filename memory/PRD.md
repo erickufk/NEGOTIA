@@ -149,3 +149,8 @@ Demo: demo@negotia.app / Demo1234!
 - Avatar: POST/GET/DELETE /api/users/me/avatar (PNG/JPG/WEBP ≤1MB, Emergent object storage, users.avatar). /auth/me trimmed to id/email/name/created_at/has_avatar.
 ## Backlog
 - P2: Refactor NegotiationRoom.jsx; avatar in header; voice history; glossary tooltips; httpOnly cookies.
+
+## 2026-10 — Badge sharing
+- Earned badges in Profile grid have a share button → ShareBadgeDialog renders 1200x630 PNG card client-side (lib/badgeCard.js), uploads via POST /api/share/badge (atomic upsert, unique index user_id+badge_id, PNG magic check, ≤2MB).
+- Share link = {FRONTEND_URL}/api/share/b/{id} (OG/Twitter meta HTML + redirect) → public SPA page /badge/{id} (in share's language) with CTA to /auth. Public JSON /api/public/badge/{id}, image /api/public/badge/{id}/image.png.
+- Buttons: Download PNG, native share (if supported) / copy link, Telegram, VK, LinkedIn, X.

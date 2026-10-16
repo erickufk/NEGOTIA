@@ -4,13 +4,16 @@ import axios from "axios";
 import { ArrowRight } from "lucide-react";
 import { API } from "../lib/api";
 import { useI18n } from "../i18n/I18nProvider";
+import { dict } from "../i18n/translations";
 
 export default function PublicBadge() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { t } = useI18n();
+  const { t: uiT } = useI18n();
   const [d, setD] = useState(null);
   const [err, setErr] = useState(false);
+
+  const t = (d && dict[d.lang]) || uiT;
 
   useEffect(() => { axios.get(`${API}/public/badge/${id}`).then(r => setD(r.data)).catch(() => setErr(true)); }, [id]);
 

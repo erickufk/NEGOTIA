@@ -56,6 +56,11 @@ async def startup():
         })
     logger.info("NEGOTIA startup complete: scenarios seeded")
     try:
+        await db.badge_shares.create_index([("user_id", 1), ("badge_id", 1)], unique=True)
+        await db.badge_shares.create_index("id", unique=True)
+    except Exception:
+        logger.exception("badge_shares index failed")
+    try:
         storage.init_storage()
     except Exception:
         logger.exception("Storage init failed")

@@ -54,7 +54,9 @@ export async function renderBadgeCard({ icon, badgeName, badgeDesc, userName, le
   // footer: user + level pill + brand
   const fy = 470;
   ctx.fillStyle = "#1E293B"; ctx.font = "700 28px 'Plus Jakarta Sans', 'Inter', sans-serif";
-  ctx.fillText(userName, x, fy);
+  let un = userName;
+  while (un.length > 1 && ctx.measureText(un).width > 560) un = un.slice(0, -1);
+  ctx.fillText(un === userName ? un : `${un.trimEnd()}…`, x, fy);
   ctx.font = "600 20px 'Plus Jakarta Sans', 'Inter', sans-serif";
   const pw = ctx.measureText(levelLabel).width + 32;
   ctx.fillStyle = "#4F46E5"; roundRect(ctx, x, fy + 18, pw, 38, 19); ctx.fill();

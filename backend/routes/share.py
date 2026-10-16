@@ -7,6 +7,8 @@ import secrets
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fastapi.responses import Response, HTMLResponse
 
+from pymongo import ReturnDocument
+
 import storage
 import gamification
 from core import db, logger, now_iso, get_current_user
@@ -39,27 +41,29 @@ async def create_badge_share(badge_id: str = Form(...), badge_name: str = Form(.
     data = await image.read(IMG_MAX + 1)
     if not data or len(data) > IMG_MAX:
         raise HTTPException(413, "Card image too large")
-    existing = await db.badge_shares.find_one({"user_id": user["id"], "badge_id": badge_id}, {"_id": 0})
-    share_id = existing["id"] if existing else secrets.token_urlsafe(8)
-    path = f"{storage.APP_NAME}/badge-cards/{user['id']}/{share_id}-{secrets.token_hex(4)}.png"
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise HTTPException(400, "Card must be PNG")
+    lang = "en" if lang == "en" else "ru"
+    doc = await db.badge_shares.find_one_and_update(
+        {"user_id": user["id"], "badge_id": badge_id},
+        {"$setOnInsert": {"id": secrets.token_urlsafe(8), "created_at": now_iso()}},
+        upsert=True, return_document=ReturnDocument.AFTER, projection={"_id": 0})
+    share_id = doc["id"]
+    path = f"{storage.APP_NAME}/badge-cards/{user['id']}/{share_id}.png"
     try:
         result = await asyncio.to_thread(storage.put_object, path, data, "image/png")
     except Exception:
         logger.exception("badge card upload failed")
         raise HTTPException(502, "Upload failed, please try again")
-    lang = "en" if lang == "en" else "ru"
-    fields = {"image_path": result["path"], "badge_name": badge_name, "lang": lang,
-              "name": user.get("name", ""), "level_xp": state.get("xp", 0), "updated_at": now_iso()}
-    if existing:
-        await db.badge_shares.update_one({"id": share_id}, {"$set": fields})
-    else:
-        await db.badge_shares.insert_one({"id": share_id, "user_id": user["id"], "badge_id": badge_id, "created_at": now_iso(), **fields})
+    await db.badge_shares.update_one({"id": share_id}, {"$set": {
+        "image_path": result["path"], "badge_name": badge_name, "lang": lang, "name": user.get("name", ""),
+        "level_xp": state.get("xp", 0), "updated_at": now_iso()}})
     return {"share_id": share_id, "url": f"{_frontend()}/api/share/b/{share_id}"}
 
 
 async def _get_share(share_id: str) -> dict:
     doc = await db.badge_shares.find_one({"id": share_id}, {"_id": 0})
-    if not doc:
+    if not doc or not doc.get("badge_name"):
         raise HTTPException(404, "Not found")
     return doc
 
@@ -75,12 +79,14 @@ async def public_badge(share_id: str):
 @api.get("/public/badge/{share_id}/image.png")
 async def public_badge_image(share_id: str):
     d = await _get_share(share_id)
+    if not d.get("image_path"):
+        raise HTTPException(404, "Image not found")
     try:
         data, _ = await asyncio.to_thread(storage.get_object, d["image_path"])
     except Exception:
         logger.exception("badge card fetch failed")
         raise HTTPException(404, "Image not found")
-    return Response(content=data, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
+    return Response(content=data, media_type="image/png", headers={"Cache-Control": "public, max-age=600"})
 
 
 @api.get("/share/b/{share_id}", response_class=HTMLResponse)
