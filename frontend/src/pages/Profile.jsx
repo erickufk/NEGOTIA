@@ -5,9 +5,11 @@ import { useI18n } from "../i18n/I18nProvider";
 import { useAuth } from "../auth/AuthProvider";
 import { api } from "../lib/api";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from "recharts";
-import { Play, ShieldCheck, AlertTriangle, User as UserIcon, Sparkles, Radar as RadarIcon, ArrowRight, Cpu } from "lucide-react";
+import { Play, ShieldCheck, AlertTriangle, Sparkles, Radar as RadarIcon, ArrowRight, Cpu } from "lucide-react";
 
 import { LevelBar, BadgesGrid } from "../components/profile/Gamification";
+import { WeeklyChallengeCard } from "../components/profile/WeeklyChallenge";
+import { AvatarUploader } from "../components/profile/AvatarUploader";
 
 const skillColor = v => v >= 70 ? "bg-emerald-500" : v >= 50 ? "bg-[#4F46E5]" : "bg-amber-500";
 
@@ -42,9 +44,7 @@ export default function Profile() {
     <AppShell>
       {/* Header */}
       <section className="mb-8 flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl neo-raised-sm bg-gradient-to-br from-[#4F46E5]/10 to-[#7C3AED]/10 text-[#4F46E5] flex items-center justify-center font-bold text-2xl">
-          {user?.name?.[0]?.toUpperCase() || <UserIcon className="w-6 h-6" />}
-        </div>
+        <AvatarUploader name={user?.name} t={t} />
         <div>
           <div className="text-xs uppercase tracking-wider text-slate-500 font-mono">{t.profile.title.toUpperCase()}</div>
           <h1 className="text-2xl md:text-3xl font-display font-bold" data-testid="profile-name">{user?.name}</h1>
@@ -53,6 +53,7 @@ export default function Profile() {
       </section>
 
       <LevelBar game={game} t={t} />
+      <WeeklyChallengeCard t={t} lang={lang} className="mb-6" />
 
       {/* KPI */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

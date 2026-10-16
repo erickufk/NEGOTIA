@@ -71,9 +71,12 @@ def apply_sim(state: Dict[str, Any], neg: dict, scenario: Optional[dict]) -> Dic
     return {"xp_gained": xp, "new_badges": new_badges}
 
 
-async def _replay_history(db, user_id: str) -> Dict[str, Any]:
+async def _replay_history(db, user_id: str, exclude_id: Optional[str] = None) -> Dict[str, Any]:
     state = empty_state()
-    negs = await db.negotiations.find({"user_id": user_id, "status": "completed"}, {"_id": 0}).to_list(2000)
+    q = {"user_id": user_id, "status": "completed"}
+    if exclude_id:
+        q["id"] = {"$ne": exclude_id}
+    negs = await db.negotiations.find(q, {"_id": 0}).to_list(2000)
     negs.sort(key=lambda n: n.get("ended_at") or n.get("created_at") or "")
     cache: Dict[str, Optional[dict]] = {}
     for n in negs:
@@ -95,13 +98,21 @@ async def get_state(db, user_id: str) -> Dict[str, Any]:
 
 async def award(db, user_id: str, neg: dict, scenario: Optional[dict]) -> Dict[str, Any]:
     user = await db.users.find_one({"id": user_id}, {"_id": 0, "gamification": 1})
-    if (user or {}).get("gamification") is None:
-        # first time: replay full history (already includes this completed sim)
-        state = await _replay_history(db, user_id)
-        await db.users.update_one({"id": user_id}, {"$set": {"gamification": state}})
-        return {"xp_gained": 0, "new_badges": state["badges"]}
-    state = user["gamification"]
+    state = (user or {}).get("gamification")
+    if state is None:
+        state = await _replay_history(db, user_id, exclude_id=neg["id"])
     result = apply_sim(state, neg, scenario)
+    wk = await weekly_progress(db, user_id)
+    result["challenge"] = None
+    if wk["completed"] and wk["week"] not in state.setdefault("challenges_done", []):
+        state["challenges_done"].append(wk["week"])
+        state["xp"] += CHALLENGE_XP
+        result["xp_gained"] += CHALLENGE_XP
+        result["challenge"] = wk
+        if state["xp"] >= LEVEL8_XP and "master" not in state["badges"]:
+            state["badges"].append("master")
+            result["new_badges"].append("master")
+    result["xp_total"] = state["xp"]
     await db.users.update_one({"id": user_id}, {"$set": {"gamification": state}})
     return result
 
@@ -112,3 +123,36 @@ def public_view(state: Dict[str, Any]) -> Dict[str, Any]:
     active = last is not None and (today - last).days <= 1
     return {"xp": state["xp"], "streak": state["streak"] if active else 0, "badges": state["badges"],
             "total": state["total"], "wins": state["wins"]}
+
+
+CHALLENGE_XP = 100
+# id, target, predicate(neg) -> counts toward progress; "days" counts distinct days
+CHALLENGES = [
+    ("win_spin", 2, lambda n: n.get("training_framework") == "spin" and n.get("outcome") in WIN_OUTCOMES),
+    ("complete_n", 3, lambda n: True),
+    ("score_80", 1, lambda n: (n.get("score") or 0) >= 80),
+    ("win_harvard", 1, lambda n: n.get("training_framework") == "harvard" and n.get("outcome") in WIN_OUTCOMES),
+    ("batna_n", 2, lambda n: n.get("training_framework") == "batna"),
+    ("days_n", 3, None),
+]
+
+
+def _week_bounds(now: Optional[datetime] = None):
+    now = now or datetime.now(timezone.utc)
+    start = (now - timedelta(days=now.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)
+    iso = start.isocalendar()
+    return start, start + timedelta(days=7), f"{iso[0]}-W{iso[1]:02d}", iso[1]
+
+
+async def weekly_progress(db, user_id: str) -> Dict[str, Any]:
+    start, end, key, num = _week_bounds()
+    cid, target, pred = CHALLENGES[num % len(CHALLENGES)]
+    negs = await db.negotiations.find(
+        {"user_id": user_id, "status": "completed", "ended_at": {"$gte": start.isoformat(), "$lt": end.isoformat()}},
+        {"_id": 0, "training_framework": 1, "outcome": 1, "score": 1, "ended_at": 1}).to_list(500)
+    if pred is None:
+        progress = len({n["ended_at"][:10] for n in negs})
+    else:
+        progress = sum(1 for n in negs if pred(n))
+    return {"id": cid, "week": key, "target": target, "progress": min(progress, target),
+            "completed": progress >= target, "bonus_xp": CHALLENGE_XP, "ends_at": end.isoformat()}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { RewardDialog } from "../components/profile/RewardDialog";
 import AppShell from "../components/AppShell";
 import { useI18n } from "../i18n/I18nProvider";
 import { api } from "../lib/api";
@@ -20,6 +21,9 @@ export default function Debrief() {
   const { t } = useI18n();
   const L = t.labels;
   const [neg, setNeg] = useState(null);
+  const location = useLocation();
+  const [pendingReward] = useState(() => location.state?.reward || null);
+  useEffect(() => { if (location.state?.reward) window.history.replaceState({}, ""); }, [location.state]);
 
   useEffect(() => { api.getNeg(id).then(setNeg); }, [id]);
   if (!neg) return <AppShell><div className="text-slate-500 py-20 text-center">{t.common.loading}</div></AppShell>;
@@ -31,6 +35,7 @@ export default function Debrief() {
 
   return (
     <AppShell>
+      <RewardDialog reward={pendingReward} t={t} />
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Hero */}
         <section className="neo-raised p-8 md:p-10 relative overflow-hidden">

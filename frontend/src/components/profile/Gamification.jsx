@@ -3,8 +3,8 @@ import { Award } from "lucide-react";
 const THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2200, 3000];
 const BADGES = [
   ["first_step", "🎯"], ["first_win", "🏆"], ["on_a_roll", "🔥"], ["sharp_mind", "⚡"], ["tough_crowd", "🥊"],
-  ["methodologist", "🎓"], ["practitioner", "📚"], ["veteran", "🌟"], ["versatile", "🎭"], ["master", "💎"],
 ];
+export const BADGE_ICONS = Object.fromEntries(BADGES);
 
 export const levelFromXp = (xp) => {
   const idx = THRESHOLDS.filter(th => xp >= th).length - 1;

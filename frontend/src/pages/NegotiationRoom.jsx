@@ -187,8 +187,8 @@ export default function NegotiationRoom() {
   const finish = async (action) => {
     setSending(true);
     try {
-      const finalNeg = await api.endNeg(id, action);
-      nav(`/debrief/${finalNeg.id}`);
+      const res = await api.endNeg(id, action);
+      nav(`/debrief/${res.negotiation.id}`, { state: { reward: res.gamification } });
     } finally { setSending(false); }
   };
 

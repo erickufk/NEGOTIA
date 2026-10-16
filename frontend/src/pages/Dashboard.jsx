@@ -6,6 +6,7 @@ import { useAuth } from "../auth/AuthProvider";
 import { api } from "../lib/api";
 import { Plus, TrendingUp, Sparkles, Trophy, Flame, ArrowRight, Target, Activity, Radar as RadarIcon } from "lucide-react";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from "recharts";
+import { WeeklyChallengeCard } from "../components/profile/WeeklyChallenge";
 
 export default function Dashboard() {
   const { t, lang } = useI18n();
@@ -99,6 +100,8 @@ export default function Dashboard() {
           </div>
         ))}
       </section>
+
+      <WeeklyChallengeCard t={t} lang={lang} className="mb-8" />
 
       {/* Two-col main */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
