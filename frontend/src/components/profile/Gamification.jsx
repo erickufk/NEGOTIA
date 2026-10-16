@@ -3,6 +3,7 @@ import { Award } from "lucide-react";
 const THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2200, 3000];
 const BADGES = [
   ["first_step", "🎯"], ["first_win", "🏆"], ["on_a_roll", "🔥"], ["sharp_mind", "⚡"], ["tough_crowd", "🥊"],
+  ["methodologist", "🎓"], ["practitioner", "📚"], ["veteran", "🌟"], ["versatile", "🎭"], ["master", "💎"],
 ];
 export const BADGE_ICONS = Object.fromEntries(BADGES);
 
@@ -12,7 +13,8 @@ export const levelFromXp = (xp) => {
 };
 
 export const LevelBar = ({ game, t }) => {
-  const xp = game?.xp ?? 0;
+  if (!game) return <section className="neo-raised h-[76px] mb-6 animate-pulse" data-testid="gamification-bar-loading" />;
+  const xp = game.xp ?? 0;
   const { level, next } = levelFromXp(xp);
   const base = THRESHOLDS[level - 1];
   const pct = next ? Math.round(((xp - base) / (next - base)) * 100) : 100;

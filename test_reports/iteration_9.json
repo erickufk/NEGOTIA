@@ -1,0 +1,45 @@
+{
+  "summary": "Iteration 9: tested the backend refactor for regressions, plus the new XP rewards on /end, the weekly challenge, avatar upload, and the Debrief reward pop-up. BACKEND: the existing regression suite passed 38/38 after the split (auth, scenarios, custom scenarios, negotiations, message and message-stream, end, delete, coach/hint, frameworks, prep, stats, recommended, framework-stats, gamification, voice tts/transcribe, health). Comparing route decorators shows all 27 old endpoints still exist and only the 4 new ones were added. The new file test_iter9_gamification_avatar.py passed 16/16, run on fresh TEST users: first sim +60 XP with first_step, second sim the same day +50, calling /end twice gives no second award, weekly-challenge shape and ISO week are correct (2026-W42 win_spin), the challenge is the same for every user, completing it gives +150 (50 + 100) with challenge != null and claimed=true, and the next sim gets no bonus. Avatar: PNG, JPEG and WEBP upload and come back byte-for-byte, GIF and text are rejected with 400, files over 1MB with 413, no token gives 401, delete then GET gives 404. Auth forgot, magic-login, reset and me also pass. FRONTEND (1920x1080, RU and EN): avatar upload shows the image and survives a reload; removing it brings back the initial letter; files over 1MB and wrong types are rejected in the browser with toasts. The weekly challenge card shows on Profile and Dashboard in RU and EN. The reward dialog appeared after make_deal and walk_away with +60 XP and the first_step badge, +50 XP with the level-up line, and +150 XP with the challenge line. The close button and Esc both close it. Reloading the debrief, opening /history/:id, or going back does not show it again. One frontend regression was found and fixed: 5 of the 10 badges were missing from the Achievements grid and reward dialog.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/auth/me", "issue": "Returns the whole user document from get_current_user, including the internal 'gamification' state (challenges_done, frameworks_tried…) and 'avatar.path', which is the storage key. Return only the needed fields (id, email, name, created_at, has_avatar)."},
+      {"endpoint": "POST /api/negotiations/{id}/end", "issue": "Two /end calls at the same moment can both see status=='active' and award XP twice. The update_one is not conditional. Use find_one_and_update({id, status:'active'}) and award only if it matched."},
+      {"endpoint": "DELETE /api/users/me/avatar", "issue": "Only unsets the DB field. The object stays in storage and each upload creates a new UUID path, so files pile up. Acceptable for an MVP."},
+      {"endpoint": "engine._neg_out", "issue": "Uses doc['scenario_title'] etc. directly, so any document missing these keys makes GET /api/negotiations return 500. Only seen with seeded test data, but .get() would be safer."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Gamification.jsx BADGES", "issue": "REGRESSION (FIXED by testing agent): the latest checkpoint deleted the line with methodologist, practitioner, veteran, versatile and master, so the grid showed 5/10 badges. Those 5 are still awarded by the backend, so the RewardDialog would have shown them with no icon. Line restored; the grid now shows 10 badges.", "selector": "[data-testid^=badge-]", "priority": "HIGH (fixed)"}
+    ],
+    "integration_issues": [
+      {"flow": "Profile load", "issue": "Right after load, xp-text shows '0 / 100 XP · Level 1' and 0 earned badges, then updates to the real values about 1s later. The gamification state defaults to xp 0 instead of showing a skeleton.", "affected_selectors": ["xp-text", "level-badge"]},
+      {"flow": "WeeklyChallengeCard", "issue": "Shows 'Выполнено ✓' when completed=true even if claimed=false. Not reachable in the normal flow (the bonus is claimed during /end), but it would mislead if progress is ever reached without an award.", "affected_selectors": ["weekly-challenge-bonus"]}
+    ],
+    "design_issues": [
+      {"screen": "Reward dialog", "issues": ["With one new badge, the grid-cols-2 layout leaves the card left-aligned with an empty right column. Center it when there is only one badge."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_iter9_gamification_avatar.py", "/app/test_reports/pytest/iter9_new.xml", "/app/test_reports/pytest/iter9_regression.xml"],
+  "action_items": [
+    "Check that the restored BADGES line in Gamification.jsx stays (10 badges); avoid accidental deletions",
+    "Make /end atomic (conditional update on status=='active') so XP cannot be awarded twice",
+    "Trim /auth/me output (no gamification internals, no avatar storage path)",
+    "Optional: loading skeleton for the Profile gamification bar; WeeklyChallenge should use 'claimed'; center a single badge in the reward dialog"
+  ],
+  "critical_code_review_comments": [
+    "Refactor kept every route path (diff of decorators: 27 old routes unchanged, plus 4 new). server.py still holds a separate router just for /health, which is fine.",
+    "Debrief clears the reward with window.history.replaceState({}, ''), which wipes React Router's history.state (key/idx). Back navigation still worked in testing, but navigate(location.pathname, {replace:true, state:{}}) is the router-safe way.",
+    "RewardDialog useState(Boolean(reward)) is set only once; fine because Debrief keeps pendingReward in its own state.",
+    "storage._request runs blocking requests in asyncio.to_thread, which is OK; init_storage at startup is synchronous and blocks the event loop for up to 30s if storage is slow."
+  ],
+  "updated_files": ["/app/frontend/src/components/profile/Gamification.jsx", "/app/backend/tests/test_iter9_gamification_avatar.py"],
+  "success_rate": {"backend": "100% (38/38 regression + 16/16 new)", "frontend": "95% (all flows pass; 1 badge regression found and fixed, minor UX notes)"},
+  "test_credentials": "demo@negotia.app / Demo1234! (used for the weekly same-for-everyone check). Fresh TEST users were registered for deterministic XP tests.",
+  "seed_data_creation": "Created test_iter9_* and test_ui9* users and their negotiations (including directly inserted SPIN wins to complete the challenge). All were deleted afterwards. No demo-account negotiations were created.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run pytest with -n 0 for test_iter9_gamification_avatar.py, because tests inside a class depend on order. An empty chat sim ended with 'end' or 'make_deal' always scores 48 ('Weak outcome'), and with walk_away scores 33, so the XP math is deterministic: 60 for the first sim of the day, 50 after that. The challenge rotates as CHALLENGES[isoweek % 6]. The challenge test seeds win_spin data and skips in other weeks.",
+  "rca of the issue": "Badge regression: in commit 8a71390 the edit that added 'export const BADGE_ICONS' replaced the second BADGES line instead of adding a new one, which dropped 5 badges. Repro: Profile → achievements-section showed 5 badge-* tiles. Fix: line restored."
+}

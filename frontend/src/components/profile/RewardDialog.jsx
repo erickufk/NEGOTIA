@@ -27,7 +27,7 @@ export const RewardDialog = ({ reward, t }) => {
         {badges.length > 0 && (
           <div>
             <div className="text-xs uppercase tracking-wider text-slate-500 font-mono mb-2">{t.game.newBadges}</div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className={`grid gap-2 ${badges.length === 1 ? "grid-cols-1 max-w-[50%] mx-auto" : "grid-cols-2"}`}>
               {badges.map((b, i) => (
                 <div key={b} className="neo-raised-sm rounded-xl p-3 reward-pop" style={{ animationDelay: `${150 + i * 120}ms` }} data-testid={`reward-badge-${b}`}>
                   <div className="text-3xl">{BADGE_ICONS[b]}</div>

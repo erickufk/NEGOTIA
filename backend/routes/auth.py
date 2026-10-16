@@ -41,7 +41,8 @@ async def login(body: LoginIn):
 
 @api.get("/auth/me")
 async def me(user=Depends(get_current_user)):
-    return {"user": user}
+    return {"user": {"id": user["id"], "email": user["email"], "name": user["name"],
+                     "created_at": user.get("created_at"), "has_avatar": bool(user.get("avatar"))}}
 
 
 # ---------- Password reset / Magic Link ----------

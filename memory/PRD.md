@@ -141,3 +141,11 @@ Demo: demo@negotia.app / Demo1234!
 - Frontend `components/profile/Gamification.jsx`: LevelBar (8 levels computed on frontend) after header, BadgesGrid "Достижения" at bottom. RU/EN in `translations.js` (`game`).
 - Aggressive opponent = participant personality contains aggressive/hardball/tough/impatient/hostile.
 - Deleting a session does not remove earned XP/badges.
+
+## 2026-10 — Backend split, weekly challenge, reward pop-up, avatar
+- server.py split into core.py, models.py, scenario_utils.py, engine.py, storage.py, gamification.py, routes/{auth,scenarios,negotiations,profile,voice}.py (original kept at /app/memory/server_monolith_backup.py). All 27 endpoints verified.
+- Weekly challenge: 1 per ISO week, rotates through 6 (gamification.CHALLENGES), +100 XP once per week; GET /api/users/me/weekly-challenge; card on Profile + Dashboard.
+- /end returns gamification {xp_gained,new_badges,challenge,xp_total}; atomic (no double award). Debrief shows RewardDialog only right after ending.
+- Avatar: POST/GET/DELETE /api/users/me/avatar (PNG/JPG/WEBP ≤1MB, Emergent object storage, users.avatar). /auth/me trimmed to id/email/name/created_at/has_avatar.
+## Backlog
+- P2: Refactor NegotiationRoom.jsx; avatar in header; voice history; glossary tooltips; httpOnly cookies.

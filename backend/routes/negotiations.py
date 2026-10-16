@@ -190,11 +190,14 @@ async def end_negotiation(neg_id: str, body: EndNegotiationIn, user=Depends(get_
     doc.update(result)
     doc["status"] = "completed"
     doc["ended_at"] = now_iso()
-    await db.negotiations.update_one({"id": neg_id}, {"$set": {
+    res = await db.negotiations.update_one({"id": neg_id, "status": "active"}, {"$set": {
         "status": "completed", "outcome": doc["outcome"], "score": doc["score"],
         "skill_scores": doc["skill_scores"], "feedback": doc["feedback"], "ended_at": doc["ended_at"],
         "framework_scores": doc.get("framework_scores"),
     }})
+    if res.modified_count == 0:
+        fresh = await db.negotiations.find_one({"id": neg_id}, {"_id": 0})
+        return {"negotiation": _neg_out(fresh), "gamification": None}
     # update user skill aggregate
     await _update_user_skills(user["id"], doc["skill_scores"])
     game = await gamification.award(db, user["id"], doc, scenario)

@@ -26,7 +26,7 @@ export const WeeklyChallengeCard = ({ t, lang, className = "" }) => {
           <div className="flex justify-between text-[11px] font-mono text-slate-500 mb-1">
             <span data-testid="weekly-challenge-progress">{wk.progress} / {wk.target}</span>
             <span className={wk.completed ? "text-emerald-600 font-bold" : "text-[#4F46E5] font-bold"} data-testid="weekly-challenge-bonus">
-              {wk.completed ? t.game.challengeDone : `+${wk.bonus_xp} XP`}
+              {wk.completed && wk.claimed ? t.game.challengeDone : `+${wk.bonus_xp} XP`}
             </span>
           </div>
           <div className="h-2 rounded-full neo-inset overflow-hidden p-0.5">
