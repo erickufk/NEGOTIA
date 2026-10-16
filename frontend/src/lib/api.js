@@ -19,6 +19,7 @@ export const api = {
   uploadAvatar: (file) => { const fd = new FormData(); fd.append("file", file); return axios.post(`${API}/users/me/avatar`, fd).then(r => r.data); },
   avatarBlob: () => axios.get(`${API}/users/me/avatar`, { responseType: "blob" }).then(r => r.data),
   deleteAvatar: () => axios.delete(`${API}/users/me/avatar`).then(r => r.data),
+  shareBadge: (fd) => axios.post(`${API}/share/badge`, fd).then(r => r.data),
   stats: () => axios.get(`${API}/users/me/stats`).then(r => r.data),
   recommended: (lang = "en") => axios.get(`${API}/users/me/recommended`, { params: { lang } }).then(r => r.data),
   gamification: () => axios.get(`${API}/users/me/gamification`).then(r => r.data),

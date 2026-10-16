@@ -1,4 +1,4 @@
-import { Award } from "lucide-react";
+import { Award, Share2 } from "lucide-react";
 
 const THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2200, 3000];
 const BADGES = [
@@ -38,7 +38,7 @@ export const LevelBar = ({ game, t }) => {
   );
 };
 
-export const BadgesGrid = ({ game, t }) => {
+export const BadgesGrid = ({ game, t, onShare }) => {
   const earned = new Set(game?.badges || []);
   return (
     <section className="neo-raised p-6 mt-6" data-testid="achievements-section">
@@ -51,7 +51,13 @@ export const BadgesGrid = ({ game, t }) => {
           const on = earned.has(id);
           return (
             <div key={id} data-testid={`badge-${id}`} data-earned={on}
-              className={`p-4 rounded-xl transition-transform duration-200 hover:-translate-y-0.5 ${on ? "neo-raised-sm ring-1 ring-[#4F46E5]/30" : "neo-inset"}`}>
+              className={`relative p-4 rounded-xl transition-transform duration-200 hover:-translate-y-0.5 ${on ? "neo-raised-sm ring-1 ring-[#4F46E5]/30" : "neo-inset"}`}>
+              {on && onShare && (
+                <button onClick={() => onShare(id)} title={t.share.button} data-testid={`badge-share-${id}`}
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full neo-raised-sm text-[#4F46E5] flex items-center justify-center hover:scale-110 transition-transform duration-200">
+                  <Share2 className="w-3.5 h-3.5" />
+                </button>
+              )}
               <div className={`text-3xl mb-2 ${on ? "" : "grayscale opacity-40"}`}>{icon}</div>
               <div className={`text-sm font-semibold ${on ? "text-[#1E293B]" : "text-slate-400"}`}>{t.game.badges[id].n}</div>
               <div className="text-[11px] text-slate-500 mt-1 leading-snug">{t.game.badges[id].d}</div>

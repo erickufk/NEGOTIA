@@ -16,6 +16,7 @@ import Debrief from "./pages/Debrief";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
 import ResetPassword from "./pages/ResetPassword";
+import PublicBadge from "./pages/PublicBadge";
 
 function Protected({ children }) {
   const { token } = useAuth();
@@ -34,6 +35,7 @@ function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/badge/:id" element={<PublicBadge />} />
               <Route path="/dashboard" element={<Protected><Dashboard /></Protected>} />
               <Route path="/scenarios" element={<Protected><Scenarios /></Protected>} />
               <Route path="/scenarios/new" element={<Protected><CustomScenarioBuilder /></Protected>} />

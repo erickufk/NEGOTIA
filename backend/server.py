@@ -10,7 +10,7 @@ from scenarios_seed import SCENARIOS
 from core import (db, logger, now_iso,
                   hash_password)
 
-from routes import auth, scenarios, negotiations, profile, voice
+from routes import auth, scenarios, negotiations, profile, voice, share
 from core import client
 import storage
 
@@ -77,7 +77,7 @@ async def health():
 
 
 app.include_router(api)
-for r in (auth, scenarios, negotiations, profile, voice):
+for r in (auth, scenarios, negotiations, profile, voice, share):
     app.include_router(r.api)
 app.add_middleware(
     CORSMiddleware,

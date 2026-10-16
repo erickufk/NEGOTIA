@@ -10,6 +10,7 @@ import { Play, ShieldCheck, AlertTriangle, Sparkles, Radar as RadarIcon, ArrowRi
 import { LevelBar, BadgesGrid } from "../components/profile/Gamification";
 import { WeeklyChallengeCard } from "../components/profile/WeeklyChallenge";
 import { AvatarUploader } from "../components/profile/AvatarUploader";
+import { ShareBadgeDialog } from "../components/profile/ShareBadgeDialog";
 
 const skillColor = v => v >= 70 ? "bg-emerald-500" : v >= 50 ? "bg-[#4F46E5]" : "bg-amber-500";
 
@@ -22,6 +23,7 @@ export default function Profile() {
   const [rec, setRec] = useState(null);
   const [fwStats, setFwStats] = useState(null);
   const [game, setGame] = useState(null);
+  const [shareId, setShareId] = useState(null);
   const [aiModel, setAiModel] = useState(() => localStorage.getItem("negotia_ai_model") || "claude");
 
   const changeAiModel = (m) => { setAiModel(m); localStorage.setItem("negotia_ai_model", m); };
@@ -186,7 +188,8 @@ export default function Profile() {
         </section>
       )}
 
-      <BadgesGrid game={game} t={t} />
+      <BadgesGrid game={game} t={t} onShare={setShareId} />
+      {shareId && <ShareBadgeDialog badgeId={shareId} game={game} userName={user?.name} t={t} lang={lang} onClose={() => setShareId(null)} />}
     </AppShell>
   );
 }

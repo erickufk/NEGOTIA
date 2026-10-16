@@ -158,6 +158,7 @@ export const en = {
     successRate: "Success rate", best: "Best", sims: "sims",
     emptyProfile: "Complete a simulation to see your profile.",
   },
+  share: { button: "Share", title: "Share your achievement", sub: "Download the card or post it — friends can open it and try NEGOTIA.", unlocked: "Achievement unlocked", tagline: "AI negotiation simulator", download: "Download PNG", native: "Share…", copy: "Copy link", copied: "Link copied", failed: "Could not create share link", text: "I unlocked “{badge}” on NEGOTIA — train your negotiation skills with AI!", notFound: "This achievement link is no longer available.", publicTitle: "{name} unlocked “{badge}”", publicSub: "Practise real negotiations with AI opponents, get scored and level up.", cta: "Try NEGOTIA free" },
   avatar: { change: "Change photo", remove: "Remove photo", badType: "Use a PNG, JPG or WEBP image", tooBig: "Image must be smaller than 1 MB", updated: "Photo updated", removed: "Photo removed", failed: "Upload failed, try again" },
   game: {
     level: "Level", days: "days", maxLevel: "Max level", streak: "Streak",
@@ -363,6 +364,7 @@ export const ru = {
     successRate: "Успешность", best: "Лучший", sims: "сессий",
     emptyProfile: "Завершите симуляцию, чтобы увидеть профиль.",
   },
+  share: { button: "Поделиться", title: "Поделитесь достижением", sub: "Скачайте карточку или опубликуйте её — друзья смогут открыть ссылку и попробовать NEGOTIA.", unlocked: "Достижение получено", tagline: "AI-симулятор переговоров", download: "Скачать PNG", native: "Поделиться…", copy: "Копировать ссылку", copied: "Ссылка скопирована", failed: "Не удалось создать ссылку", text: "Я получил(а) достижение «{badge}» в NEGOTIA — тренируйте переговоры с AI!", notFound: "Эта ссылка на достижение больше недоступна.", publicTitle: "{name} получил(а) достижение «{badge}»", publicSub: "Тренируйте реальные переговоры с AI-оппонентами, получайте оценку и повышайте уровень.", cta: "Попробовать NEGOTIA бесплатно" },
   avatar: { change: "Сменить фото", remove: "Удалить фото", badType: "Загрузите изображение PNG, JPG или WEBP", tooBig: "Размер изображения должен быть меньше 1 МБ", updated: "Фото обновлено", removed: "Фото удалено", failed: "Не удалось загрузить, попробуйте ещё раз" },
   game: {
     level: "Уровень", days: "дней", maxLevel: "Макс. уровень", streak: "Серия",
