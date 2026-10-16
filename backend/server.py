@@ -28,6 +28,7 @@ from emergentintegrations.llm.openai import OpenAISpeechToText, OpenAITextToSpee
 
 from scenarios_seed import SCENARIOS, GENDERS, ROLE_RU, SCENARIO_RU, NAME_RU, SCENARIO_RU_CTX
 from frameworks import FRAMEWORKS, classify_spin
+import gamification
 
 LANG_NAMES = {"ru": "РУССКОМ (Russian)", "en": "English", "es": "Spanish", "de": "German"}
 # OpenAI TTS voices mapped by gender
@@ -783,7 +784,8 @@ async def end_negotiation(neg_id: str, body: EndNegotiationIn, user=Depends(get_
     }})
     # update user skill aggregate
     await _update_user_skills(user["id"], doc["skill_scores"])
-    return {"negotiation": _neg_out(doc)}
+    game = await gamification.award(db, user["id"], doc, scenario)
+    return {"negotiation": _neg_out(doc), "gamification": game}
 
 
 async def _compute_debrief(scenario: dict, doc: dict, action: str) -> Dict[str, Any]:
@@ -974,6 +976,12 @@ async def user_stats(user=Depends(get_current_user)):
         "total": total, "avg_score": avg, "best_score": best,
         "success_rate": success_rate, "streak": streak, "skills": skills,
     }
+
+
+@api.get("/users/me/gamification")
+async def user_gamification(user=Depends(get_current_user)):
+    state = await gamification.get_state(db, user["id"])
+    return gamification.public_view(state)
 
 
 @api.get("/users/me/recommended")

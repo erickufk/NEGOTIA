@@ -7,6 +7,8 @@ import { api } from "../lib/api";
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from "recharts";
 import { Play, ShieldCheck, AlertTriangle, User as UserIcon, Sparkles, Radar as RadarIcon, ArrowRight, Cpu } from "lucide-react";
 
+import { LevelBar, BadgesGrid } from "../components/profile/Gamification";
+
 const skillColor = v => v >= 70 ? "bg-emerald-500" : v >= 50 ? "bg-[#4F46E5]" : "bg-amber-500";
 
 export default function Profile() {
@@ -17,6 +19,7 @@ export default function Profile() {
   const [stats, setStats] = useState(null);
   const [rec, setRec] = useState(null);
   const [fwStats, setFwStats] = useState(null);
+  const [game, setGame] = useState(null);
   const [aiModel, setAiModel] = useState(() => localStorage.getItem("negotia_ai_model") || "claude");
 
   const changeAiModel = (m) => { setAiModel(m); localStorage.setItem("negotia_ai_model", m); };
@@ -25,6 +28,7 @@ export default function Profile() {
     api.stats().then(setStats).catch(() => {});
     api.recommended(lang).then(setRec).catch(() => {});
     api.frameworkStats().then(setFwStats).catch(() => {});
+    api.gamification().then(setGame).catch(() => {});
   }, [lang]);
 
   const skills = stats?.skills || {};
@@ -47,6 +51,8 @@ export default function Profile() {
           <div className="text-sm text-slate-500">{user?.email}</div>
         </div>
       </section>
+
+      <LevelBar game={game} t={t} />
 
       {/* KPI */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -178,6 +184,8 @@ export default function Profile() {
           </div>
         </section>
       )}
+
+      <BadgesGrid game={game} t={t} />
     </AppShell>
   );
 }

@@ -135,3 +135,9 @@ OpenAI Whisper STT + OpenAI TTS via Emergent Universal Key. SSE streaming. Conte
 
 ## Credentials
 Demo: demo@negotia.app / Demo1234!
+
+## 2026-06 — Gamification (Profile)
+- Backend `gamification.py`: XP (50 base, +20 score 80–89, +30 score 90+, +20 win, +10 first sim of day), streak, 10 badges; stored in `users.gamification`; awarded in `POST /negotiations/{id}/end` (response includes `gamification`); `GET /api/users/me/gamification`; lazy backfill from history for existing users.
+- Frontend `components/profile/Gamification.jsx`: LevelBar (8 levels computed on frontend) after header, BadgesGrid "Достижения" at bottom. RU/EN in `translations.js` (`game`).
+- Aggressive opponent = participant personality contains aggressive/hardball/tough/impatient/hostile.
+- Deleting a session does not remove earned XP/badges.
