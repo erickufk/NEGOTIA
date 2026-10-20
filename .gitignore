@@ -89,3 +89,11 @@ credentials.json
 *.key
 .credentials
 NEGOTIA/frontend/node_modules/.cache/default-development/0.pack
+
+# Local docs and env files (not pushed)
+README.md
+**/README.md
+.env
+**/.env
+backend/.env
+frontend/.env
