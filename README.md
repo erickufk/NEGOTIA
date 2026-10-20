@@ -4,8 +4,7 @@
 
 ![NEGOTIA](frontend/public/og-image.png)
 
-**Live demo:** [arena.cvscore.pro](https://arena.cvscore.pro) · **Preview:** [stitch-demo-1.preview.emergentagent.com](https://stitch-demo-1.preview.emergentagent.com)
-
+**Live demo:** [arena.cvscore.pro](https://arena.cvscore.pro) 
 ---
 
 ## 📖 О проекте
@@ -97,7 +96,7 @@
 
 ## 🚀 Как запустить
 
-Проект разработан на платформе **Emergent** и работает в контейнеризованном окружении под supervisor. Ниже — воспроизведение локально.
+Проект разработан работает в контейнеризованном окружении под supervisor. Ниже — воспроизведение локально.
 
 ### Требования
 
@@ -133,8 +132,6 @@ AI_MODEL_NAME=claude-sonnet-5
 FRONTEND_URL=http://localhost:3000
 ```
 
-> **Emergent LLM Key** — универсальный ключ, покрывающий Claude, OpenAI (текст + TTS + Whisper + image) и Gemini. Получите его в личном кабинете Emergent (Profile → Manage plan → Universal Key).
-
 Запуск:
 
 ```bash
@@ -161,7 +158,6 @@ WDS_SOCKET_PORT=443
 yarn start
 ```
 
-Откройте [http://localhost:3000](http://localhost:3000).
 
 ### 4. Demo-аккаунт
 
