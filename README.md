@@ -248,5 +248,3 @@ pytest tests/ -v
 - **shadcn/ui** и **Lucide** — за UI-строительные блоки
 
 ---
-
-*Made with ❤️ using Emergent · Tested via testing_agent · 100% RU-first*
