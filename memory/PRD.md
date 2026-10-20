@@ -154,3 +154,8 @@ Demo: demo@negotia.app / Demo1234!
 - Earned badges in Profile grid have a share button → ShareBadgeDialog renders 1200x630 PNG card client-side (lib/badgeCard.js), uploads via POST /api/share/badge (atomic upsert, unique index user_id+badge_id, PNG magic check, ≤2MB).
 - Share link = {FRONTEND_URL}/api/share/b/{id} (OG/Twitter meta HTML + redirect) → public SPA page /badge/{id} (in share's language) with CTA to /auth. Public JSON /api/public/badge/{id}, image /api/public/badge/{id}/image.png.
 - Buttons: Download PNG, native share (if supported) / copy link, Telegram, VK, LinkedIn, X.
+
+## 2026-10 — Code review (safe fixes only, user choice)
+- Stable list keys (Landing, Wizard, Learn, Debrief, Profile, Dashboard, NegotiationRoom choices), useMemo topSignals/prepKeys, dev-only devLog, documented empty catches. Regression iteration_11 passed.
+- Deliberately NOT changed (false positives): "undefined var" paths that raise, "secrets" = translation labels, `is None`, blanket hook deps.
+- Still backlog (user declined for now): httpOnly cookie auth, split NegotiationRoom/Landing, backend complexity refactor.

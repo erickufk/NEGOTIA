@@ -1,0 +1,22 @@
+{
+  "summary": "Frontend REGRESSION test of the safe small fixes (stable keys, useMemo topSignals/prepKeys, devLog, catch comments). Frontend runs as a dev build (yarn start), so React key warnings would have printed. Across every flow tested, 0 console warnings, 0 console errors and 0 page errors were captured. Landing page works in RU and EN (all sections render, 6 scenario cards). Login works. The Dashboard (4 KPIs), Learn (4 framework sections, 24 list items), Profile KPI row and History page all render. The Wizard's 7 steps pass: step labels, participants, success conditions and the summary rows. Chat mode passes: the AI reply arrives, the Preparation sidebar shows the 4 filled fields, Live signals show 6 items and re-sort by value after a message (Questions/Open questions/Anchoring/Empathy move to the top), and the coach hint appears when Coaching is on (RU). Make a Deal goes to the debrief with the +50 XP reward dialog, and the did_well/improve lists render. Challenge mode passes: after the first free-text turn, 4 choices (choice-0..3) appear; clicking one sends it (marked STRONG) and a new, different set of 4 appears. Voice mode passes: btn-mic and btn-voice-toggle render, and btn-mic is absent in chat mode. All 4 test negotiations were deleted (DELETE 200, then GET 404).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "NegotiationRoom.jsx: the devLog const is declared between import statements (line 3, before the react-router-dom import). It works because imports are hoisted, but it breaks the ESLint import/first convention. Move it below all the imports.",
+    "Debrief.jsx key={s} on did_well/improve and Learn.jsx key={c}/key={r}: these keys are content-based. AI-generated did_well/improve lists could in theory contain duplicate strings, which would cause duplicate-key warnings. Consider key={`${i}-${s}`} for AI-generated lists. No duplicates were seen during testing.",
+    "Challenge mode: choices only appear after the first free-text message (round 0 shows a text input). This was already the behaviour before the change and is not a regression."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "seed_data_creation": "None. Four negotiations were created and then deleted (43ef3ba8, 1e664f96, b846f383, 35ae0007).",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Login: demo@negotia.app / Demo1234!. Language is stored in localStorage key negotia_lang (ru/en). Wizard: w-scenario-*, then wizard-next for steps 2-7 (w-framework-*, w-mode-chat|voice|challenge, w-parts-*, w-prep-batna|priorities|ideal|minimum), then wizard-start. In challenge mode, send one free-text message before the choice-* buttons appear. Coaching is turned on with the input inside [data-testid=coach-toggle]. AI replies take about 10-40s."
+}
